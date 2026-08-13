@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/enemy_definition.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://enemies/behaviors/pattern_enemy_behavior.gd" id="2_behavior"]
+
+[sub_resource type="Resource" id="PatternBehavior"]
+script = ExtResource("2_behavior")
+attack_pattern = PackedInt32Array(4, 5, 7)
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"siege_core"
+display_name = "Siege Core"
+description = "A relentless war machine whose barrage grows over a three-turn cycle."
+maximum_health = 28
+behavior = SubResource("PatternBehavior")

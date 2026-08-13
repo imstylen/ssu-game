@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleRules" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://battle/rules/battle_rules.gd" id="1_rules"]
+
+[resource]
+script = ExtResource("1_rules")
+player_starting_health = 30
+energy_per_turn = 5
+starting_hand_size = 3
+cards_drawn_per_turn = 1
+maximum_hand_size = 8
+maximum_battlefield_size = 5
+units_can_attack_when_played = false
+maximum_deck_size = 20
+duplicate_card_limit = 2
+excess_board_damage_spills_to_player = true

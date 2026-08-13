@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=5 format=3 uid="uid://x4j1jmt3daxg"]
+
+[ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
+[ext_resource type="Texture2D" uid="uid://csq4npq2ulsik" path="res://cards/definitions/life_drain/life_drain.png" id="1_ustrq"]
+[ext_resource type="Script" uid="uid://bvxx2nwisypdp" path="res://cards/behaviors/life_drain_behavior.gd" id="2_behavior"]
+
+[sub_resource type="Resource" id="DrainBehavior"]
+script = ExtResource("2_behavior")
+drain_amount = 3
+
+[resource]
+script = ExtResource("1_card")
+id = &"life_drain"
+display_name = "Life Drain"
+description = "Deal 3 damage and restore 3 commander health."
+artwork = ExtResource("1_ustrq")
+card_type = 1
+attack = 0
+health = 1
+cost = 3
+behavior = SubResource("DrainBehavior")
