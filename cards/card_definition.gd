@@ -21,9 +21,9 @@ enum CardType {
 func validation_errors() -> PackedStringArray:
 	var errors := PackedStringArray()
 	if id.is_empty():
-		errors.append("Card ID cannot be empty")
+		errors.append("This ally card needs an internal ID.")
 	if display_name.strip_edges().is_empty():
-		errors.append("Card '%s' needs a display name" % id)
+		errors.append("Ally card '%s' needs a display name." % id)
 	if card_type == CardType.ACTION and attack != 0:
-		errors.append("Action card '%s' must have zero attack" % id)
+		errors.append("One-shot '%s' must have zero Power." % id)
 	return errors

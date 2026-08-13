@@ -13,4 +13,4 @@ func resolve(context: EffectContext) -> void:
 
 
 func describe() -> String:
-	return "Deal %d damage" % amount
+	return "Pile on %d barrier damage" % amount

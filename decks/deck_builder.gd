@@ -39,12 +39,12 @@ func _build_ui() -> void:
 	var title_stack := VBoxContainer.new()
 	title_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title_stack)
-	title_stack.add_child(AppTheme.heading("DECK WORKSHOP", 34))
+	title_stack.add_child(AppTheme.heading("COZY DECK BUILDER", 34))
 	var subtitle := Label.new()
-	subtitle.text = "Manage multiple squads • 1–20 cards • 2 copies maximum"
+	subtitle.text = "Mix 1–20 ally cards • up to 2 copies of each friend"
 	subtitle.add_theme_color_override("font_color", AppTheme.MUTED)
 	title_stack.add_child(subtitle)
-	var back := AppTheme.button("← COMMAND DECK", 210)
+	var back := AppTheme.button("← COZY CORNER", 210)
 	back.pressed.connect(SceneNavigator.go_to_main_menu)
 	header.add_child(back)
 	var body := HBoxContainer.new()
@@ -57,15 +57,15 @@ func _build_ui() -> void:
 	var side_stack := VBoxContainer.new()
 	side_stack.add_theme_constant_override("separation", 10)
 	sidebar.add_child(side_stack)
-	side_stack.add_child(AppTheme.heading("SAVED DECKS", 20))
+	side_stack.add_child(AppTheme.heading("YOUR DECKS", 20))
 	_deck_list = ItemList.new()
 	_deck_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_deck_list.item_selected.connect(_on_deck_selected)
 	side_stack.add_child(_deck_list)
-	var new_button := AppTheme.button("+ NEW DECK")
+	var new_button := AppTheme.button("+ NEW ALLY DECK")
 	new_button.pressed.connect(_new_deck)
 	side_stack.add_child(new_button)
-	_delete_button = AppTheme.button("DELETE DECK")
+	_delete_button = AppTheme.button("REMOVE DECK")
 	_delete_button.pressed.connect(_request_delete)
 	side_stack.add_child(_delete_button)
 	var editor_panel := PanelContainer.new()
@@ -111,19 +111,19 @@ func _build_ui() -> void:
 	_save_button = AppTheme.button("SAVE DECK", 180)
 	_save_button.pressed.connect(_save_deck)
 	actions.add_child(_save_button)
-	_play_button = AppTheme.button("SAVE & DEPLOY", 210)
+	_play_button = AppTheme.button("SAVE & START", 210)
 	_play_button.pressed.connect(_save_and_play)
 	actions.add_child(_play_button)
 	var hint := Label.new()
-	hint.text = "Invalid and missing-card decks remain editable."
+	hint.text = "You can keep editing a deck that still needs a little help."
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hint.add_theme_font_size_override("font_size", 13)
 	hint.add_theme_color_override("font_color", AppTheme.MUTED)
 	actions.add_child(hint)
 	_delete_dialog = ConfirmationDialog.new()
-	_delete_dialog.title = "Delete deck?"
-	_delete_dialog.dialog_text = "This removes the selected saved deck from your local profile."
+	_delete_dialog.title = "Remove this deck?"
+	_delete_dialog.dialog_text = "This removes the selected deck from this device. Your ally cards stay unlocked."
 	_delete_dialog.confirmed.connect(_delete_deck)
 	add_child(_delete_dialog)
 
@@ -194,7 +194,7 @@ func _rebuild_catalog() -> void:
 		var missing_stack := VBoxContainer.new()
 		missing_panel.add_child(missing_stack)
 		var label := Label.new()
-		label.text = "MISSING CARD\n%s\n%d copies" % [card_id, _working_ids.count(card_id)]
+		label.text = "ALLY DETAILS MISSING\n%s\n%d copies" % [card_id, _working_ids.count(card_id)]
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.add_theme_color_override("font_color", AppTheme.DANGER)
 		missing_stack.add_child(label)
@@ -210,7 +210,7 @@ func _refresh_validation(saved_message: String = "") -> void:
 		_validation_label.text = saved_message
 		_validation_label.add_theme_color_override("font_color", AppTheme.ACCENT)
 	elif errors.is_empty():
-		_validation_label.text = "✓ Deck is battle-ready"
+		_validation_label.text = "✓ Your allies are ready!"
 		_validation_label.add_theme_color_override("font_color", AppTheme.ACCENT)
 	else:
 		_validation_label.text = " • ".join(errors)
@@ -239,7 +239,7 @@ func _save_deck() -> bool:
 		return false
 	var saved := ProfileStore.update_deck(_working_deck_id, _name_edit.text, _working_ids)
 	_refresh_deck_list()
-	_refresh_validation("Saved to local profile." if saved else "Save failed.")
+	_refresh_validation("Saved in your cozy corner." if saved else "That save did not work. Please try again.")
 	return saved
 
 

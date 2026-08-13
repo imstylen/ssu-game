@@ -13,6 +13,6 @@ func get_turn_actions(context: EnemyDecisionContext) -> Array:
 
 func describe_next_action(context: EnemyDecisionContext) -> String:
 	if attack_pattern.is_empty():
-		return "Waiting"
+		return "Taking a grumpy little pause"
 	var index := maxi(context.turn_number - 1, 0) % attack_pattern.size()
-	return "Incoming: %d spread damage" % attack_pattern[index]
+	return "Next barrier: %d damage across the Ally Circle" % attack_pattern[index]

@@ -25,12 +25,12 @@ func _build_ui() -> void:
 	var title_stack := VBoxContainer.new()
 	title_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title_stack)
-	title_stack.add_child(AppTheme.heading("CARD ARCHIVE", 36))
+	title_stack.add_child(AppTheme.heading("ALLY ALBUM", 36))
 	var subtitle := Label.new()
-	subtitle.text = "Every card is unlocked. Build freely within deck limits."
+	subtitle.text = "Meet every disabled and neurodivergent animal ally. Everyone is unlocked."
 	subtitle.add_theme_color_override("font_color", AppTheme.MUTED)
 	title_stack.add_child(subtitle)
-	var back := AppTheme.button("← COMMAND DECK", 210)
+	var back := AppTheme.button("← COZY CORNER", 210)
 	back.pressed.connect(SceneNavigator.go_to_main_menu)
 	header.add_child(back)
 	var divider := HSeparator.new()
@@ -48,6 +48,5 @@ func _build_ui() -> void:
 	for definition in CardCatalog.get_all_cards():
 		var copies := selected.card_ids.count(definition.id) if selected != null else 0
 		var card_view: CardBase = CARD_BASE_SCENE.instantiate()
-		card_view.setup_definition(definition, "IN ACTIVE DECK: %d / %d" % [copies, ProfileStore.deck_rules.duplicate_card_limit])
+		card_view.setup_definition(definition, "IN YOUR DECK: %d / %d" % [copies, ProfileStore.deck_rules.duplicate_card_limit])
 		grid.add_child(card_view)
-

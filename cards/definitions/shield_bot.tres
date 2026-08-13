@@ -1,15 +1,17 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=3 format=3 uid="uid://d2adjxpf251vg"]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://d2adjxpf251vg"]
 
-[ext_resource type="Texture2D" uid="uid://csq4npq2ulsik" path="res://cards/definitions/life_drain/life_drain.png" id="1_5kjy1"]
+[ext_resource type="Texture2D" path="res://cards/definitions/shield_bot/rolling_rabbit.png" id="1_5kjy1"]
 [ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="3_style"]
 
 [resource]
 script = ExtResource("1_card")
 id = &"shield_bot"
-display_name = "Shield Bot"
-description = "A sturdy frontline unit built to absorb incoming fire."
+display_name = "Rolling Rabbit"
+description = "A custom chair and a clever route help Rabbit keep the whole crew safe."
 artwork = ExtResource("1_5kjy1")
 card_type = 0
 attack = 2
 health = 5
 cost = 2
+visual_style = ExtResource("3_style")

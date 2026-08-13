@@ -1,12 +1,29 @@
 extends SceneTree
 
-var _failures: int = 0
-var _assertions: int = 0
-var _shield_bot: CardDefinition
-var _arc_bolt: CardDefinition
-var _life_drain: CardDefinition
-var _enemy: EnemyDefinition
+const EXPECTED_CARDS := {
+	&"shield_bot": ["Rolling Rabbit", CardDefinition.CardType.UNIT, 2, 2, 5],
+	&"autistic_axolotl": ["Autistic Axolotl", CardDefinition.CardType.UNIT, 2, 3, 3],
+	&"deaf_deer": ["Signing Deer", CardDefinition.CardType.UNIT, 3, 4, 4],
+	&"adhd_red_panda": ["ADHD Red Panda", CardDefinition.CardType.UNIT, 1, 2, 2],
+	&"dyslexic_duckling": ["Dyslexic Duckling", CardDefinition.CardType.UNIT, 3, 5, 3],
+	&"prosthetic_paw_puppy": ["Prosthetic-Paw Puppy", CardDefinition.CardType.UNIT, 4, 4, 7],
+	&"grounding_alpaca": ["Grounding Alpaca", CardDefinition.CardType.UNIT, 2, 1, 6],
+	&"arc_bolt": ["Tourette Toucan", CardDefinition.CardType.ACTION, 2, 0, 1],
+	&"life_drain": ["Spoonie Sloth", CardDefinition.CardType.ACTION, 2, 0, 1],
+	&"low_vision_lynx": ["Low-Vision Lynx", CardDefinition.CardType.ACTION, 1, 0, 1],
+}
+
+var EXPECTED_ENEMIES := {
+	&"siege_core": ["Gatekeeping Gremlin", 30, PackedInt32Array([4, 5, 7])],
+	&"assumption_golem": ["Assumption Golem", 34, PackedInt32Array([3, 6, 5])],
+	&"barrier_blob": ["Barrier Blob", 26, PackedInt32Array([2, 4, 8])],
+}
+
+var _failures := 0
+var _assertions := 0
 var _catalog
+var _cards: Dictionary = {}
+var _enemies: Dictionary = {}
 
 
 func _init() -> void:
@@ -16,22 +33,28 @@ func _init() -> void:
 func _run_all() -> void:
 	_catalog = load("res://autoload/card_catalog.gd").new()
 	_catalog.reload_catalog()
-	_shield_bot = _catalog.get_card(&"shield_bot")
-	_arc_bolt = _catalog.get_card(&"arc_bolt")
-	_life_drain = _catalog.get_card(&"life_drain")
-	_enemy = _catalog.get_enemy(&"siege_core")
+	for card_id in EXPECTED_CARDS:
+		_cards[card_id] = _catalog.get_card(card_id)
+	for enemy_id in EXPECTED_ENEMIES:
+		_enemies[enemy_id] = _catalog.get_enemy(enemy_id)
 	_test_content_resources()
 	_test_card_base_artwork_and_style()
 	_test_battle_setup()
-	_test_damage_action()
-	_test_life_drain()
-	_test_summoning_sickness_and_attack()
+	_test_damage_one_shot()
+	_test_heal_one_shot()
+	_test_draw_one_shot()
+	_test_full_hand_burn()
+	_test_summoning_sickness_and_help()
 	_test_spread_damage_and_overflow()
 	_test_discard_reshuffle()
 	_test_invalid_action_is_atomic()
 	_test_victory_and_defeat()
-	_test_complete_battle_loop()
+	_test_random_enemy_selection()
+	_test_complete_battles()
 	_test_deck_rules_and_serialization()
+	_test_profile_migration()
+	_test_font_license_and_copy()
+	await _test_enemy_portrait_binding()
 	_catalog.free()
 	if _failures == 0:
 		print("TESTS_OK: %d assertions" % _assertions)
@@ -41,254 +64,409 @@ func _run_all() -> void:
 
 
 func _test_content_resources() -> void:
-	_expect(_shield_bot is CardDefinition, "Shield Bot resource loads")
-	_expect(_arc_bolt is CardDefinition, "Arc Bolt resource loads")
-	_expect(_life_drain is CardDefinition, "Life Drain resource loads")
-	_expect(_enemy is EnemyDefinition, "Siege Core resource loads")
-	var ids := [_shield_bot.id, _arc_bolt.id, _life_drain.id]
-	_expect(ids.size() == _unique_values(ids).size(), "Card IDs are unique")
-	for definition in [_shield_bot, _arc_bolt, _life_drain]:
-		_expect(definition.validation_errors().is_empty(), "%s validates" % definition.display_name)
-	_expect(_enemy.validation_errors().is_empty(), "Enemy validates")
+	var cards: Array[CardDefinition] = _catalog.get_all_cards()
+	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
+	_expect(cards.size() == 10, "Catalog contains exactly ten unique cards")
+	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
+	var allies := 0
+	var one_shots := 0
+	var style_paths: Dictionary = {}
+	for card_id in EXPECTED_CARDS:
+		var card: CardDefinition = _cards[card_id]
+		var expected: Array = EXPECTED_CARDS[card_id]
+		_expect(card != null, "%s resource loads" % card_id)
+		if card == null:
+			continue
+		_expect(card.display_name == expected[0], "%s has its Access Allies name" % card_id)
+		_expect(card.card_type == expected[1], "%s has the expected type" % card_id)
+		_expect(card.cost == expected[2], "%s has the expected Spark cost" % card_id)
+		_expect(card.attack == expected[3] and card.health == expected[4], "%s has expected Power and Heart" % card_id)
+		_expect(not card.description.is_empty(), "%s has warm rules text" % card_id)
+		_expect(card.artwork != null, "%s has assigned artwork" % card_id)
+		_expect(card.artwork != null and card.artwork.get_width() == 1024 and card.artwork.get_height() == 1024, "%s artwork is 1024x1024" % card_id)
+		_expect(card.visual_style != null, "%s has a reusable pastel variant" % card_id)
+		if card.visual_style != null:
+			style_paths[card.visual_style.resource_path] = true
+		_expect(card.validation_errors().is_empty(), "%s validates" % card_id)
+		if card.card_type == CardDefinition.CardType.UNIT:
+			allies += 1
+		else:
+			one_shots += 1
+	_expect(allies == 7, "Roster has seven allies")
+	_expect(one_shots == 3, "Roster has three one-shots")
+	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
+	for enemy_id in EXPECTED_ENEMIES:
+		var enemy: EnemyDefinition = _enemies[enemy_id]
+		var expected: Array = EXPECTED_ENEMIES[enemy_id]
+		_expect(enemy != null, "%s resource loads" % enemy_id)
+		if enemy == null:
+			continue
+		_expect(enemy.display_name == expected[0], "%s has its Access Allies name" % enemy_id)
+		_expect(enemy.maximum_health == expected[1], "%s has expected Heart" % enemy_id)
+		_expect(enemy.behavior is PatternEnemyBehavior and enemy.behavior.attack_pattern == expected[2], "%s has expected barrier rhythm" % enemy_id)
+		_expect(not enemy.description.is_empty(), "%s has a barrier-themed description" % enemy_id)
+		_expect(enemy.artwork != null, "%s has assigned artwork" % enemy_id)
+		_expect(enemy.artwork != null and enemy.artwork.get_width() == 1024 and enemy.artwork.get_height() == 1024, "%s artwork is 1024x1024" % enemy_id)
+		_expect(enemy.validation_errors().is_empty(), "%s validates" % enemy_id)
 	_expect(_catalog.validation_errors.is_empty(), "Catalog scan reports no content errors")
 
 
 func _test_card_base_artwork_and_style() -> void:
 	var card_scene: PackedScene = load("res://ui/card_base.tscn")
-	_expect(card_scene != null, "Card base scene loads")
-	var artwork_view: CardBase = card_scene.instantiate()
-	artwork_view.setup_definition(_shield_bot)
-	root.add_child(artwork_view)
-	_expect(artwork_view.get_displayed_artwork() == _shield_bot.artwork, "Assigned artwork reaches the card TextureRect")
-	var artwork_rect: TextureRect = artwork_view.get_node("%Artwork")
+	_expect(card_scene != null, "Editor-authorable card base scene loads")
+	var view: CardBase = card_scene.instantiate()
+	view.setup_definition(_cards[&"shield_bot"])
+	root.add_child(view)
+	var artwork_rect: TextureRect = view.get_node("%Artwork")
+	_expect(view.get_displayed_artwork() == _cards[&"shield_bot"].artwork, "Assigned artwork reaches the card TextureRect")
 	_expect(artwork_rect.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED, "Artwork uses aspect-preserving cover crop")
-	artwork_view.set_compact()
+	_expect(view.get_node("%TypeLabel").text == "ALLY", "Unit type is displayed as ALLY")
+	_expect(view.get_node("%AttackLabel").text == "POWER 2", "Attack stat is displayed as POWER")
+	_expect(view.get_node("%HealthLabel").text == "HEART 5", "Health stat is displayed as HEART")
+	view.set_compact()
 	_expect(artwork_rect.visible and artwork_rect.is_visible_in_tree(), "Compact cards retain visible artwork")
-	var compact_artwork_size: Vector2 = artwork_view.get_node("%ArtworkFrame").custom_minimum_size
-	_expect(compact_artwork_size == Vector2.ONE * artwork_view.compact_artwork_size, "Compact cards use a square artwork frame")
-	artwork_view.mouse_entered.emit()
+	_expect(view.get_node("%ArtworkFrame").custom_minimum_size == Vector2.ONE * view.compact_artwork_size, "Compact artwork remains square")
+	view.mouse_entered.emit()
 	var hover_layer := root.get_node_or_null("CardHoverPreviewLayer") as CanvasLayer
 	var hover_card: CardBase = hover_layer.get_node_or_null("FullCardPreview") if hover_layer != null else null
-	_expect(hover_card != null, "Hovering a compact card creates a full-card preview")
-	_expect(hover_card != null and not hover_card.compact, "Hover preview uses the full card layout")
+	_expect(hover_card != null and not hover_card.compact, "Hovering a compact card creates a full-card preview")
 	_expect(hover_card != null and hover_card.get_node("%DescriptionLabel").visible, "Hover preview exposes readable description text")
-	_expect(hover_card != null and hover_card.get_displayed_artwork() == _shield_bot.artwork, "Hover preview preserves the card artwork")
-	var full_artwork_size: Vector2 = hover_card.get_node("%ArtworkFrame").custom_minimum_size if hover_card != null else Vector2.ZERO
-	_expect(hover_card != null and full_artwork_size == Vector2.ONE * hover_card.full_artwork_size, "Full cards use a square artwork frame")
-	artwork_view.mouse_exited.emit()
-	_expect(root.get_node_or_null("CardHoverPreviewLayer") == null, "Hover preview is removed when the pointer leaves")
+	_expect(hover_card != null and hover_card.get_displayed_artwork() == _cards[&"shield_bot"].artwork, "Hover preview preserves artwork")
+	view.mouse_exited.emit()
+	_expect(root.get_node_or_null("CardHoverPreviewLayer") == null, "Hover preview closes on pointer exit")
 
+	var missing := CardDefinition.new()
+	missing.id = &"missing_art_test"
+	missing.display_name = "Fallback Friend"
 	var fallback_view: CardBase = card_scene.instantiate()
-	fallback_view.setup_definition(_arc_bolt)
+	fallback_view.setup_definition(missing)
 	root.add_child(fallback_view)
 	_expect(fallback_view.get_displayed_artwork() == load("res://icon.svg"), "Missing artwork uses the project icon")
-	fallback_view.mouse_entered.emit()
-	_expect(root.get_node_or_null("CardHoverPreviewLayer") == null, "Full-size cards do not create redundant hover previews")
 
-	var styled_definition: CardDefinition = _arc_bolt.duplicate(true)
+	var styled_definition: CardDefinition = missing.duplicate(true)
 	var visual_style := CardVisualStyle.new()
 	visual_style.override_panel_color = true
-	visual_style.panel_color = Color("#8f2454")
+	visual_style.panel_color = Color("#FFEEDD")
 	visual_style.override_title_color = true
-	visual_style.title_color = Color("#ffcfef")
+	visual_style.title_color = Color("#4B315A")
 	styled_definition.visual_style = visual_style
 	var styled_view: CardBase = card_scene.instantiate()
 	styled_view.setup_definition(styled_definition)
 	root.add_child(styled_view)
 	var styled_box := styled_view.get_theme_stylebox("normal") as StyleBoxFlat
 	var plain_box := fallback_view.get_theme_stylebox("normal") as StyleBoxFlat
-	_expect(styled_box != null and styled_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card panel color is applied")
-	_expect(plain_box != null and not plain_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card style does not leak to another instance")
-	var styled_title: Label = styled_view.get_node("%NameLabel")
-	var plain_title: Label = fallback_view.get_node("%NameLabel")
-	_expect(styled_title.get_theme_color("font_color").is_equal_approx(visual_style.title_color), "Per-card title color is applied")
-	_expect(not plain_title.get_theme_color("font_color").is_equal_approx(visual_style.title_color), "Per-card text style remains isolated")
-
-	artwork_view.free()
+	_expect(styled_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card panel color is applied")
+	_expect(not plain_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card styling does not leak")
+	_expect(view.editor_preview_definition != null and view.editor_preview_definition.id == &"life_drain", "Editor preview defaults to Spoonie Sloth's stable resource")
+	view.free()
 	fallback_view.free()
 	styled_view.free()
 
 
 func _test_battle_setup() -> void:
 	var rules := BattleRules.new()
-	var bundle := _start([_shield_bot, _arc_bolt, _life_drain], rules)
+	var bundle := _start([_cards[&"shield_bot"], _cards[&"arc_bolt"], _cards[&"life_drain"]], rules)
 	var session: BattleSession = bundle.session
-	_expect(session.phase == BattleSession.Phase.PLAYER_TURN, "Setup enters player turn")
-	_expect(session.turn_number == 1, "Setup begins on turn one")
-	_expect(session.player_health == 30, "Setup assigns player health")
-	_expect(session.current_energy == 5, "Setup refills energy")
-	_expect(session.hand.size() == 3, "Setup draws starting hand")
+	_expect(session.phase == BattleSession.Phase.PLAYER_TURN, "Setup enters the player's round")
+	_expect(session.turn_number == 1 and session.player_health == 30, "Setup initializes round and Team Heart")
+	_expect(session.current_energy == 5 and session.hand.size() == 3, "Setup fills Spark and starting hand")
 
 
-func _test_damage_action() -> void:
+func _test_damage_one_shot() -> void:
+	var bundle := _forced_hand_bundle(_cards[&"arc_bolt"], [_cards[&"shield_bot"]])
+	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	_expect(bundle.session.enemy.current_health == 26, "Tourette Toucan deals exactly 4 damage")
+	_expect(bundle.session.current_energy == 3, "Tourette Toucan spends 2 Spark")
+	_expect(bundle.session.hand.is_empty() and bundle.session.discard_pile.size() == 1, "Damage one-shot moves to the rest pile")
+	_expect(_event_count(events, &"DamageApplied") == 1, "Damage one-shot emits one damage event")
+
+
+func _test_heal_one_shot() -> void:
+	var bundle := _forced_hand_bundle(_cards[&"life_drain"], [_cards[&"shield_bot"]])
+	bundle.session.player_health = 27
+	var enemy_health: int = bundle.session.enemy.current_health
+	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	_expect(bundle.session.player_health == 30, "Spoonie Sloth heals up to maximum Team Heart")
+	_expect(bundle.session.enemy.current_health == enemy_health, "Spoonie Sloth does not damage the monster")
+	var healing := _first_event(events, &"HealingApplied")
+	_expect(healing != null and healing.data.amount == 3, "Heal-5 effect reports only the clamped amount")
+	var second := _forced_hand_bundle(_cards[&"life_drain"], [_cards[&"shield_bot"]])
+	second.session.player_health = 20
+	second.resolver.play_card(second.session, second.session.hand[0].instance_id)
+	_expect(second.session.player_health == 25, "Spoonie Sloth heals exactly 5 when room is available")
+
+
+func _test_draw_one_shot() -> void:
+	var bundle := _forced_hand_bundle(_cards[&"low_vision_lynx"], [_cards[&"shield_bot"], _cards[&"arc_bolt"]])
+	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	_expect(bundle.session.hand.size() == 2, "Low-Vision Lynx draws exactly 2 cards")
+	_expect(_event_count(events, &"CardDrawn") == 2, "Draw-2 emits two draw events")
+	_expect(bundle.session.discard_pile.size() == 1 and bundle.session.discard_pile[0].definition.id == &"low_vision_lynx", "Draw one-shot moves itself to the rest pile")
+
+
+func _test_full_hand_burn() -> void:
+	var definitions: Array = [_cards[&"low_vision_lynx"]]
+	for _index in 9:
+		definitions.append(_cards[&"shield_bot"])
 	var rules := BattleRules.new()
-	rules.starting_hand_size = 1
+	rules.starting_hand_size = 0
 	rules.cards_drawn_per_turn = 0
-	var bundle := _start([_arc_bolt], rules)
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	var card := session.hand[0]
-	var events := resolver.play_card(session, card.instance_id)
-	_expect(not events.is_empty(), "Damage action produces events")
-	_expect(session.enemy.current_health == 24, "Damage action harms enemy")
-	_expect(session.current_energy == 3, "Damage action spends energy")
-	_expect(session.hand.is_empty() and session.discard_pile.size() == 1, "Action moves to discard")
+	var bundle := _start(definitions, rules)
+	_force_into_hand(bundle.session, &"low_vision_lynx")
+	while bundle.session.hand.size() < 8:
+		bundle.session.hand.append(bundle.session.draw_pile.pop_back())
+	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.find_hand_card(_find_hand_id(bundle.session, &"low_vision_lynx")).instance_id)
+	_expect(bundle.session.hand.size() == 8, "Draw-2 stops the hand at its maximum")
+	_expect(_event_count(events, &"CardBurned") == 1, "The extra draw moves to the rest pile when hand is full")
+	_expect(bundle.session.discard_pile.size() == 2, "Burned card and played one-shot both reach the rest pile")
 
 
-func _test_life_drain() -> void:
-	var rules := BattleRules.new()
-	rules.starting_hand_size = 1
-	rules.cards_drawn_per_turn = 0
-	var bundle := _start([_life_drain], rules)
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	session.player_health = 25
-	resolver.play_card(session, session.hand[0].instance_id)
-	_expect(session.enemy.current_health == 25, "Life Drain harms enemy")
-	_expect(session.player_health == 28, "Life Drain heals player")
-
-
-func _test_summoning_sickness_and_attack() -> void:
-	var rules := BattleRules.new()
-	rules.starting_hand_size = 1
-	rules.cards_drawn_per_turn = 0
-	var bundle := _start([_shield_bot], rules)
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	var unit_id: int = session.hand[0].instance_id
-	resolver.play_card(session, unit_id)
-	_expect(session.battlefield.size() == 1, "Unit enters battlefield")
-	_expect(not resolver.can_attack_enemy(session, unit_id), "New unit cannot attack")
-	resolver.end_turn(session)
-	_expect(session.turn_number == 2, "Enemy turn advances turn counter")
-	_expect(session.battlefield[0].current_health == 1, "Frontline absorbs enemy damage")
-	_expect(resolver.can_attack_enemy(session, unit_id), "Unit readies next turn")
-	resolver.attack_enemy(session, unit_id)
-	_expect(session.enemy.current_health == 26, "Unit attacks enemy")
+func _test_summoning_sickness_and_help() -> void:
+	var bundle := _forced_hand_bundle(_cards[&"shield_bot"], [_cards[&"arc_bolt"]])
+	var unit_id: int = bundle.session.hand[0].instance_id
+	bundle.resolver.play_card(bundle.session, unit_id)
+	_expect(bundle.session.battlefield.size() == 1, "An ally joins the Ally Circle")
+	_expect(not bundle.resolver.can_attack_enemy(bundle.session, unit_id), "A new ally rests until the next round")
+	bundle.resolver.end_turn(bundle.session)
+	_expect(bundle.session.turn_number == 2, "Ending a round advances the adventure")
+	_expect(bundle.session.battlefield[0].current_health == 1, "The Ally Circle shares incoming barrier damage")
+	_expect(bundle.resolver.can_attack_enemy(bundle.session, unit_id), "The ally is ready to help next round")
+	bundle.resolver.attack_enemy(bundle.session, unit_id)
+	_expect(bundle.session.enemy.current_health == 28, "Rolling Rabbit helps for 2 Power")
 
 
 func _test_spread_damage_and_overflow() -> void:
 	var fragile := CardDefinition.new()
-	fragile.id = &"fragile_test_unit"
-	fragile.display_name = "Fragile Unit"
-	fragile.card_type = CardDefinition.CardType.UNIT
-	fragile.attack = 0
+	fragile.id = &"fragile_test_ally"
+	fragile.display_name = "Tiny Test Ally"
 	fragile.health = 1
 	fragile.cost = 0
 	var rules := BattleRules.new()
 	rules.starting_hand_size = 2
 	rules.cards_drawn_per_turn = 0
 	var bundle := _start([fragile, fragile], rules)
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	resolver.play_card(session, session.hand[0].instance_id)
-	resolver.play_card(session, session.hand[0].instance_id)
-	resolver.end_turn(session)
-	_expect(session.battlefield.is_empty(), "Spread damage destroys depleted units")
-	_expect(session.discard_pile.size() == 2, "Destroyed units enter discard")
-	_expect(session.player_health == 28, "Remaining board damage overflows to player")
+	bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	bundle.resolver.end_turn(bundle.session)
+	_expect(bundle.session.battlefield.is_empty(), "Allies at zero Heart need a rest")
+	_expect(bundle.session.discard_pile.size() == 2, "Resting allies enter the rest pile")
+	_expect(bundle.session.player_health == 28, "Remaining barrier damage reaches Team Heart")
 
 
 func _test_discard_reshuffle() -> void:
 	var rules := BattleRules.new()
 	rules.starting_hand_size = 1
 	rules.cards_drawn_per_turn = 1
-	var bundle := _start([_arc_bolt], rules)
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	resolver.play_card(session, session.hand[0].instance_id)
-	resolver.end_turn(session)
-	_expect(session.hand.size() == 1, "Discard reshuffles when draw pile is empty")
-	_expect(session.hand[0].definition.id == &"arc_bolt", "Reshuffled card can be redrawn")
-	_expect(session.discard_pile.is_empty(), "Reshuffle consumes discard")
+	var bundle := _start([_cards[&"arc_bolt"]], rules)
+	bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	bundle.resolver.end_turn(bundle.session)
+	_expect(bundle.session.hand.size() == 1 and bundle.session.hand[0].definition.id == &"arc_bolt", "Rest pile reshuffles into a fresh deck")
+	_expect(bundle.session.discard_pile.is_empty(), "Reshuffle consumes the rest pile")
 
 
 func _test_invalid_action_is_atomic() -> void:
 	var expensive := CardDefinition.new()
-	expensive.id = &"expensive_test_action"
-	expensive.display_name = "Too Expensive"
+	expensive.id = &"expensive_test_one_shot"
+	expensive.display_name = "Big Spark Test"
 	expensive.card_type = CardDefinition.CardType.ACTION
 	expensive.cost = 9
-	var rules := BattleRules.new()
-	rules.starting_hand_size = 1
-	var bundle := _start([expensive], rules)
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	var events := resolver.play_card(session, session.hand[0].instance_id)
-	_expect(events.is_empty(), "Invalid action produces no rule events")
-	_expect(session.current_energy == 5, "Invalid action does not spend energy")
-	_expect(session.hand.size() == 1 and session.discard_pile.is_empty(), "Invalid action does not move cards")
+	var bundle := _forced_hand_bundle(expensive, [])
+	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
+	_expect(events.is_empty(), "Invalid play produces no rule events")
+	_expect(bundle.session.current_energy == 5, "Invalid play does not spend Spark")
+	_expect(bundle.session.hand.size() == 1 and bundle.session.discard_pile.is_empty(), "Invalid play does not move cards")
 
 
 func _test_victory_and_defeat() -> void:
 	var weak_enemy := EnemyDefinition.new()
-	weak_enemy.id = &"weak_test_enemy"
-	weak_enemy.display_name = "Weak Enemy"
+	weak_enemy.id = &"weak_test_monster"
+	weak_enemy.display_name = "Paper Barrier"
 	weak_enemy.maximum_health = 3
 	weak_enemy.behavior = PatternEnemyBehavior.new()
-	var rules := BattleRules.new()
-	rules.starting_hand_size = 1
-	var victory_bundle := _start([_arc_bolt], rules, weak_enemy)
-	var victory_session: BattleSession = victory_bundle.session
-	victory_bundle.resolver.play_card(victory_session, victory_session.hand[0].instance_id)
-	_expect(victory_session.phase == BattleSession.Phase.VICTORY, "Lethal enemy damage causes victory")
+	var victory := _forced_hand_bundle(_cards[&"arc_bolt"], [], weak_enemy)
+	victory.resolver.play_card(victory.session, victory.session.hand[0].instance_id)
+	_expect(victory.session.phase == BattleSession.Phase.VICTORY, "Lethal monster damage busts the barrier")
 	var lethal_behavior := PatternEnemyBehavior.new()
 	lethal_behavior.attack_pattern = PackedInt32Array([100])
 	var lethal_enemy := EnemyDefinition.new()
-	lethal_enemy.id = &"lethal_test_enemy"
-	lethal_enemy.display_name = "Lethal Enemy"
+	lethal_enemy.id = &"lethal_test_monster"
+	lethal_enemy.display_name = "Huge Test Barrier"
 	lethal_enemy.maximum_health = 20
 	lethal_enemy.behavior = lethal_behavior
-	var defeat_bundle := _start([_arc_bolt], rules, lethal_enemy)
-	var defeat_session: BattleSession = defeat_bundle.session
-	defeat_bundle.resolver.end_turn(defeat_session)
-	_expect(defeat_session.phase == BattleSession.Phase.DEFEAT, "Lethal player damage causes defeat")
+	var defeat := _forced_hand_bundle(_cards[&"arc_bolt"], [], lethal_enemy)
+	defeat.resolver.end_turn(defeat.session)
+	_expect(defeat.session.phase == BattleSession.Phase.DEFEAT, "Zero Team Heart ends in a rest")
 
 
-func _test_complete_battle_loop() -> void:
-	var deck := [_shield_bot, _shield_bot, _arc_bolt, _arc_bolt, _life_drain, _life_drain]
-	var bundle := _start(deck, BattleRules.new())
-	var session: BattleSession = bundle.session
-	var resolver: ActionResolver = bundle.resolver
-	var safety_turns := 30
-	while not session.is_finished() and safety_turns > 0:
-		var made_play := true
-		while made_play and not session.is_finished():
-			made_play = false
-			for card in session.hand.duplicate():
-				if resolver.can_play_card(session, card.instance_id):
-					resolver.play_card(session, card.instance_id)
-					made_play = true
-					break
-		for unit in session.battlefield.duplicate():
-			if resolver.can_attack_enemy(session, unit.instance_id):
-				resolver.attack_enemy(session, unit.instance_id)
-		if not session.is_finished():
-			resolver.end_turn(session)
-		safety_turns -= 1
-	_expect(session.is_finished(), "A full battle reaches a terminal result")
-	_expect(session.phase == BattleSession.Phase.VICTORY, "Starter deck can defeat the MVP enemy")
+func _test_random_enemy_selection() -> void:
+	var first_rng := RandomNumberGenerator.new()
+	var second_rng := RandomNumberGenerator.new()
+	first_rng.seed = 778899
+	second_rng.seed = 778899
+	var first_sequence: Array[StringName] = []
+	var second_sequence: Array[StringName] = []
+	for _index in 24:
+		var first: EnemyDefinition = _catalog.get_random_enemy(first_rng)
+		var second: EnemyDefinition = _catalog.get_random_enemy(second_rng)
+		first_sequence.append(first.id)
+		second_sequence.append(second.id)
+		_expect(first.id in EXPECTED_ENEMIES, "Random selection always returns a catalog monster")
+	_expect(first_sequence == second_sequence, "Seeded random monster selection is deterministic")
+	_expect(_unique_values(first_sequence).size() == 3, "Seeded sequence can reach all three monsters")
+	var empty_catalog = load("res://autoload/card_catalog.gd").new()
+	empty_catalog.enemies_by_id.clear()
+	_expect(empty_catalog.get_random_enemy(first_rng) == null, "Empty catalog returns no random monster")
+	empty_catalog.free()
+
+
+func _test_complete_battles() -> void:
+	var starter := _starter_definitions()
+	_expect(starter.size() == 20, "Access Allies starter contains twenty cards")
+	for enemy_id in EXPECTED_ENEMIES:
+		var bundle := _start(starter, BattleRules.new(), _enemies[enemy_id])
+		var safety_rounds := 40
+		while not bundle.session.is_finished() and safety_rounds > 0:
+			var made_play := true
+			while made_play and not bundle.session.is_finished():
+				made_play = false
+				for card in bundle.session.hand.duplicate():
+					if bundle.resolver.can_play_card(bundle.session, card.instance_id):
+						bundle.resolver.play_card(bundle.session, card.instance_id)
+						made_play = true
+						break
+			for ally in bundle.session.battlefield.duplicate():
+				if bundle.resolver.can_attack_enemy(bundle.session, ally.instance_id):
+					bundle.resolver.attack_enemy(bundle.session, ally.instance_id)
+			if not bundle.session.is_finished():
+				bundle.resolver.end_turn(bundle.session)
+			safety_rounds -= 1
+		_expect(bundle.session.phase == BattleSession.Phase.VICTORY, "Starter deck can bust %s" % _enemies[enemy_id].display_name)
 
 
 func _test_deck_rules_and_serialization() -> void:
 	var rules := DeckRules.new(BattleRules.new())
 	var empty: Array[StringName] = []
-	_expect(not rules.validate(empty).is_empty(), "Empty deck is invalid")
-	var valid: Array[StringName] = [&"shield_bot", &"shield_bot", &"arc_bolt"]
-	_expect(rules.validate(valid).is_empty(), "Valid deck passes rules")
+	_expect(not rules.validate(empty).is_empty(), "Empty deck gives a precise warm instruction")
+	var valid: Array[StringName] = []
+	valid.assign(ProfileMigrator.ACCESS_ALLIES_STARTER_IDS)
+	_expect(valid.size() == 20 and rules.validate(valid, _catalog).is_empty(), "Twenty-card starter respects the duplicate limit")
 	valid.append(&"shield_bot")
-	_expect(not rules.validate(valid).is_empty(), "Duplicate limit is enforced")
-	var record := DeckRecord.new("test", "Test Deck", [&"arc_bolt", &"life_drain"])
+	_expect(not rules.validate(valid, _catalog).is_empty(), "A third copy is rejected")
+	var record := DeckRecord.new("test", "Test Ally Deck", [&"arc_bolt", &"life_drain"])
 	var restored := DeckRecord.from_dictionary(record.to_dictionary())
 	_expect(restored.id == record.id and restored.card_ids == record.card_ids, "Deck record round-trips")
 
 
+func _test_profile_migration() -> void:
+	var legacy := {
+		"schema_version": 1,
+		"selected_deck_id": "starter",
+		"decks": [
+			{"id": "starter", "name": "Starter Squad", "card_ids": ["shield_bot", "shield_bot", "arc_bolt", "arc_bolt", "life_drain", "life_drain"]},
+			{"id": "personal", "name": "My Own Deck", "card_ids": ["arc_bolt"]},
+		],
+	}
+	var migrated: Dictionary = ProfileMigrator.migrate_profile_data(legacy)
+	_expect(migrated.changed and migrated.data.schema_version == 2, "Legacy profile migrates to schema 2")
+	_expect(migrated.data.decks[0].name == "Access Allies" and migrated.data.decks[0].card_ids.size() == 20, "Untouched six-card starter upgrades and is renamed")
+	_expect(migrated.data.decks[1] == legacy.decks[1], "User-created deck is preserved exactly")
+	var customized := legacy.duplicate(true)
+	customized.decks[0].card_ids.append("shield_bot")
+	customized.decks[0].name = "My Customized Starter"
+	var customized_result: Dictionary = ProfileMigrator.migrate_profile_data(customized)
+	_expect(customized_result.data.decks[0] == customized.decks[0], "Customized starter remains untouched")
+	var current: Dictionary = migrated.data.duplicate(true)
+	var current_result: Dictionary = ProfileMigrator.migrate_profile_data(current)
+	_expect(not current_result.changed and current_result.data == current, "Schema-2 profile is idempotent")
+
+
+func _test_font_license_and_copy() -> void:
+	var font := load("res://assets/fonts/Fredoka-Variable.ttf")
+	_expect(font is FontFile, "Fredoka variable font loads")
+	var license := FileAccess.get_file_as_string("res://assets/fonts/OFL-Fredoka.txt")
+	_expect(license.contains("SIL OPEN FONT LICENSE") and license.contains("Version 1.1"), "Fredoka OFL license is bundled")
+	var source_paths := [
+		"res://main/main.gd", "res://collection/collection.gd", "res://decks/deck_builder.gd",
+		"res://battle/battle_ui.gd", "res://ui/card_base.gd",
+	]
+	var player_copy := ""
+	for path in source_paths:
+		player_copy += FileAccess.get_file_as_string(path)
+	for old_phrase in ["TACTICAL DECK COMMAND", "SSU // FRONTLINE", "FIELD OPERATION", "COMMANDER 30", "MISSION COMPLETE", "LINE OVERRUN", "READY TO ATTACK", "was destroyed", "Commander defeated"]:
+		_expect(not player_copy.contains(old_phrase), "Old player-facing military phrase is absent: %s" % old_phrase)
+	for required in ["ACCESS ALLIES", "A COZY CARD ADVENTURE", "ALLY ALBUM", "COZY DECK BUILDER", "BARRIER-BUSTING ADVENTURE", "TEAM HEART", "ALLY CIRCLE", "STORY SO FAR", "SPARK", "YOUR HAND", "BARRIER BUSTED!", "TIME FOR A REST"]:
+		_expect(player_copy.contains(required), "Required warm interface string is present: %s" % required)
+
+
+func _test_enemy_portrait_binding() -> void:
+	var packed: PackedScene = load("res://battle/battle_scene.tscn")
+	var battle_ui = packed.instantiate()
+	var battle_controller: BattleController = battle_ui.get_node("BattleController")
+	battle_controller.presentation_delay = 0.0
+	battle_ui.visible = false
+	root.add_child(battle_ui)
+	await process_frame
+	battle_controller.start_battle(_starter_definitions(), _enemies[&"barrier_blob"], BattleRules.new(), 24680)
+	await process_frame
+	_expect(battle_ui.get_enemy_portrait_texture() == _enemies[&"barrier_blob"].artwork, "Battle header binds selected monster artwork")
+	_expect(battle_ui.get_enemy_description_text() == _enemies[&"barrier_blob"].description, "Battle header binds selected monster description")
+	battle_ui.free()
+
+
+func _forced_hand_bundle(card: CardDefinition, extras: Array, enemy_override: EnemyDefinition = null) -> Dictionary:
+	var definitions: Array = [card]
+	definitions.append_array(extras)
+	var rules := BattleRules.new()
+	rules.starting_hand_size = 0
+	rules.cards_drawn_per_turn = 0
+	var bundle := _start(definitions, rules, enemy_override)
+	_force_into_hand(bundle.session, card.id)
+	return bundle
+
+
+func _force_into_hand(session: BattleSession, card_id: StringName) -> void:
+	for card in session.draw_pile:
+		if card.definition.id == card_id:
+			session.draw_pile.erase(card)
+			session.hand.append(card)
+			return
+
+
+func _find_hand_id(session: BattleSession, card_id: StringName) -> int:
+	for card in session.hand:
+		if card.definition.id == card_id:
+			return card.instance_id
+	return -1
+
+
+func _starter_definitions() -> Array[CardDefinition]:
+	var result: Array[CardDefinition] = []
+	for card_id in ProfileMigrator.ACCESS_ALLIES_STARTER_IDS:
+		result.append(_cards[card_id])
+	return result
+
+
 func _start(definitions: Array, rules: BattleRules, enemy_override: EnemyDefinition = null) -> Dictionary:
 	var session := BattleSession.new()
-	session.initialize(definitions, enemy_override if enemy_override != null else _enemy, rules, 12345)
+	session.initialize(definitions, enemy_override if enemy_override != null else _enemies[&"siege_core"], rules, 12345)
 	var resolver := ActionResolver.new()
 	resolver.start_battle(session)
 	return {"session": session, "resolver": resolver}
+
+
+func _event_count(events: Array[BattleEvent], kind: StringName) -> int:
+	var count := 0
+	for event in events:
+		if event.kind == kind:
+			count += 1
+	return count
+
+
+func _first_event(events: Array[BattleEvent], kind: StringName) -> BattleEvent:
+	for event in events:
+		if event.kind == kind:
+			return event
+	return null
 
 
 func _unique_values(values: Array) -> Array:

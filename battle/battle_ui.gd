@@ -8,6 +8,8 @@ var _turn_label: Label
 var _player_label: Label
 var _energy_label: Label
 var _enemy_name: Label
+var _enemy_artwork: TextureRect
+var _enemy_description: Label
 var _enemy_health: ProgressBar
 var _intent_label: Label
 var _board_container: HBoxContainer
@@ -46,26 +48,38 @@ func _build_ui() -> void:
 	var header := HBoxContainer.new()
 	header.custom_minimum_size.y = 52
 	root_stack.add_child(header)
-	var title := AppTheme.heading("FIELD OPERATION", 28)
+	var title := AppTheme.heading("BARRIER-BUSTING ADVENTURE", 28)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_turn_label = Label.new()
 	_turn_label.add_theme_color_override("font_color", AppTheme.MUTED)
 	header.add_child(_turn_label)
-	var retreat := AppTheme.button("RETREAT", 132)
+	var retreat := AppTheme.button("TAKE A BREAK", 160)
 	retreat.pressed.connect(SceneNavigator.go_to_main_menu)
 	header.add_child(retreat)
 	var enemy_panel := PanelContainer.new()
-	enemy_panel.custom_minimum_size.y = 102
+	enemy_panel.custom_minimum_size.y = 118
 	root_stack.add_child(enemy_panel)
 	var enemy_row := HBoxContainer.new()
-	enemy_row.add_theme_constant_override("separation", 20)
+	enemy_row.add_theme_constant_override("separation", 14)
 	enemy_panel.add_child(enemy_row)
+	_enemy_artwork = TextureRect.new()
+	_enemy_artwork.custom_minimum_size = Vector2(88, 88)
+	_enemy_artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_enemy_artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_enemy_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	enemy_row.add_child(_enemy_artwork)
 	var enemy_identity := VBoxContainer.new()
-	enemy_identity.custom_minimum_size.x = 240
+	enemy_identity.custom_minimum_size.x = 330
 	enemy_row.add_child(enemy_identity)
-	_enemy_name = AppTheme.heading("ENEMY", 24, AppTheme.DANGER)
+	_enemy_name = AppTheme.heading("ABLEISM MONSTER", 24, AppTheme.DANGER)
 	enemy_identity.add_child(_enemy_name)
+	_enemy_description = Label.new()
+	_enemy_description.custom_minimum_size.x = 330
+	_enemy_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_enemy_description.add_theme_font_size_override("font_size", 13)
+	_enemy_description.add_theme_color_override("font_color", AppTheme.MUTED)
+	enemy_identity.add_child(_enemy_description)
 	_intent_label = Label.new()
 	_intent_label.add_theme_color_override("font_color", AppTheme.GOLD)
 	enemy_identity.add_child(_intent_label)
@@ -74,7 +88,7 @@ func _build_ui() -> void:
 	_enemy_health.custom_minimum_size.y = 38
 	_enemy_health.show_percentage = false
 	enemy_row.add_child(_enemy_health)
-	_player_label = AppTheme.heading("COMMANDER 30 / 30", 20)
+	_player_label = AppTheme.heading("TEAM HEART 30 / 30", 20)
 	_player_label.custom_minimum_size.x = 230
 	_player_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	enemy_row.add_child(_player_label)
@@ -89,7 +103,7 @@ func _build_ui() -> void:
 	board_stack.add_theme_constant_override("separation", 6)
 	board_panel.add_child(board_stack)
 	var board_heading := Label.new()
-	board_heading.text = "FRONTLINE  //  Click a ready unit to attack"
+	board_heading.text = "ALLY CIRCLE  •  Choose a ready ally to help bust the barrier"
 	board_heading.add_theme_font_size_override("font_size", 14)
 	board_heading.add_theme_color_override("font_color", AppTheme.MUTED)
 	board_stack.add_child(board_heading)
@@ -107,7 +121,7 @@ func _build_ui() -> void:
 	var log_stack := VBoxContainer.new()
 	log_panel.add_child(log_stack)
 	var log_heading := Label.new()
-	log_heading.text = "COMBAT FEED"
+	log_heading.text = "STORY SO FAR"
 	log_heading.add_theme_font_size_override("font_size", 14)
 	log_heading.add_theme_color_override("font_color", AppTheme.ACCENT)
 	log_stack.add_child(log_heading)
@@ -121,7 +135,7 @@ func _build_ui() -> void:
 	var controls := HBoxContainer.new()
 	controls.custom_minimum_size.y = 48
 	root_stack.add_child(controls)
-	_energy_label = AppTheme.heading("ENERGY 0 / 5", 22, AppTheme.ACCENT)
+	_energy_label = AppTheme.heading("SPARK 0 / 5", 22, AppTheme.ACCENT)
 	_energy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	controls.add_child(_energy_label)
 	_toast = Label.new()
@@ -132,7 +146,7 @@ func _build_ui() -> void:
 	_piles_label = Label.new()
 	_piles_label.add_theme_color_override("font_color", AppTheme.MUTED)
 	controls.add_child(_piles_label)
-	_end_turn_button = AppTheme.button("END TURN →", 170)
+	_end_turn_button = AppTheme.button("END ROUND →", 170)
 	_end_turn_button.pressed.connect(controller.request_end_turn)
 	controls.add_child(_end_turn_button)
 	var hand_panel := PanelContainer.new()
@@ -142,7 +156,7 @@ func _build_ui() -> void:
 	hand_stack.add_theme_constant_override("separation", 4)
 	hand_panel.add_child(hand_stack)
 	var hand_heading := Label.new()
-	hand_heading.text = "HAND  //  Click a card to play it"
+	hand_heading.text = "YOUR HAND  •  Choose an ally card to play it"
 	hand_heading.add_theme_font_size_override("font_size", 14)
 	hand_heading.add_theme_color_override("font_color", AppTheme.MUTED)
 	hand_stack.add_child(hand_heading)
@@ -163,7 +177,7 @@ func _build_result_layer() -> void:
 	_result_layer.visible = false
 	add_child(_result_layer)
 	var dim := ColorRect.new()
-	dim.color = Color(0.01, 0.02, 0.06, 0.86)
+	dim.color = Color(0.294, 0.192, 0.353, 0.72)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_result_layer.add_child(dim)
 	var center := CenterContainer.new()
@@ -176,7 +190,7 @@ func _build_result_layer() -> void:
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
 	stack.add_theme_constant_override("separation", 18)
 	panel.add_child(stack)
-	_result_title = AppTheme.heading("VICTORY", 42, AppTheme.ACCENT)
+	_result_title = AppTheme.heading("BARRIER BUSTED!", 42, AppTheme.ACCENT)
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stack.add_child(_result_title)
 	_result_body = Label.new()
@@ -184,10 +198,10 @@ func _build_result_layer() -> void:
 	_result_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_result_body.add_theme_color_override("font_color", AppTheme.MUTED)
 	stack.add_child(_result_body)
-	var retry := AppTheme.button("DEPLOY AGAIN", 230)
+	var retry := AppTheme.button("TRY ANOTHER MONSTER", 270)
 	retry.pressed.connect(func(): get_tree().reload_current_scene())
 	stack.add_child(retry)
-	var home := AppTheme.button("RETURN TO COMMAND", 230)
+	var home := AppTheme.button("BACK TO THE COZY CORNER", 270)
 	home.pressed.connect(SceneNavigator.go_to_main_menu)
 	stack.add_child(home)
 
@@ -195,30 +209,41 @@ func _build_result_layer() -> void:
 func _start_battle() -> void:
 	var errors := ProfileStore.selected_deck_errors()
 	if not errors.is_empty():
-		_show_blocking_error("Deck invalid", "\n".join(errors))
+		_show_blocking_error("DECK NEEDS A LITTLE HELP", "\n".join(errors))
 		return
-	var enemy := CardCatalog.get_enemy(&"siege_core")
+	var enemy := CardCatalog.get_random_enemy()
 	if enemy == null:
-		_show_blocking_error("Content error", "The Siege Core definition is missing.")
+		_show_blocking_error("MONSTER TAKING A BREAK", "No ableism monster is ready for an adventure yet.")
 		return
 	var rules: BattleRules = load("res://battle/rules/battle_rules.tres")
 	controller.start_battle(ProfileStore.get_selected_deck_definitions(), enemy, rules)
+
+
+func get_enemy_portrait_texture() -> Texture2D:
+	return _enemy_artwork.texture if _enemy_artwork != null else null
+
+
+func get_enemy_description_text() -> String:
+	return _enemy_description.text if _enemy_description != null else ""
 
 
 func _refresh() -> void:
 	if controller.session == null:
 		return
 	var session := controller.session
-	_turn_label.text = "TURN %d  •  %s" % [session.turn_number, session.phase_name().to_upper()]
-	_player_label.text = "COMMANDER  %d / %d" % [session.player_health, session.rules.player_starting_health]
+	_turn_label.text = "ROUND %d  •  %s" % [session.turn_number, session.phase_name().to_upper().replace("_", " ")]
+	_player_label.text = "TEAM HEART  %d / %d" % [session.player_health, session.rules.player_starting_health]
 	_player_label.add_theme_color_override("font_color", AppTheme.DANGER if session.player_health <= 10 else AppTheme.INK)
 	_enemy_name.text = session.enemy.definition.display_name.to_upper()
+	_enemy_artwork.texture = session.enemy.definition.artwork if session.enemy.definition.artwork != null else load("res://icon.svg")
+	_enemy_artwork.tooltip_text = session.enemy.definition.description
+	_enemy_description.text = session.enemy.definition.description
 	_enemy_health.max_value = session.enemy.definition.maximum_health
 	_enemy_health.value = session.enemy.current_health
-	_enemy_health.tooltip_text = "%d / %d integrity" % [session.enemy.current_health, session.enemy.definition.maximum_health]
+	_enemy_health.tooltip_text = "%d / %d monster Heart" % [session.enemy.current_health, session.enemy.definition.maximum_health]
 	_intent_label.text = controller.get_enemy_intent()
-	_energy_label.text = "ENERGY  %d / %d" % [session.current_energy, session.rules.energy_per_turn]
-	_piles_label.text = "DRAW %d  •  DISCARD %d  •  HAND %d / %d     " % [
+	_energy_label.text = "SPARK  %d / %d" % [session.current_energy, session.rules.energy_per_turn]
+	_piles_label.text = "DECK %d  •  REST PILE %d  •  HAND %d / %d     " % [
 		session.draw_pile.size(),
 		session.discard_pile.size(),
 		session.hand.size(),
@@ -230,9 +255,9 @@ func _refresh() -> void:
 	if session.is_finished():
 		_result_layer.visible = true
 		var won := session.phase == BattleSession.Phase.VICTORY
-		_result_title.text = "MISSION COMPLETE" if won else "LINE OVERRUN"
+		_result_title.text = "BARRIER BUSTED!" if won else "TIME FOR A REST"
 		_result_title.add_theme_color_override("font_color", AppTheme.ACCENT if won else AppTheme.DANGER)
-		_result_body.text = "The Siege Core has been neutralized." if won else "The commander fell on turn %d. Reconfigure and redeploy." % session.turn_number
+		_result_body.text = "%s's barriers came tumbling down. Great teamwork!" % session.enemy.definition.display_name if won else "The team needs a rest after round %d. A new plan and a snack can help." % session.turn_number
 
 
 func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_board: bool) -> void:
@@ -241,7 +266,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 		child.queue_free()
 	if cards.is_empty():
 		var empty := Label.new()
-		empty.text = "No units deployed" if on_board else "Hand empty"
+		empty.text = "The Ally Circle has room for a friend." if on_board else "Your hand is empty for now."
 		empty.add_theme_color_override("font_color", AppTheme.MUTED)
 		empty.custom_minimum_size = Vector2(180, 120)
 		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -250,7 +275,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 	for card in cards:
 		var view: CardBase = CARD_BASE_SCENE.instantiate()
 		var available := controller.can_attack_enemy(card.instance_id) if on_board else controller.can_play_card(card.instance_id)
-		var footer := "READY TO ATTACK" if on_board and available else ""
+		var footer := "READY TO HELP" if on_board and available else ""
 		view.setup_instance(card, footer)
 		view.set_compact()
 		view.set_interactive(available)
@@ -277,21 +302,21 @@ func _on_event_presented(event: BattleEvent) -> void:
 
 func _event_message(event: BattleEvent) -> String:
 	match event.kind:
-		&"BattleStarted": return "Contact: [color=#ff6f7d]%s[/color]." % event.data.enemy_name
-		&"TurnStarted": return "[color=#43d9b5]Turn %d started.[/color]" % event.data.turn
-		&"CardDrawn": return "Drew %s." % event.data.name
-		&"CardPlayed": return "Played [color=#ffc857]%s[/color]." % event.data.name
-		&"UnitAttacked": return "%s attacked for %d." % [event.data.name, event.data.amount]
-		&"EnemyActionStarted": return "Enemy: %s." % event.data.description
+		&"BattleStarted": return "A barrier appeared: [color=#D9547F]%s[/color]." % event.data.enemy_name
+		&"TurnStarted": return "[color=#279B82]Round %d started.[/color]" % event.data.turn
+		&"CardDrawn": return "%s joined your hand." % event.data.name
+		&"CardPlayed": return "[color=#A56716]%s[/color] joined the adventure." % event.data.name
+		&"UnitAttacked": return "%s helped for %d Power." % [event.data.name, event.data.amount]
+		&"EnemyActionStarted": return "The monster made a barrier: %s." % event.data.description
 		&"DamageApplied":
 			if event.data.target == "unit":
-				return "%s took %d damage." % [event.data.name, event.data.amount]
-			return "%s took %d damage." % [str(event.data.target).capitalize(), event.data.amount]
-		&"HealingApplied": return "%s restored %d health." % [str(event.data.target).capitalize(), event.data.amount]
-		&"CardDestroyed": return "[color=#ff6f7d]%s was destroyed.[/color]" % event.data.name
-		&"DiscardReshuffled": return "Discard reshuffled into the draw pile."
-		&"CardBurned": return "%s was discarded because the hand is full." % event.data.name
-		&"BattleEnded": return "[color=#43d9b5]Victory secured.[/color]" if event.data.result == "victory" else "[color=#ff6f7d]Commander defeated.[/color]"
+				return "%s lost %d Heart." % [event.data.name, event.data.amount]
+			return "%s lost %d Heart." % ["The monster" if event.data.target == "enemy" else "The team", event.data.amount]
+		&"HealingApplied": return "%s restored %d Heart." % ["The team" if event.data.target == "player" else "The monster", event.data.amount]
+		&"CardDestroyed": return "[color=#D9547F]%s needs a rest.[/color]" % event.data.name
+		&"DiscardReshuffled": return "The rest pile became a fresh deck."
+		&"CardBurned": return "%s moved to the rest pile because your hand is full." % event.data.name
+		&"BattleEnded": return "[color=#279B82]Barrier busted![/color]" if event.data.result == "victory" else "[color=#D9547F]The team needs a rest.[/color]"
 	return ""
 
 

@@ -23,19 +23,19 @@ func reload_catalog() -> void:
 		if resource is CardDefinition:
 			_register_card(resource, path)
 		else:
-			validation_errors.append("%s is not a CardDefinition" % path)
+			validation_errors.append("%s is not an ally card resource." % path)
 	for path in _resource_paths(ENEMY_ROOT):
 		var resource := load(path)
 		if resource is EnemyDefinition:
 			_register_enemy(resource, path)
 		else:
-			validation_errors.append("%s is not an EnemyDefinition" % path)
+			validation_errors.append("%s is not an ableism monster resource." % path)
 	if cards_by_id.is_empty():
-		validation_errors.append("The card catalog is empty")
+		validation_errors.append("The Ally Album is empty.")
 	if enemies_by_id.is_empty():
-		validation_errors.append("The enemy catalog is empty")
+		validation_errors.append("No ableism monsters are ready yet.")
 	for message in validation_errors:
-		push_error("Content validation: %s" % message)
+		push_error("Access Allies content check: %s" % message)
 	catalog_reloaded.emit()
 
 
@@ -63,6 +63,15 @@ func get_all_enemies() -> Array[EnemyDefinition]:
 	return enemies
 
 
+func get_random_enemy(rng: RandomNumberGenerator = null) -> EnemyDefinition:
+	var enemies := get_all_enemies()
+	if enemies.is_empty():
+		return null
+	if rng != null:
+		return enemies[rng.randi_range(0, enemies.size() - 1)]
+	return enemies[randi_range(0, enemies.size() - 1)]
+
+
 func has_card(card_id: StringName) -> bool:
 	return cards_by_id.has(card_id)
 
@@ -71,7 +80,7 @@ func _register_card(card: CardDefinition, path: String) -> void:
 	for message in card.validation_errors():
 		validation_errors.append("%s: %s" % [path, message])
 	if cards_by_id.has(card.id):
-		validation_errors.append("Duplicate card ID '%s' in %s" % [card.id, path])
+		validation_errors.append("Ally card ID '%s' appears twice in %s." % [card.id, path])
 		return
 	cards_by_id[card.id] = card
 
@@ -80,7 +89,7 @@ func _register_enemy(enemy: EnemyDefinition, path: String) -> void:
 	for message in enemy.validation_errors():
 		validation_errors.append("%s: %s" % [path, message])
 	if enemies_by_id.has(enemy.id):
-		validation_errors.append("Duplicate enemy ID '%s' in %s" % [enemy.id, path])
+		validation_errors.append("Ableism monster ID '%s' appears twice in %s." % [enemy.id, path])
 		return
 	enemies_by_id[enemy.id] = enemy
 
@@ -89,7 +98,7 @@ func _resource_paths(root: String) -> PackedStringArray:
 	var results := PackedStringArray()
 	var directory := DirAccess.open(root)
 	if directory == null:
-		validation_errors.append("Cannot open content directory: %s" % root)
+		validation_errors.append("We could not open this content folder: %s" % root)
 		return results
 	directory.list_dir_begin()
 	var entry := directory.get_next()

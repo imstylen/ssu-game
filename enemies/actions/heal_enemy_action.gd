@@ -13,4 +13,4 @@ func resolve(context: EffectContext) -> void:
 
 
 func describe() -> String:
-	return "Repair %d health" % amount
+	return "Patch up %d monster Heart" % amount

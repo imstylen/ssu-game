@@ -144,27 +144,27 @@ func _refresh() -> void:
 
 func _bind_card_data() -> void:
 	if definition == null:
-		_name_label.text = "Unknown Card"
+		_name_label.text = "Mystery Ally"
 		_cost_label.text = "-"
-		_type_label.text = "MISSING"
+		_type_label.text = "NEEDS A CHECK"
 		_artwork.texture = FALLBACK_ARTWORK
-		_description_label.text = "This card definition could not be loaded."
+		_description_label.text = "This ally's details need a quick check."
 		_attack_label.visible = false
 		_health_label.visible = false
 		_action_label.visible = true
-		_action_label.text = "NO DATA"
+		_action_label.text = "NO DETAILS"
 		_footer_label.text = footer_text
 		return
 	_name_label.text = definition.display_name
 	_cost_label.text = str(definition.cost)
-	_type_label.text = "UNIT" if definition.card_type == CardDefinition.CardType.UNIT else "ACTION"
+	_type_label.text = "ALLY" if definition.card_type == CardDefinition.CardType.UNIT else "ONE-SHOT"
 	_artwork.texture = definition.artwork if definition.artwork != null else FALLBACK_ARTWORK
 	_description_label.text = definition.description
 	if definition.card_type == CardDefinition.CardType.UNIT:
 		var attack := instance.current_attack if instance != null else definition.attack
 		var health := instance.current_health if instance != null else definition.health
-		_attack_label.text = "ATK %d" % attack
-		_health_label.text = "HP %d" % health
+		_attack_label.text = "POWER %d" % attack
+		_health_label.text = "HEART %d" % health
 		_attack_label.visible = true
 		_health_label.visible = true
 		_action_label.visible = false

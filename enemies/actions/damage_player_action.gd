@@ -13,4 +13,4 @@ func resolve(context: EffectContext) -> void:
 
 
 func describe() -> String:
-	return "Strike the commander for %d" % amount
+	return "Pile on %d Team Heart damage" % amount

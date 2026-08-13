@@ -8,10 +8,10 @@ var board_damage_policy: BoardDamagePolicy = SpreadBoardDamagePolicy.new()
 func start_battle(session: BattleSession) -> Array[BattleEvent]:
 	var events: Array[BattleEvent] = []
 	if session.enemy == null or session.enemy.definition == null:
-		last_error = "A valid enemy is required"
+		last_error = "Choose an ableism monster for this adventure."
 		return events
 	if session.draw_pile.is_empty():
-		last_error = "A non-empty deck is required"
+		last_error = "Add at least one ally card before starting the adventure."
 		return events
 	session.turn_number = 1
 	session.current_energy = session.rules.energy_per_turn
@@ -35,15 +35,15 @@ func can_play_card(session: BattleSession, instance_id: int) -> bool:
 
 func get_play_error(session: BattleSession, instance_id: int) -> String:
 	if session == null or session.phase != BattleSession.Phase.PLAYER_TURN:
-		return "Cards can only be played during your turn"
+		return "You can play an ally card during your round."
 	var card := session.find_hand_card(instance_id)
 	if card == null:
-		return "That card is not in your hand"
+		return "That card is no longer in your hand."
 	if card.definition.cost > session.current_energy:
-		return "Not enough energy"
+		return "You need more Spark to play that card."
 	if card.definition.card_type == CardDefinition.CardType.UNIT \
 	and session.battlefield.size() >= session.rules.maximum_battlefield_size:
-		return "The battlefield is full"
+		return "Your Ally Circle is full. End the round or choose a one-shot."
 	return ""
 
 
@@ -91,14 +91,14 @@ func can_attack_enemy(session: BattleSession, instance_id: int) -> bool:
 
 func get_attack_error(session: BattleSession, instance_id: int) -> String:
 	if session == null or session.phase != BattleSession.Phase.PLAYER_TURN:
-		return "Units can only attack during your turn"
+		return "Allies can help bust a barrier during your round."
 	var card := session.find_battlefield_card(instance_id)
 	if card == null:
-		return "That unit is not on the battlefield"
+		return "That ally is not in the Ally Circle."
 	if card.has_attacked_this_turn:
-		return "That unit has already attacked this turn"
+		return "That ally already helped this round."
 	if card.current_attack <= 0:
-		return "That unit has no attack"
+		return "That ally has no Power right now."
 	return ""
 
 
@@ -128,7 +128,7 @@ func can_end_turn(session: BattleSession) -> bool:
 func end_turn(session: BattleSession) -> Array[BattleEvent]:
 	var events: Array[BattleEvent] = []
 	if not can_end_turn(session):
-		last_error = "The turn cannot be ended right now"
+		last_error = "This round cannot end while an action is still resolving."
 		return events
 	last_error = ""
 	events.append(BattleEvent.new(&"TurnEnded", {"turn": session.turn_number}))

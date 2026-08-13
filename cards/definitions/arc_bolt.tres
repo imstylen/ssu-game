@@ -1,7 +1,9 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3 uid="uid://dmaahmfyibrpq"]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=6 format=3 uid="uid://dmaahmfyibrpq"]
 
 [ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
 [ext_resource type="Script" uid="uid://bu4p0uydusdnd" path="res://cards/behaviors/damage_enemy_behavior.gd" id="2_behavior"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="3_style"]
+[ext_resource type="Texture2D" path="res://cards/definitions/arc_bolt/tourette_toucan.png" id="4_art"]
 
 [sub_resource type="Resource" id="DamageBehavior"]
 script = ExtResource("2_behavior")
@@ -10,10 +12,12 @@ damage_amount = 4
 [resource]
 script = ExtResource("1_card")
 id = &"arc_bolt"
-display_name = "Arc Bolt"
-description = "Deal 4 damage directly to the enemy."
+display_name = "Tourette Toucan"
+description = "Tics and all, Toucan speaks up. Deal 4 damage."
+artwork = ExtResource("4_art")
 card_type = 1
 attack = 0
 health = 1
 cost = 2
 behavior = SubResource("DamageBehavior")
+visual_style = ExtResource("3_style")

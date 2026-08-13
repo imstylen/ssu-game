@@ -1,52 +1,53 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://ui/card_base.gd" id="1_card_base"]
 [ext_resource type="Resource" path="res://cards/definitions/life_drain/life_drain.tres" id="2_preview"]
-[ext_resource type="Texture2D" path="res://cards/definitions/life_drain/life_drain.png" id="3_preview_art"]
+[ext_resource type="Texture2D" path="res://cards/definitions/life_drain/spoonie_sloth.png" id="3_preview_art"]
+[ext_resource type="FontFile" path="res://assets/fonts/Fredoka-Variable.ttf" id="4_font"]
 
 [sub_resource type="StyleBoxFlat" id="CardNormal"]
-bg_color = Color(0.078, 0.133, 0.243, 1)
+bg_color = Color(1, 0.992, 0.969, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.204, 0.286, 0.431, 1)
+border_color = Color(0.851, 0.522, 0.678, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="CardHover"]
-bg_color = Color(0.105, 0.18, 0.314, 1)
+bg_color = Color(1, 0.961, 0.98, 1)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.263, 0.851, 0.71, 1)
+border_color = Color(0.282, 0.812, 0.682, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="CardPressed"]
-bg_color = Color(0.055, 0.102, 0.192, 1)
+bg_color = Color(0.839, 0.973, 0.929, 1)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(1, 0.784, 0.341, 1)
+border_color = Color(0.294, 0.192, 0.353, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="CardDisabled"]
-bg_color = Color(0.044, 0.071, 0.129, 1)
+bg_color = Color(0.961, 0.918, 0.941, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.133, 0.176, 0.259, 1)
+border_color = Color(0.804, 0.737, 0.784, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -58,31 +59,31 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.263, 0.851, 0.71, 1)
+border_color = Color(0.294, 0.192, 0.353, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="ArtworkPanel"]
-bg_color = Color(0.027, 0.047, 0.098, 1)
+bg_color = Color(1, 0.957, 0.98, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.204, 0.286, 0.431, 1)
+border_color = Color(0.851, 0.522, 0.678, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="CostPanel"]
-bg_color = Color(0.09, 0.247, 0.259, 1)
+bg_color = Color(0.839, 0.973, 0.929, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.263, 0.851, 0.71, 1)
+border_color = Color(0.153, 0.608, 0.51, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -98,7 +99,7 @@ border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.263, 0.851, 0.71, 1)
+border_color = Color(0.294, 0.192, 0.353, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -160,9 +161,10 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.91, 0.941, 1, 1)
+theme_override_colors/font_color = Color(0.294, 0.192, 0.353, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 22
-text = "Life Drain"
+text = "Spoonie Sloth"
 text_overrun_behavior = 3
 
 [node name="CostBadge" type="PanelContainer" parent="ContentMargin/ContentStack/Header"]
@@ -174,18 +176,20 @@ theme_override_styles/panel = SubResource("CostPanel")
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_colors/font_color = Color(0.647, 0.404, 0.086, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 18
-text = "3"
+text = "2"
 horizontal_alignment = 1
 
 [node name="TypeLabel" type="Label" parent="ContentMargin/ContentStack"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.263, 0.851, 0.71, 1)
+theme_override_colors/font_color = Color(0.153, 0.608, 0.51, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 12
-text = "ACTION"
+text = "ONE-SHOT"
 
 [node name="ArtworkFrame" type="PanelContainer" parent="ContentMargin/ContentStack"]
 unique_name_in_owner = true
@@ -209,9 +213,10 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.569, 0.643, 0.784, 1)
+theme_override_colors/font_color = Color(0.49, 0.4, 0.529, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 15
-text = "Deal 3 damage and restore 3 commander health."
+text = "Sloth rests without apology and shares a soothing snack. Heal 5 Heart."
 autowrap_mode = 2
 vertical_alignment = 1
 
@@ -225,16 +230,18 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_colors/font_color = Color(0.647, 0.404, 0.086, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 17
-text = "ATK 2"
+text = "POWER 2"
 
 [node name="ActionLabel" type="Label" parent="ContentMargin/ContentStack/StatsRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_colors/font_color = Color(0.647, 0.404, 0.086, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 17
 text = "ONE-SHOT"
 horizontal_alignment = 1
@@ -244,16 +251,18 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_colors/font_color = Color(0.647, 0.404, 0.086, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 17
-text = "HP 5"
+text = "HEART 5"
 horizontal_alignment = 2
 
 [node name="FooterLabel" type="Label" parent="ContentMargin/ContentStack"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.263, 0.851, 0.71, 1)
+theme_override_colors/font_color = Color(0.153, 0.608, 0.51, 1)
+theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 11
 text = "EDITOR PREVIEW"
 horizontal_alignment = 1

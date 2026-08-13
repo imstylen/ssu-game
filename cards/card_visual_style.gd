@@ -22,24 +22,24 @@ extends Resource
 
 @export_group("Panel Color")
 @export var override_panel_color: bool = false
-@export var panel_color: Color = Color("#14223e")
+@export var panel_color: Color = Color("#FFFDF7")
 
 @export_group("Border Color")
 @export var override_border_color: bool = false
-@export var border_color: Color = Color("#34496e")
+@export var border_color: Color = Color("#D985AD")
 
 @export_group("Accent Color")
 @export var override_accent_color: bool = false
-@export var accent_color: Color = Color("#43d9b5")
+@export var accent_color: Color = Color("#48CFAE")
 
 @export_group("Title Color")
 @export var override_title_color: bool = false
-@export var title_color: Color = Color("#e8f0ff")
+@export var title_color: Color = Color("#4B315A")
 
 @export_group("Body Color")
 @export var override_body_color: bool = false
-@export var body_color: Color = Color("#91a4c8")
+@export var body_color: Color = Color("#7D6687")
 
 @export_group("Stats Color")
 @export var override_stats_color: bool = false
-@export var stats_color: Color = Color("#ffc857")
+@export var stats_color: Color = Color("#A56716")

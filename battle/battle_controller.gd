@@ -89,7 +89,7 @@ func _present_events(events: Array[BattleEvent]) -> void:
 
 func _accepting_input() -> bool:
 	if session == null:
-		invalid_action.emit("No battle is active")
+		invalid_action.emit("No barrier-busting adventure is active yet.")
 		return false
 	if input_locked:
 		return false

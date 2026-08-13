@@ -12,9 +12,9 @@ extends Resource
 func validation_errors() -> PackedStringArray:
 	var errors := PackedStringArray()
 	if id.is_empty():
-		errors.append("Enemy ID cannot be empty")
+		errors.append("This ableism monster needs an internal ID.")
 	if display_name.strip_edges().is_empty():
-		errors.append("Enemy '%s' needs a display name" % id)
+		errors.append("Ableism monster '%s' needs a display name." % id)
 	if behavior == null:
-		errors.append("Enemy '%s' needs a behavior" % id)
+		errors.append("Ableism monster '%s' needs a barrier pattern." % id)
 	return errors

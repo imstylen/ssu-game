@@ -1,21 +1,23 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=5 format=3 uid="uid://x4j1jmt3daxg"]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=6 format=3 uid="uid://x4j1jmt3daxg"]
 
 [ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
-[ext_resource type="Texture2D" uid="uid://csq4npq2ulsik" path="res://cards/definitions/life_drain/life_drain.png" id="1_ustrq"]
-[ext_resource type="Script" uid="uid://bvxx2nwisypdp" path="res://cards/behaviors/life_drain_behavior.gd" id="2_behavior"]
+[ext_resource type="Texture2D" uid="uid://b4ahxmgbrm15p" path="res://cards/definitions/life_drain/spoonie_sloth.png" id="1_ustrq"]
+[ext_resource type="Script" path="res://cards/behaviors/heal_player_behavior.gd" id="2_behavior"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="3_style"]
 
-[sub_resource type="Resource" id="DrainBehavior"]
+[sub_resource type="Resource" id="HealBehavior"]
 script = ExtResource("2_behavior")
-drain_amount = 3
+heal_amount = 5
 
 [resource]
 script = ExtResource("1_card")
 id = &"life_drain"
-display_name = "Life Drain"
-description = "Deal 3 damage and restore 3 commander health."
+display_name = "Spoonie Sloth"
+description = "Sloth rests without apology and shares a soothing snack. Heal 5 Heart."
 artwork = ExtResource("1_ustrq")
 card_type = 1
 attack = 0
 health = 1
-cost = 3
-behavior = SubResource("DrainBehavior")
+cost = 2
+behavior = SubResource("HealBehavior")
+visual_style = ExtResource("3_style")

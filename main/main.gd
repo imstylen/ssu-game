@@ -24,7 +24,7 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 44)
 	add_child(margin)
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 64)
+	columns.add_theme_constant_override("separation", 36)
 	margin.add_child(columns)
 	var identity := VBoxContainer.new()
 	identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -32,15 +32,15 @@ func _build_ui() -> void:
 	identity.add_theme_constant_override("separation", 12)
 	columns.add_child(identity)
 	var eyebrow := Label.new()
-	eyebrow.text = "TACTICAL DECK COMMAND"
+	eyebrow.text = "A COZY CARD ADVENTURE"
 	eyebrow.add_theme_font_size_override("font_size", 16)
 	eyebrow.add_theme_color_override("font_color", AppTheme.ACCENT)
 	identity.add_child(eyebrow)
-	var title := AppTheme.heading("SSU // FRONTLINE", 54)
+	var title := AppTheme.heading("ACCESS ALLIES", 58)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	identity.add_child(title)
 	var description := Label.new()
-	description.text = "Assemble your squad. Hold the line. Break the Siege Core."
+	description.text = "Disabled and neurodivergent animal allies sharing support, one barrier at a time."
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.add_theme_font_size_override("font_size", 22)
 	description.add_theme_color_override("font_color", AppTheme.MUTED)
@@ -49,7 +49,7 @@ func _build_ui() -> void:
 	rule.custom_minimum_size.y = 20
 	identity.add_child(rule)
 	var features := Label.new()
-	features.text = "PLAY UNITS  •  FIRE ACTIONS  •  ATTACK IN ANY ORDER"
+	features.text = "PLAY ALLIES • SHARE SUPPORT • BUST BARRIERS"
 	features.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	features.add_theme_font_size_override("font_size", 15)
 	features.add_theme_color_override("font_color", AppTheme.GOLD)
@@ -66,18 +66,18 @@ func _build_ui() -> void:
 	var menu := VBoxContainer.new()
 	menu.add_theme_constant_override("separation", 14)
 	menu_margin.add_child(menu)
-	menu.add_child(AppTheme.heading("COMMAND DECK", 28))
+	menu.add_child(AppTheme.heading("YOUR COZY CORNER", 28))
 	_deck_status = Label.new()
 	_deck_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_deck_status.add_theme_color_override("font_color", AppTheme.MUTED)
 	menu.add_child(_deck_status)
-	_battle_button = AppTheme.button("DEPLOY TO BATTLE")
+	_battle_button = AppTheme.button("START AN ADVENTURE")
 	_battle_button.pressed.connect(_start_battle)
 	menu.add_child(_battle_button)
-	var decks_button := AppTheme.button("DECK BUILDER")
+	var decks_button := AppTheme.button("BUILD A DECK")
 	decks_button.pressed.connect(func(): SceneNavigator.go_to(SceneNavigator.DECK_BUILDER))
 	menu.add_child(decks_button)
-	var collection_button := AppTheme.button("CARD COLLECTION")
+	var collection_button := AppTheme.button("MEET THE ALLIES")
 	collection_button.pressed.connect(func(): SceneNavigator.go_to(SceneNavigator.COLLECTION))
 	menu.add_child(collection_button)
 	_notice = Label.new()
@@ -89,7 +89,7 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	menu.add_child(spacer)
 	var version := Label.new()
-	version.text = "MVP BUILD 1  //  OFFLINE PROFILE"
+	version.text = "COZY OFFLINE PROFILE • SAVED ON THIS DEVICE"
 	version.add_theme_font_size_override("font_size", 13)
 	version.add_theme_color_override("font_color", AppTheme.MUTED)
 	menu.add_child(version)
@@ -99,15 +99,15 @@ func _refresh() -> void:
 	var deck := ProfileStore.get_selected_deck()
 	var errors := ProfileStore.selected_deck_errors()
 	if deck == null:
-		_deck_status.text = "No deck selected"
+		_deck_status.text = "Choose an ally deck to begin."
 	else:
-		_deck_status.text = "ACTIVE: %s\n%d / %d cards" % [
+		_deck_status.text = "READY: %s\n%d / %d cards" % [
 			deck.name,
 			deck.card_ids.size(),
 			ProfileStore.deck_rules.maximum_deck_size,
 		]
 	_battle_button.disabled = not errors.is_empty()
-	_notice.text = "Deck needs attention: %s" % errors[0] if not errors.is_empty() else "Profile saved locally • Ready to deploy"
+	_notice.text = "Your deck needs a little help: %s" % errors[0] if not errors.is_empty() else "Saved here • Ready for an adventure!"
 	_notice.add_theme_color_override("font_color", AppTheme.DANGER if not errors.is_empty() else AppTheme.ACCENT)
 
 

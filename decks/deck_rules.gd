@@ -16,17 +16,17 @@ func _init(battle_rules: BattleRules = null) -> void:
 func validate(card_ids: Array[StringName], catalog = null) -> PackedStringArray:
 	var errors := PackedStringArray()
 	if card_ids.size() < minimum_deck_size:
-		errors.append("Add at least %d card" % minimum_deck_size)
+		errors.append("Add at least %d ally card to this deck." % minimum_deck_size)
 	if card_ids.size() > maximum_deck_size:
-		errors.append("Decks may contain at most %d cards" % maximum_deck_size)
+		errors.append("This deck can hold at most %d cards." % maximum_deck_size)
 	var counts: Dictionary = {}
 	for card_id in card_ids:
 		counts[card_id] = int(counts.get(card_id, 0)) + 1
 		if catalog != null and not catalog.has_card(card_id):
-			errors.append("Missing card: %s" % card_id)
+			errors.append("We could not find ally card: %s" % card_id)
 	for card_id in counts:
 		if counts[card_id] > duplicate_card_limit:
-			errors.append("Only %d copies of %s are allowed" % [
+			errors.append("Keep up to %d copies of %s in one deck." % [
 			duplicate_card_limit,
 			card_id,
 		])
