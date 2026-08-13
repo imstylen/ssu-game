@@ -31,6 +31,12 @@ const FALLBACK_ARTWORK: Texture2D = preload("res://icon.svg")
 @export_range(1, 96, 1) var compact_body_font_size: int = 11
 @export_range(1, 96, 1) var compact_stats_font_size: int = 13
 
+@export_group("Hover Preview")
+@export var hover_preview_enabled: bool = true
+@export_range(0, 200, 1) var hover_preview_viewport_margin: int = 16
+@export_range(1, 500, 1) var hover_preview_canvas_layer: int = 100
+@export_range(0.0, 0.5, 0.01) var hover_preview_animation_seconds: float = 0.12
+
 var definition: CardDefinition
 var instance: CardInstance
 var interactive: bool = false
@@ -64,12 +70,18 @@ var _base_label_fonts: Dictionary = {}
 var _base_label_sizes: Dictionary = {}
 var _preview_definition_connection: CardDefinition
 var _preview_style_connection: CardVisualStyle
+var _hover_preview_layer: CanvasLayer
+var _hover_preview_card: CardBase
 
 
 func _ready() -> void:
 	_cache_scene_defaults()
 	if not pressed.is_connected(_on_pressed):
 		pressed.connect(_on_pressed)
+	if not mouse_entered.is_connected(_show_hover_preview):
+		mouse_entered.connect(_show_hover_preview)
+	if not mouse_exited.is_connected(_hide_hover_preview):
+		mouse_exited.connect(_hide_hover_preview)
 	if Engine.is_editor_hint():
 		definition = editor_preview_definition
 		instance = null
@@ -79,6 +91,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_hide_hover_preview()
 	_disconnect_editor_preview_resources()
 
 
@@ -108,6 +121,8 @@ func set_interactive(enabled: bool) -> void:
 
 func set_compact(enabled: bool = true) -> void:
 	compact = enabled
+	if not compact:
+		_hide_hover_preview()
 	if is_node_ready():
 		_refresh()
 
@@ -308,6 +323,73 @@ func _all_labels() -> Array[Label]:
 func _on_pressed() -> void:
 	if interactive and not Engine.is_editor_hint():
 		card_activated.emit(instance.instance_id if instance != null else -1)
+
+
+func _show_hover_preview() -> void:
+	if Engine.is_editor_hint() or not hover_preview_enabled or not compact:
+		return
+	if not is_inside_tree() or _hover_preview_layer != null:
+		return
+	var packed_scene: PackedScene = load("res://ui/card_base.tscn")
+	if packed_scene == null:
+		return
+	_hover_preview_layer = CanvasLayer.new()
+	_hover_preview_layer.name = "CardHoverPreviewLayer"
+	_hover_preview_layer.layer = hover_preview_canvas_layer
+	get_tree().root.add_child(_hover_preview_layer)
+	_hover_preview_card = packed_scene.instantiate()
+	_hover_preview_card.name = "FullCardPreview"
+	_hover_preview_card.hover_preview_enabled = false
+	_hover_preview_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hover_preview_card.set_compact(false)
+	if instance != null:
+		_hover_preview_card.setup_instance(instance, footer_text)
+	else:
+		_hover_preview_card.setup_definition(definition, footer_text)
+	_hover_preview_layer.add_child(_hover_preview_card)
+	_hover_preview_card.size = _hover_preview_card.full_minimum_size
+	_position_hover_preview()
+	_hover_preview_card.pivot_offset = _hover_preview_card.size * 0.5
+	_hover_preview_card.scale = Vector2(0.9, 0.9)
+	_hover_preview_card.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	var tween := _hover_preview_card.create_tween()
+	tween.set_parallel(true)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(
+		_hover_preview_card,
+		"scale",
+		Vector2.ONE,
+		hover_preview_animation_seconds
+	)
+	tween.tween_property(
+		_hover_preview_card,
+		"modulate",
+		Color.WHITE,
+		hover_preview_animation_seconds
+	)
+
+
+func _hide_hover_preview() -> void:
+	_hover_preview_card = null
+	if _hover_preview_layer != null and is_instance_valid(_hover_preview_layer):
+		_hover_preview_layer.free()
+	_hover_preview_layer = null
+
+
+func _position_hover_preview() -> void:
+	if _hover_preview_card == null or not is_instance_valid(_hover_preview_card):
+		return
+	var viewport_size := get_viewport_rect().size
+	var preview_size := _hover_preview_card.size
+	var source_center := get_global_rect().get_center()
+	var target := source_center - preview_size * 0.5
+	var margin := float(hover_preview_viewport_margin)
+	var maximum_x := maxf(margin, viewport_size.x - preview_size.x - margin)
+	var maximum_y := maxf(margin, viewport_size.y - preview_size.y - margin)
+	target.x = clampf(target.x, margin, maximum_x)
+	target.y = clampf(target.y, margin, maximum_y)
+	_hover_preview_card.position = target
 
 
 func _queue_editor_preview_refresh() -> void:

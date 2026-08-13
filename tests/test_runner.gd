@@ -65,11 +65,22 @@ func _test_card_base_artwork_and_style() -> void:
 	artwork_view.set_compact()
 	_expect(artwork_rect.visible and artwork_rect.is_visible_in_tree(), "Compact cards retain visible artwork")
 	_expect(artwork_view.get_node("%ArtworkFrame").custom_minimum_size.y == artwork_view.compact_artwork_height, "Compact cards use the compact artwork height")
+	artwork_view.mouse_entered.emit()
+	var hover_layer := root.get_node_or_null("CardHoverPreviewLayer") as CanvasLayer
+	var hover_card: CardBase = hover_layer.get_node_or_null("FullCardPreview") if hover_layer != null else null
+	_expect(hover_card != null, "Hovering a compact card creates a full-card preview")
+	_expect(hover_card != null and not hover_card.compact, "Hover preview uses the full card layout")
+	_expect(hover_card != null and hover_card.get_node("%DescriptionLabel").visible, "Hover preview exposes readable description text")
+	_expect(hover_card != null and hover_card.get_displayed_artwork() == _shield_bot.artwork, "Hover preview preserves the card artwork")
+	artwork_view.mouse_exited.emit()
+	_expect(root.get_node_or_null("CardHoverPreviewLayer") == null, "Hover preview is removed when the pointer leaves")
 
 	var fallback_view: CardBase = card_scene.instantiate()
 	fallback_view.setup_definition(_arc_bolt)
 	root.add_child(fallback_view)
 	_expect(fallback_view.get_displayed_artwork() == load("res://icon.svg"), "Missing artwork uses the project icon")
+	fallback_view.mouse_entered.emit()
+	_expect(root.get_node_or_null("CardHoverPreviewLayer") == null, "Full-size cards do not create redundant hover previews")
 
 	var styled_definition: CardDefinition = _arc_bolt.duplicate(true)
 	var visual_style := CardVisualStyle.new()

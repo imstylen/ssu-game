@@ -40,6 +40,8 @@ Open `res://ui/card_base.tscn` in the Godot editor to change the shared card lay
 
 Every card displays its `CardDefinition.artwork` with an aspect-preserving cover crop. Cards without assigned artwork display `res://icon.svg` as a fallback.
 
+Compact cards in battle and the Deck Workshop automatically open a full-size, readable card preview while hovered. The preview is drawn above screen and scroll-container clipping and closes when the pointer leaves the compact card.
+
 For card-specific styling, create a `CardVisualStyle` resource and assign it to the card definition's **Visual Style** property. Disabled overrides inherit from `card_base.tscn`, so the base scene remains the single source of shared styling.
 
 The battle model is UI-independent. Card and enemy definitions are immutable `.tres` resources, while each battle owns its mutable session and emits presentation events through `BattleController`.
