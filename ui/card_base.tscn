@@ -105,7 +105,7 @@ corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
 [node name="CardBase" type="Button"]
-custom_minimum_size = Vector2(218, 330)
+custom_minimum_size = Vector2(218, 395)
 clip_contents = true
 mouse_default_cursor_shape = 0
 focus_mode = 0
@@ -189,8 +189,9 @@ text = "ACTION"
 
 [node name="ArtworkFrame" type="PanelContainer" parent="ContentMargin/ContentStack"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 118)
+custom_minimum_size = Vector2(180, 180)
 layout_mode = 2
+size_flags_horizontal = 4
 clip_contents = true
 mouse_filter = 2
 theme_override_styles/panel = SubResource("ArtworkPanel")

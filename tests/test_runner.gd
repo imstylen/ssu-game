@@ -64,7 +64,8 @@ func _test_card_base_artwork_and_style() -> void:
 	_expect(artwork_rect.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED, "Artwork uses aspect-preserving cover crop")
 	artwork_view.set_compact()
 	_expect(artwork_rect.visible and artwork_rect.is_visible_in_tree(), "Compact cards retain visible artwork")
-	_expect(artwork_view.get_node("%ArtworkFrame").custom_minimum_size.y == artwork_view.compact_artwork_height, "Compact cards use the compact artwork height")
+	var compact_artwork_size: Vector2 = artwork_view.get_node("%ArtworkFrame").custom_minimum_size
+	_expect(compact_artwork_size == Vector2.ONE * artwork_view.compact_artwork_size, "Compact cards use a square artwork frame")
 	artwork_view.mouse_entered.emit()
 	var hover_layer := root.get_node_or_null("CardHoverPreviewLayer") as CanvasLayer
 	var hover_card: CardBase = hover_layer.get_node_or_null("FullCardPreview") if hover_layer != null else null
@@ -72,6 +73,8 @@ func _test_card_base_artwork_and_style() -> void:
 	_expect(hover_card != null and not hover_card.compact, "Hover preview uses the full card layout")
 	_expect(hover_card != null and hover_card.get_node("%DescriptionLabel").visible, "Hover preview exposes readable description text")
 	_expect(hover_card != null and hover_card.get_displayed_artwork() == _shield_bot.artwork, "Hover preview preserves the card artwork")
+	var full_artwork_size: Vector2 = hover_card.get_node("%ArtworkFrame").custom_minimum_size if hover_card != null else Vector2.ZERO
+	_expect(hover_card != null and full_artwork_size == Vector2.ONE * hover_card.full_artwork_size, "Full cards use a square artwork frame")
 	artwork_view.mouse_exited.emit()
 	_expect(root.get_node_or_null("CardHoverPreviewLayer") == null, "Hover preview is removed when the pointer leaves")
 

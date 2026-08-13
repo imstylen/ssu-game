@@ -17,16 +17,16 @@ const FALLBACK_ARTWORK: Texture2D = preload("res://icon.svg")
 		_queue_editor_preview_refresh()
 
 @export_group("Full Layout")
-@export var full_minimum_size := Vector2(218, 330)
+@export var full_minimum_size := Vector2(218, 395)
 @export_range(0, 40, 1) var full_content_margin: int = 10
 @export_range(0, 30, 1) var full_separation: int = 7
-@export_range(1, 300, 1) var full_artwork_height: int = 118
+@export_range(1, 300, 1) var full_artwork_size: int = 180
 
 @export_group("Compact Layout")
 @export var compact_minimum_size := Vector2(164, 188)
 @export_range(0, 40, 1) var compact_content_margin: int = 7
 @export_range(0, 30, 1) var compact_separation: int = 3
-@export_range(1, 300, 1) var compact_artwork_height: int = 70
+@export_range(1, 300, 1) var compact_artwork_size: int = 70
 @export_range(1, 96, 1) var compact_title_font_size: int = 16
 @export_range(1, 96, 1) var compact_body_font_size: int = 11
 @export_range(1, 96, 1) var compact_stats_font_size: int = 13
@@ -185,7 +185,8 @@ func _apply_layout() -> void:
 		"separation",
 		compact_separation if compact else full_separation
 	)
-	_artwork_frame.custom_minimum_size.y = compact_artwork_height if compact else full_artwork_height
+	var artwork_size := compact_artwork_size if compact else full_artwork_size
+	_artwork_frame.custom_minimum_size = Vector2(artwork_size, artwork_size)
 	_description_label.visible = not compact
 	_footer_label.visible = not footer_text.is_empty()
 	if compact:

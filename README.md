@@ -38,7 +38,7 @@ godot --headless --path . -- --smoke-test
 
 Open `res://ui/card_base.tscn` in the Godot editor to change the shared card layout, colors, fonts, artwork frame, background texture, and decorative overlay. The scene displays Life Drain as a live editor preview; choose another resource in **Editor Preview Definition** to preview a different card, or toggle **Editor Preview Compact** to inspect the battle/deck-builder layout.
 
-Every card displays its `CardDefinition.artwork` with an aspect-preserving cover crop. Cards without assigned artwork display `res://icon.svg` as a fallback.
+Every card displays its `CardDefinition.artwork` in a centered 1:1 frame with an aspect-preserving cover crop. Cards without assigned artwork display `res://icon.svg` as a fallback.
 
 Compact cards in battle and the Deck Workshop automatically open a full-size, readable card preview while hovered. The preview is drawn above screen and scroll-container clipping and closes when the pointer leaves the compact card.
 
