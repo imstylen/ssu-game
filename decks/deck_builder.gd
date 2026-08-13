@@ -1,6 +1,6 @@
 extends Control
 
-const CARD_VIEW_SCENE := preload("res://ui/card_view.tscn")
+const CARD_BASE_SCENE := preload("res://ui/card_base.tscn")
 
 var _deck_list: ItemList
 var _name_edit: LineEdit
@@ -165,7 +165,7 @@ func _rebuild_catalog() -> void:
 		cell.add_theme_constant_override("separation", 6)
 		_card_grid.add_child(cell)
 		var count := _working_ids.count(definition.id)
-		var view: CardView = CARD_VIEW_SCENE.instantiate()
+		var view: CardBase = CARD_BASE_SCENE.instantiate()
 		view.setup_definition(definition, "")
 		view.set_compact()
 		cell.add_child(view)

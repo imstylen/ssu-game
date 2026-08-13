@@ -369,8 +369,8 @@ res://
 ├── collection/
 │   └── collection_scene.tscn
 ├── ui/
-│   ├── card_view.tscn
-│   ├── card_view.gd
+│   ├── card_base.tscn
+│   ├── card_base.gd
 │   └── components/
 └── tests/
 ```

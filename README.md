@@ -34,4 +34,12 @@ godot --headless --path . -- --smoke-test
 - Destroyed and played one-shot cards enter the discard pile and reshuffle when needed.
 - The Deck Workshop saves changes to `user://profile.json`; missing-card and otherwise invalid decks remain editable but cannot deploy.
 
+## Editing card visuals
+
+Open `res://ui/card_base.tscn` in the Godot editor to change the shared card layout, colors, fonts, artwork frame, background texture, and decorative overlay. The scene displays Life Drain as a live editor preview; choose another resource in **Editor Preview Definition** to preview a different card, or toggle **Editor Preview Compact** to inspect the battle/deck-builder layout.
+
+Every card displays its `CardDefinition.artwork` with an aspect-preserving cover crop. Cards without assigned artwork display `res://icon.svg` as a fallback.
+
+For card-specific styling, create a `CardVisualStyle` resource and assign it to the card definition's **Visual Style** property. Disabled overrides inherit from `card_base.tscn`, so the base scene remains the single source of shared styling.
+
 The battle model is UI-independent. Card and enemy definitions are immutable `.tres` resources, while each battle owns its mutable session and emits presentation events through `BattleController`.

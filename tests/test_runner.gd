@@ -6,6 +6,7 @@ var _shield_bot: CardDefinition
 var _arc_bolt: CardDefinition
 var _life_drain: CardDefinition
 var _enemy: EnemyDefinition
+var _catalog
 
 
 func _init() -> void:
@@ -13,11 +14,14 @@ func _init() -> void:
 
 
 func _run_all() -> void:
-	_shield_bot = load("res://cards/definitions/shield_bot.tres")
-	_arc_bolt = load("res://cards/definitions/arc_bolt.tres")
-	_life_drain = load("res://cards/definitions/life_drain.tres")
-	_enemy = load("res://enemies/definitions/siege_core.tres")
+	_catalog = load("res://autoload/card_catalog.gd").new()
+	_catalog.reload_catalog()
+	_shield_bot = _catalog.get_card(&"shield_bot")
+	_arc_bolt = _catalog.get_card(&"arc_bolt")
+	_life_drain = _catalog.get_card(&"life_drain")
+	_enemy = _catalog.get_enemy(&"siege_core")
 	_test_content_resources()
+	_test_card_base_artwork_and_style()
 	_test_battle_setup()
 	_test_damage_action()
 	_test_life_drain()
@@ -28,6 +32,7 @@ func _run_all() -> void:
 	_test_victory_and_defeat()
 	_test_complete_battle_loop()
 	_test_deck_rules_and_serialization()
+	_catalog.free()
 	if _failures == 0:
 		print("TESTS_OK: %d assertions" % _assertions)
 	else:
@@ -45,10 +50,49 @@ func _test_content_resources() -> void:
 	for definition in [_shield_bot, _arc_bolt, _life_drain]:
 		_expect(definition.validation_errors().is_empty(), "%s validates" % definition.display_name)
 	_expect(_enemy.validation_errors().is_empty(), "Enemy validates")
-	var catalog = load("res://autoload/card_catalog.gd").new()
-	catalog.reload_catalog()
-	_expect(catalog.validation_errors.is_empty(), "Catalog scan reports no content errors")
-	catalog.free()
+	_expect(_catalog.validation_errors.is_empty(), "Catalog scan reports no content errors")
+
+
+func _test_card_base_artwork_and_style() -> void:
+	var card_scene: PackedScene = load("res://ui/card_base.tscn")
+	_expect(card_scene != null, "Card base scene loads")
+	var artwork_view: CardBase = card_scene.instantiate()
+	artwork_view.setup_definition(_shield_bot)
+	root.add_child(artwork_view)
+	_expect(artwork_view.get_displayed_artwork() == _shield_bot.artwork, "Assigned artwork reaches the card TextureRect")
+	var artwork_rect: TextureRect = artwork_view.get_node("%Artwork")
+	_expect(artwork_rect.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_COVERED, "Artwork uses aspect-preserving cover crop")
+	artwork_view.set_compact()
+	_expect(artwork_rect.visible and artwork_rect.is_visible_in_tree(), "Compact cards retain visible artwork")
+	_expect(artwork_view.get_node("%ArtworkFrame").custom_minimum_size.y == artwork_view.compact_artwork_height, "Compact cards use the compact artwork height")
+
+	var fallback_view: CardBase = card_scene.instantiate()
+	fallback_view.setup_definition(_arc_bolt)
+	root.add_child(fallback_view)
+	_expect(fallback_view.get_displayed_artwork() == load("res://icon.svg"), "Missing artwork uses the project icon")
+
+	var styled_definition: CardDefinition = _arc_bolt.duplicate(true)
+	var visual_style := CardVisualStyle.new()
+	visual_style.override_panel_color = true
+	visual_style.panel_color = Color("#8f2454")
+	visual_style.override_title_color = true
+	visual_style.title_color = Color("#ffcfef")
+	styled_definition.visual_style = visual_style
+	var styled_view: CardBase = card_scene.instantiate()
+	styled_view.setup_definition(styled_definition)
+	root.add_child(styled_view)
+	var styled_box := styled_view.get_theme_stylebox("normal") as StyleBoxFlat
+	var plain_box := fallback_view.get_theme_stylebox("normal") as StyleBoxFlat
+	_expect(styled_box != null and styled_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card panel color is applied")
+	_expect(plain_box != null and not plain_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card style does not leak to another instance")
+	var styled_title: Label = styled_view.get_node("%NameLabel")
+	var plain_title: Label = fallback_view.get_node("%NameLabel")
+	_expect(styled_title.get_theme_color("font_color").is_equal_approx(visual_style.title_color), "Per-card title color is applied")
+	_expect(not plain_title.get_theme_color("font_color").is_equal_approx(visual_style.title_color), "Per-card text style remains isolated")
+
+	artwork_view.free()
+	fallback_view.free()
+	styled_view.free()
 
 
 func _test_battle_setup() -> void:

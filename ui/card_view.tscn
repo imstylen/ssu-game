@@ -1,8 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://ui/card_view.gd" id="1_card_view"]
-
-[node name="CardView" type="Button"]
-custom_minimum_size = Vector2(218, 278)
-text = ""
-script = ExtResource("1_card_view")

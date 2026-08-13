@@ -1,6 +1,6 @@
 extends Control
 
-const CARD_VIEW_SCENE := preload("res://ui/card_view.tscn")
+const CARD_BASE_SCENE := preload("res://ui/card_base.tscn")
 
 @onready var controller: BattleController = $BattleController
 
@@ -248,7 +248,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 		container.add_child(empty)
 		return
 	for card in cards:
-		var view: CardView = CARD_VIEW_SCENE.instantiate()
+		var view: CardBase = CARD_BASE_SCENE.instantiate()
 		var available := controller.can_attack_enemy(card.instance_id) if on_board else controller.can_play_card(card.instance_id)
 		var footer := "READY TO ATTACK" if on_board and available else ""
 		view.setup_instance(card, footer)

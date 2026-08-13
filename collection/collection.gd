@@ -1,6 +1,6 @@
 extends Control
 
-const CARD_VIEW_SCENE := preload("res://ui/card_view.tscn")
+const CARD_BASE_SCENE := preload("res://ui/card_base.tscn")
 
 
 func _ready() -> void:
@@ -47,8 +47,7 @@ func _build_ui() -> void:
 	var selected := ProfileStore.get_selected_deck()
 	for definition in CardCatalog.get_all_cards():
 		var copies := selected.card_ids.count(definition.id) if selected != null else 0
-		var card_view: CardView = CARD_VIEW_SCENE.instantiate()
+		var card_view: CardBase = CARD_BASE_SCENE.instantiate()
 		card_view.setup_definition(definition, "IN ACTIVE DECK: %d / %d" % [copies, ProfileStore.deck_rules.duplicate_card_limit])
 		grid.add_child(card_view)
-
 

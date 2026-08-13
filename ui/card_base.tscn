@@ -1,0 +1,283 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://ui/card_base.gd" id="1_card_base"]
+[ext_resource type="Resource" path="res://cards/definitions/life_drain/life_drain.tres" id="2_preview"]
+[ext_resource type="Texture2D" path="res://cards/definitions/life_drain/life_drain.png" id="3_preview_art"]
+
+[sub_resource type="StyleBoxFlat" id="CardNormal"]
+bg_color = Color(0.078, 0.133, 0.243, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.204, 0.286, 0.431, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="CardHover"]
+bg_color = Color(0.105, 0.18, 0.314, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.263, 0.851, 0.71, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="CardPressed"]
+bg_color = Color(0.055, 0.102, 0.192, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.784, 0.341, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="CardDisabled"]
+bg_color = Color(0.044, 0.071, 0.129, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.133, 0.176, 0.259, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="CardFocus"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.263, 0.851, 0.71, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="ArtworkPanel"]
+bg_color = Color(0.027, 0.047, 0.098, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.204, 0.286, 0.431, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="CostPanel"]
+bg_color = Color(0.09, 0.247, 0.259, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.263, 0.851, 0.71, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="InteractionOutline"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.263, 0.851, 0.71, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="CardBase" type="Button"]
+custom_minimum_size = Vector2(218, 330)
+clip_contents = true
+mouse_default_cursor_shape = 0
+focus_mode = 0
+theme_override_styles/normal = SubResource("CardNormal")
+theme_override_styles/hover = SubResource("CardHover")
+theme_override_styles/pressed = SubResource("CardPressed")
+theme_override_styles/disabled = SubResource("CardDisabled")
+theme_override_styles/focus = SubResource("CardFocus")
+text = ""
+script = ExtResource("1_card_base")
+editor_preview_definition = ExtResource("2_preview")
+
+[node name="CardBackground" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ContentMargin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ContentStack" type="VBoxContainer" parent="ContentMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 7
+
+[node name="Header" type="HBoxContainer" parent="ContentMargin/ContentStack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="ContentMargin/ContentStack/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.91, 0.941, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "Life Drain"
+text_overrun_behavior = 3
+
+[node name="CostBadge" type="PanelContainer" parent="ContentMargin/ContentStack/Header"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("CostPanel")
+
+[node name="CostLabel" type="Label" parent="ContentMargin/ContentStack/Header/CostBadge"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_font_sizes/font_size = 18
+text = "3"
+horizontal_alignment = 1
+
+[node name="TypeLabel" type="Label" parent="ContentMargin/ContentStack"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.263, 0.851, 0.71, 1)
+theme_override_font_sizes/font_size = 12
+text = "ACTION"
+
+[node name="ArtworkFrame" type="PanelContainer" parent="ContentMargin/ContentStack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 118)
+layout_mode = 2
+clip_contents = true
+mouse_filter = 2
+theme_override_styles/panel = SubResource("ArtworkPanel")
+
+[node name="Artwork" type="TextureRect" parent="ContentMargin/ContentStack/ArtworkFrame"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_preview_art")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="DescriptionLabel" type="Label" parent="ContentMargin/ContentStack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.569, 0.643, 0.784, 1)
+theme_override_font_sizes/font_size = 15
+text = "Deal 3 damage and restore 3 commander health."
+autowrap_mode = 2
+vertical_alignment = 1
+
+[node name="StatsRow" type="HBoxContainer" parent="ContentMargin/ContentStack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="AttackLabel" type="Label" parent="ContentMargin/ContentStack/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_font_sizes/font_size = 17
+text = "ATK 2"
+
+[node name="ActionLabel" type="Label" parent="ContentMargin/ContentStack/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_font_sizes/font_size = 17
+text = "ONE-SHOT"
+horizontal_alignment = 1
+
+[node name="HealthLabel" type="Label" parent="ContentMargin/ContentStack/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.784, 0.341, 1)
+theme_override_font_sizes/font_size = 17
+text = "HP 5"
+horizontal_alignment = 2
+
+[node name="FooterLabel" type="Label" parent="ContentMargin/ContentStack"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.263, 0.851, 0.71, 1)
+theme_override_font_sizes/font_size = 11
+text = "EDITOR PREVIEW"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="FrameOverlay" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="InteractiveOutline" type="Panel" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("InteractionOutline")

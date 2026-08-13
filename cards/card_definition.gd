@@ -15,6 +15,7 @@ enum CardType {
 @export_range(1, 100) var health: int = 1
 @export_range(0, 20) var cost: int = 0
 @export var behavior: CardBehavior
+@export var visual_style: CardVisualStyle
 
 
 func validation_errors() -> PackedStringArray:
