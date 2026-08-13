@@ -1,5 +1,7 @@
 extends Control
 
+const MENU_HERO: Texture2D = preload("res://main/art/access_allies_menu_hero.png")
+
 var _deck_status: Label
 var _battle_button: Button
 var _notice: Label
@@ -34,16 +36,31 @@ func _build_ui() -> void:
 	var eyebrow := Label.new()
 	eyebrow.text = "A COZY CARD ADVENTURE"
 	eyebrow.add_theme_font_size_override("font_size", 16)
-	eyebrow.add_theme_color_override("font_color", AppTheme.ACCENT)
+	eyebrow.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
 	identity.add_child(eyebrow)
 	var title := AppTheme.heading("ACCESS ALLIES", 58)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	identity.add_child(title)
+	var hero_panel := PanelContainer.new()
+	hero_panel.name = "MenuHeroPanel"
+	hero_panel.custom_minimum_size.y = 180
+	hero_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hero_panel.clip_contents = true
+	hero_panel.add_theme_stylebox_override("panel", AppTheme.style_box(AppTheme.SURFACE, AppTheme.INK, 22, 3, 0))
+	identity.add_child(hero_panel)
+	var hero := TextureRect.new()
+	hero.name = "MenuHeroArtwork"
+	hero.texture = MENU_HERO
+	hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hero.tooltip_text = "The Access Allies sharing a cozy map and planning their next barrier-busting adventure."
+	hero_panel.add_child(hero)
 	var description := Label.new()
 	description.text = "Disabled and neurodivergent animal allies sharing support, one barrier at a time."
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.add_theme_font_size_override("font_size", 22)
-	description.add_theme_color_override("font_color", AppTheme.MUTED)
+	description.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	identity.add_child(description)
 	var rule := HSeparator.new()
 	rule.custom_minimum_size.y = 20
@@ -52,7 +69,7 @@ func _build_ui() -> void:
 	features.text = "PLAY ALLIES • SHARE SUPPORT • BUST BARRIERS"
 	features.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	features.add_theme_font_size_override("font_size", 15)
-	features.add_theme_color_override("font_color", AppTheme.GOLD)
+	features.add_theme_color_override("font_color", AppTheme.GOLD_TEXT)
 	identity.add_child(features)
 	var menu_panel := PanelContainer.new()
 	menu_panel.custom_minimum_size.x = 390
@@ -69,7 +86,7 @@ func _build_ui() -> void:
 	menu.add_child(AppTheme.heading("YOUR COZY CORNER", 28))
 	_deck_status = Label.new()
 	_deck_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_deck_status.add_theme_color_override("font_color", AppTheme.MUTED)
+	_deck_status.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	menu.add_child(_deck_status)
 	_battle_button = AppTheme.button("START AN ADVENTURE")
 	_battle_button.pressed.connect(_start_battle)
@@ -83,7 +100,7 @@ func _build_ui() -> void:
 	_notice = Label.new()
 	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_notice.add_theme_font_size_override("font_size", 14)
-	_notice.add_theme_color_override("font_color", AppTheme.DANGER)
+	_notice.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
 	menu.add_child(_notice)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -91,7 +108,7 @@ func _build_ui() -> void:
 	var version := Label.new()
 	version.text = "COZY OFFLINE PROFILE • SAVED ON THIS DEVICE"
 	version.add_theme_font_size_override("font_size", 13)
-	version.add_theme_color_override("font_color", AppTheme.MUTED)
+	version.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	menu.add_child(version)
 
 
@@ -108,7 +125,7 @@ func _refresh() -> void:
 		]
 	_battle_button.disabled = not errors.is_empty()
 	_notice.text = "Your deck needs a little help: %s" % errors[0] if not errors.is_empty() else "Saved here • Ready for an adventure!"
-	_notice.add_theme_color_override("font_color", AppTheme.DANGER if not errors.is_empty() else AppTheme.ACCENT)
+	_notice.add_theme_color_override("font_color", AppTheme.DANGER_TEXT if not errors.is_empty() else AppTheme.ACCENT_TEXT)
 
 
 func _start_battle() -> void:

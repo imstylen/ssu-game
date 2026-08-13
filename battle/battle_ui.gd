@@ -56,7 +56,7 @@ func _build_ui() -> void:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_turn_label = Label.new()
-	_turn_label.add_theme_color_override("font_color", AppTheme.MUTED)
+	_turn_label.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	header.add_child(_turn_label)
 	var retreat := AppTheme.button("TAKE A BREAK", 160)
 	retreat.pressed.connect(SceneNavigator.go_to_main_menu)
@@ -77,16 +77,16 @@ func _build_ui() -> void:
 	var enemy_identity := VBoxContainer.new()
 	enemy_identity.custom_minimum_size.x = 330
 	enemy_row.add_child(enemy_identity)
-	_enemy_name = AppTheme.heading("ABLEISM MONSTER", 24, AppTheme.DANGER)
+	_enemy_name = AppTheme.heading("ABLEISM MONSTER", 24, AppTheme.DANGER_TEXT)
 	enemy_identity.add_child(_enemy_name)
 	_enemy_description = Label.new()
 	_enemy_description.custom_minimum_size.x = 330
 	_enemy_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_enemy_description.add_theme_font_size_override("font_size", 13)
-	_enemy_description.add_theme_color_override("font_color", AppTheme.MUTED)
+	_enemy_description.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	enemy_identity.add_child(_enemy_description)
 	_intent_label = Label.new()
-	_intent_label.add_theme_color_override("font_color", AppTheme.GOLD)
+	_intent_label.add_theme_color_override("font_color", AppTheme.GOLD_TEXT)
 	enemy_identity.add_child(_intent_label)
 	_enemy_health = ProgressBar.new()
 	_enemy_health.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -110,7 +110,7 @@ func _build_ui() -> void:
 	var board_heading := Label.new()
 	board_heading.text = "ALLY CIRCLE  •  Allies help automatically at the start of each round"
 	board_heading.add_theme_font_size_override("font_size", 14)
-	board_heading.add_theme_color_override("font_color", AppTheme.MUTED)
+	board_heading.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	board_stack.add_child(board_heading)
 	var board_scroll := ScrollContainer.new()
 	board_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -128,7 +128,7 @@ func _build_ui() -> void:
 	var log_heading := Label.new()
 	log_heading.text = "STORY SO FAR"
 	log_heading.add_theme_font_size_override("font_size", 14)
-	log_heading.add_theme_color_override("font_color", AppTheme.ACCENT)
+	log_heading.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
 	log_stack.add_child(log_heading)
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
@@ -146,10 +146,10 @@ func _build_ui() -> void:
 	_toast = Label.new()
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_toast.add_theme_color_override("font_color", AppTheme.MUTED)
+	_toast.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	controls.add_child(_toast)
 	_piles_label = Label.new()
-	_piles_label.add_theme_color_override("font_color", AppTheme.MUTED)
+	_piles_label.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	controls.add_child(_piles_label)
 	_end_turn_button = AppTheme.button("END ROUND →", 170)
 	_end_turn_button.pressed.connect(controller.request_end_turn)
@@ -163,7 +163,7 @@ func _build_ui() -> void:
 	var hand_heading := Label.new()
 	hand_heading.text = "YOUR HAND  •  Choose an ally card to play it"
 	hand_heading.add_theme_font_size_override("font_size", 14)
-	hand_heading.add_theme_color_override("font_color", AppTheme.MUTED)
+	hand_heading.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	hand_stack.add_child(hand_heading)
 	var hand_scroll := ScrollContainer.new()
 	hand_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -214,7 +214,7 @@ func _build_result_layer() -> void:
 	_result_body = Label.new()
 	_result_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_result_body.add_theme_color_override("font_color", AppTheme.MUTED)
+	_result_body.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	stack.add_child(_result_body)
 	var retry := AppTheme.button("TRY ANOTHER MONSTER", 270)
 	retry.pressed.connect(func(): get_tree().reload_current_scene())
@@ -251,7 +251,7 @@ func _refresh() -> void:
 	var session := controller.session
 	_turn_label.text = "ROUND %d  •  %s" % [session.turn_number, session.phase_name().to_upper().replace("_", " ")]
 	_player_label.text = "TEAM HEART  %d / %d" % [session.player_health, session.rules.player_starting_health]
-	_player_label.add_theme_color_override("font_color", AppTheme.DANGER if session.player_health <= 10 else AppTheme.INK)
+	_player_label.add_theme_color_override("font_color", AppTheme.DANGER_TEXT if session.player_health <= 10 else AppTheme.INK)
 	_enemy_name.text = session.enemy.definition.display_name.to_upper()
 	_enemy_artwork.texture = session.enemy.definition.artwork if session.enemy.definition.artwork != null else load("res://icon.svg")
 	_enemy_artwork.tooltip_text = session.enemy.definition.description
@@ -275,7 +275,7 @@ func _refresh() -> void:
 		_result_layer.visible = true
 		var won := session.phase == BattleSession.Phase.VICTORY
 		_result_title.text = "BARRIER BUSTED!" if won else "TIME FOR A REST"
-		_result_title.add_theme_color_override("font_color", AppTheme.ACCENT if won else AppTheme.DANGER)
+		_result_title.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT if won else AppTheme.DANGER_TEXT)
 		_result_body.text = "%s's barriers came tumbling down. Great teamwork!" % session.enemy.definition.display_name if won else "The team needs a rest after round %d. A new plan and a snack can help." % session.turn_number
 
 
@@ -288,7 +288,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 	if cards.is_empty():
 		var empty := Label.new()
 		empty.text = "The Ally Circle has room for a friend." if on_board else "Your hand is empty for now."
-		empty.add_theme_color_override("font_color", AppTheme.MUTED)
+		empty.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 		empty.custom_minimum_size = Vector2(180, 120)
 		empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		container.add_child(empty)
@@ -391,8 +391,8 @@ func _show_damage_number(event: BattleEvent) -> void:
 
 func _event_message(event: BattleEvent) -> String:
 	match event.kind:
-		&"BattleStarted": return "A barrier appeared: [color=#D9547F]%s[/color]." % event.data.enemy_name
-		&"TurnStarted": return "[color=#279B82]Round %d started.[/color]" % event.data.turn
+		&"BattleStarted": return "A barrier appeared: [color=#A52E57]%s[/color]." % event.data.enemy_name
+		&"TurnStarted": return "[color=#176B59]Round %d started.[/color]" % event.data.turn
 		&"CardDrawn": return "%s joined your hand." % event.data.name
 		&"CardPlayed": return "[color=#A56716]%s[/color] joined the adventure." % event.data.name
 		&"UnitAttacked": return "%s helped for %d Power." % [event.data.name, event.data.amount]
@@ -402,22 +402,22 @@ func _event_message(event: BattleEvent) -> String:
 				return "%s lost %d Heart." % [event.data.name, event.data.amount]
 			return "%s lost %d Heart." % ["The monster" if event.data.target == "enemy" else "The team", event.data.amount]
 		&"HealingApplied": return "%s restored %d Heart." % ["The team" if event.data.target == "player" else "The monster", event.data.amount]
-		&"CardDestroyed": return "[color=#D9547F]%s needs a rest.[/color]" % event.data.name
+		&"CardDestroyed": return "[color=#A52E57]%s needs a rest.[/color]" % event.data.name
 		&"DiscardReshuffled": return "The rest pile became a fresh deck."
 		&"CardBurned": return "%s moved to the rest pile because your hand is full." % event.data.name
-		&"BattleEnded": return "[color=#279B82]Barrier busted![/color]" if event.data.result == "victory" else "[color=#D9547F]The team needs a rest.[/color]"
+		&"BattleEnded": return "[color=#176B59]Barrier busted![/color]" if event.data.result == "victory" else "[color=#A52E57]The team needs a rest.[/color]"
 	return ""
 
 
 func _show_message(message: String) -> void:
 	_toast.text = message
-	_toast.add_theme_color_override("font_color", AppTheme.DANGER)
+	_toast.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
 
 
 func _show_blocking_error(title: String, body: String) -> void:
 	_result_layer.visible = true
 	_result_title.text = title.to_upper()
-	_result_title.add_theme_color_override("font_color", AppTheme.DANGER)
+	_result_title.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
 	_result_body.text = body
 
 

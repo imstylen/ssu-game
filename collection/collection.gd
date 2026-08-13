@@ -28,7 +28,7 @@ func _build_ui() -> void:
 	title_stack.add_child(AppTheme.heading("ALLY ALBUM", 36))
 	var subtitle := Label.new()
 	subtitle.text = "Meet every disabled and neurodivergent animal ally. Everyone is unlocked."
-	subtitle.add_theme_color_override("font_color", AppTheme.MUTED)
+	subtitle.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	title_stack.add_child(subtitle)
 	var back := AppTheme.button("← COZY CORNER", 210)
 	back.pressed.connect(SceneNavigator.go_to_main_menu)

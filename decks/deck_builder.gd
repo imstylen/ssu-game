@@ -42,7 +42,7 @@ func _build_ui() -> void:
 	title_stack.add_child(AppTheme.heading("COZY DECK BUILDER", 34))
 	var subtitle := Label.new()
 	subtitle.text = "Mix 1–20 ally cards • up to 2 copies of each friend"
-	subtitle.add_theme_color_override("font_color", AppTheme.MUTED)
+	subtitle.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	title_stack.add_child(subtitle)
 	var back := AppTheme.button("← COZY CORNER", 210)
 	back.pressed.connect(SceneNavigator.go_to_main_menu)
@@ -79,7 +79,7 @@ func _build_ui() -> void:
 	var name_label := Label.new()
 	name_label.text = "DECK NAME"
 	name_label.custom_minimum_size.x = 120
-	name_label.add_theme_color_override("font_color", AppTheme.MUTED)
+	name_label.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	name_row.add_child(name_label)
 	_name_edit = LineEdit.new()
 	_name_edit.max_length = 40
@@ -119,7 +119,7 @@ func _build_ui() -> void:
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	hint.add_theme_font_size_override("font_size", 13)
-	hint.add_theme_color_override("font_color", AppTheme.MUTED)
+	hint.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	actions.add_child(hint)
 	_delete_dialog = ConfirmationDialog.new()
 	_delete_dialog.title = "Remove this deck?"
@@ -196,7 +196,7 @@ func _rebuild_catalog() -> void:
 		var label := Label.new()
 		label.text = "ALLY DETAILS MISSING\n%s\n%d copies" % [card_id, _working_ids.count(card_id)]
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.add_theme_color_override("font_color", AppTheme.DANGER)
+		label.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
 		missing_stack.add_child(label)
 		var remove := AppTheme.button("REMOVE ONE")
 		remove.pressed.connect(_remove_card.bind(card_id))
@@ -208,13 +208,13 @@ func _refresh_validation(saved_message: String = "") -> void:
 	var errors := ProfileStore.deck_rules.validate(_working_ids, CardCatalog)
 	if not saved_message.is_empty():
 		_validation_label.text = saved_message
-		_validation_label.add_theme_color_override("font_color", AppTheme.ACCENT)
+		_validation_label.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
 	elif errors.is_empty():
 		_validation_label.text = "✓ Your allies are ready!"
-		_validation_label.add_theme_color_override("font_color", AppTheme.ACCENT)
+		_validation_label.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
 	else:
 		_validation_label.text = " • ".join(errors)
-		_validation_label.add_theme_color_override("font_color", AppTheme.DANGER)
+		_validation_label.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
 	_save_button.disabled = _working_deck_id.is_empty()
 	_play_button.disabled = not errors.is_empty()
 

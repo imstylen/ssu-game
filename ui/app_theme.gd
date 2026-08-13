@@ -10,6 +10,11 @@ const ACCENT := Color("#48CFAE")
 const ACCENT_DARK := Color("#D6F8ED")
 const DANGER := Color("#D9547F")
 const GOLD := Color("#F4B942")
+## Dark semantic variants for text on blush, cream, and pastel surfaces.
+const SECONDARY_TEXT := Color("#695271")
+const ACCENT_TEXT := Color("#176B59")
+const DANGER_TEXT := Color("#A52E57")
+const GOLD_TEXT := Color("#805600")
 const FREDOKA: FontFile = preload("res://assets/fonts/Fredoka-Variable.ttf")
 
 
@@ -22,13 +27,17 @@ static func create_theme() -> Theme:
 	theme.set_color("font_color", "Button", INK)
 	theme.set_color("font_hover_color", "Button", INK)
 	theme.set_color("font_pressed_color", "Button", INK)
-	theme.set_color("font_disabled_color", "Button", Color("#A994B0"))
+	theme.set_color("font_disabled_color", "Button", Color("#735D7A"))
 	theme.set_color("font_color", "LineEdit", INK)
-	theme.set_color("font_placeholder_color", "LineEdit", MUTED)
+	theme.set_color("font_placeholder_color", "LineEdit", SECONDARY_TEXT)
+	theme.set_color("caret_color", "LineEdit", INK)
+	theme.set_color("selection_color", "LineEdit", ACCENT_DARK)
 	theme.set_color("font_color", "ItemList", INK)
 	theme.set_color("font_selected_color", "ItemList", INK)
 	theme.set_color("font_color", "RichTextLabel", INK)
 	theme.set_color("font_color", "ProgressBar", INK)
+	theme.set_color("font_color", "TooltipLabel", INK)
+	theme.set_font_size("font_size", "TooltipLabel", 16)
 	theme.set_font_size("font_size", "Button", 17)
 	theme.set_font_size("font_size", "LineEdit", 18)
 	theme.set_constant("outline_size", "Label", 0)
@@ -46,6 +55,7 @@ static func create_theme() -> Theme:
 	theme.set_stylebox("selected_focus", "ItemList", style_box(ACCENT_DARK, INK, 7, 3, 6))
 	theme.set_stylebox("background", "ProgressBar", style_box(Color("#F3DCE7"), Color("#D9B5C8"), 10, 1, 0))
 	theme.set_stylebox("fill", "ProgressBar", style_box(DANGER, DANGER, 7, 0, 0))
+	theme.set_stylebox("panel", "TooltipPanel", style_box(SURFACE, INK, 10, 2, 10))
 	return theme
 
 

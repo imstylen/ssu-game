@@ -54,6 +54,7 @@ func _run_all() -> void:
 	_test_deck_rules_and_serialization()
 	_test_profile_migration()
 	_test_font_license_and_copy()
+	_test_legible_theme_colors()
 	await _test_enemy_portrait_binding()
 	_catalog.free()
 	if _failures == 0:
@@ -398,6 +399,20 @@ func _test_font_license_and_copy() -> void:
 		_expect(player_copy.contains(required), "Required warm interface string is present: %s" % required)
 
 
+func _test_legible_theme_colors() -> void:
+	for entry in [
+		[AppTheme.INK, AppTheme.SURFACE, "primary text"],
+		[AppTheme.SECONDARY_TEXT, AppTheme.SURFACE, "secondary text"],
+		[AppTheme.ACCENT_TEXT, AppTheme.SURFACE, "positive text"],
+		[AppTheme.DANGER_TEXT, AppTheme.SURFACE, "danger text"],
+		[AppTheme.GOLD_TEXT, AppTheme.SURFACE, "highlight text"],
+		[Color("#735D7A"), Color("#F5EAF0"), "disabled button text"],
+	]:
+		_expect(_contrast_ratio(entry[0], entry[1]) >= 4.5, "%s meets 4.5:1 contrast" % entry[2])
+	var menu_source := FileAccess.get_file_as_string("res://main/main.gd")
+	_expect(menu_source.contains("access_allies_menu_hero.png"), "Main menu references the dedicated hero artwork")
+
+
 func _test_enemy_portrait_binding() -> void:
 	var packed: PackedScene = load("res://battle/battle_scene.tscn")
 	var battle_ui = packed.instantiate()
@@ -485,6 +500,19 @@ func _unique_values(values: Array) -> Array:
 		if value not in unique:
 			unique.append(value)
 	return unique
+
+
+func _contrast_ratio(foreground: Color, background: Color) -> float:
+	var foreground_luminance := _relative_luminance(foreground)
+	var background_luminance := _relative_luminance(background)
+	return (maxf(foreground_luminance, background_luminance) + 0.05) / (minf(foreground_luminance, background_luminance) + 0.05)
+
+
+func _relative_luminance(color: Color) -> float:
+	var red := color.r / 12.92 if color.r <= 0.04045 else pow((color.r + 0.055) / 1.055, 2.4)
+	var green := color.g / 12.92 if color.g <= 0.04045 else pow((color.g + 0.055) / 1.055, 2.4)
+	var blue := color.b / 12.92 if color.b <= 0.04045 else pow((color.b + 0.055) / 1.055, 2.4)
+	return 0.2126 * red + 0.7152 * green + 0.0722 * blue
 
 
 func _expect(condition: bool, message: String) -> void:
