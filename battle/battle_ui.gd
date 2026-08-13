@@ -1,12 +1,16 @@
 extends Control
 
 const CARD_BASE_SCENE := preload("res://ui/card_base.tscn")
+const SPARK_AVAILABLE_TEXTURE: Texture2D = preload("res://battle/art/spark_available.png")
+const SPARK_SPENT_TEXTURE: Texture2D = preload("res://battle/art/spark_spent.png")
 
 @onready var controller: BattleController = $BattleController
 
 var _turn_label: Label
-var _player_label: Label
-var _energy_label: Label
+var _player_health: ProgressBar
+var _player_health_text: Label
+var _spark_row: HBoxContainer
+var _spark_icons: Array[TextureRect] = []
 var _enemy_name: Label
 var _enemy_artwork: TextureRect
 var _enemy_description: Label
@@ -62,43 +66,56 @@ func _build_ui() -> void:
 	retreat.pressed.connect(SceneNavigator.go_to_main_menu)
 	header.add_child(retreat)
 	var enemy_panel := PanelContainer.new()
-	enemy_panel.custom_minimum_size.y = 118
+	enemy_panel.name = "EnemyEncounterPanel"
+	enemy_panel.custom_minimum_size.y = 292
+	enemy_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root_stack.add_child(enemy_panel)
 	var enemy_row := HBoxContainer.new()
-	enemy_row.add_theme_constant_override("separation", 14)
+	enemy_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	enemy_row.add_theme_constant_override("separation", 22)
 	enemy_panel.add_child(enemy_row)
 	_enemy_artwork = TextureRect.new()
 	_enemy_artwork.name = "EnemyArtwork"
-	_enemy_artwork.custom_minimum_size = Vector2(88, 88)
+	_enemy_artwork.custom_minimum_size = Vector2(240, 240)
+	_enemy_artwork.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_enemy_artwork.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_enemy_artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_enemy_artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_enemy_artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	enemy_row.add_child(_enemy_artwork)
-	var enemy_identity := VBoxContainer.new()
-	enemy_identity.custom_minimum_size.x = 330
-	enemy_row.add_child(enemy_identity)
-	_enemy_name = AppTheme.heading("ABLEISM MONSTER", 24, AppTheme.DANGER_TEXT)
-	enemy_identity.add_child(_enemy_name)
+	var encounter_details := VBoxContainer.new()
+	encounter_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	encounter_details.alignment = BoxContainer.ALIGNMENT_CENTER
+	encounter_details.add_theme_constant_override("separation", 12)
+	enemy_row.add_child(encounter_details)
+	var enemy_header := HBoxContainer.new()
+	encounter_details.add_child(enemy_header)
+	_enemy_name = AppTheme.heading("ABLEISM MONSTER", 32, AppTheme.DANGER_TEXT)
+	_enemy_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	enemy_header.add_child(_enemy_name)
 	_enemy_description = Label.new()
-	_enemy_description.custom_minimum_size.x = 330
 	_enemy_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_enemy_description.add_theme_font_size_override("font_size", 13)
+	_enemy_description.add_theme_font_size_override("font_size", 18)
 	_enemy_description.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
-	enemy_identity.add_child(_enemy_description)
+	encounter_details.add_child(_enemy_description)
 	_intent_label = Label.new()
+	_intent_label.add_theme_font_size_override("font_size", 19)
 	_intent_label.add_theme_color_override("font_color", AppTheme.GOLD_TEXT)
-	enemy_identity.add_child(_intent_label)
+	encounter_details.add_child(_intent_label)
+	var health_heading := Label.new()
+	health_heading.text = "MONSTER HEART"
+	health_heading.add_theme_font_size_override("font_size", 14)
+	health_heading.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
+	encounter_details.add_child(health_heading)
 	_enemy_health = ProgressBar.new()
 	_enemy_health.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_enemy_health.custom_minimum_size.y = 38
+	_enemy_health.custom_minimum_size.y = 44
 	_enemy_health.show_percentage = false
-	enemy_row.add_child(_enemy_health)
-	_player_label = AppTheme.heading("TEAM HEART 30 / 30", 20)
-	_player_label.custom_minimum_size.x = 230
-	_player_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	enemy_row.add_child(_player_label)
+	encounter_details.add_child(_enemy_health)
 	var center_row := HBoxContainer.new()
-	center_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	center_row.name = "PlayerBoardRow"
+	center_row.custom_minimum_size.y = 242
+	center_row.size_flags_vertical = Control.SIZE_FILL
 	center_row.add_theme_constant_override("separation", 12)
 	root_stack.add_child(center_row)
 	var board_panel := PanelContainer.new()
@@ -140,9 +157,26 @@ func _build_ui() -> void:
 	var controls := HBoxContainer.new()
 	controls.custom_minimum_size.y = 48
 	root_stack.add_child(controls)
-	_energy_label = AppTheme.heading("SPARK 0 / 5", 22, AppTheme.ACCENT)
-	_energy_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	controls.add_child(_energy_label)
+	var spark_group := HBoxContainer.new()
+	spark_group.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spark_group.add_theme_constant_override("separation", 10)
+	controls.add_child(spark_group)
+	var spark_label := AppTheme.heading("SPARK", 20, AppTheme.ACCENT_TEXT)
+	spark_group.add_child(spark_label)
+	_spark_row = HBoxContainer.new()
+	_spark_row.name = "SparkIconRow"
+	_spark_row.add_theme_constant_override("separation", 3)
+	spark_group.add_child(_spark_row)
+	for index in 5:
+		var icon := TextureRect.new()
+		icon.name = "Spark%d" % (index + 1)
+		icon.custom_minimum_size = Vector2(42, 42)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.texture = SPARK_SPENT_TEXTURE
+		_spark_row.add_child(icon)
+		_spark_icons.append(icon)
 	_toast = Label.new()
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -154,7 +188,36 @@ func _build_ui() -> void:
 	_end_turn_button = AppTheme.button("END ROUND →", 170)
 	_end_turn_button.pressed.connect(controller.request_end_turn)
 	controls.add_child(_end_turn_button)
+	var player_health_stack := VBoxContainer.new()
+	player_health_stack.name = "TeamHeartSection"
+	player_health_stack.add_theme_constant_override("separation", 3)
+	root_stack.add_child(player_health_stack)
+	var player_health_heading := Label.new()
+	player_health_heading.text = "TEAM HEART"
+	player_health_heading.add_theme_font_size_override("font_size", 14)
+	player_health_heading.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
+	player_health_stack.add_child(player_health_heading)
+	var player_health_overlay := Control.new()
+	player_health_overlay.custom_minimum_size.y = 42
+	player_health_stack.add_child(player_health_overlay)
+	_player_health = ProgressBar.new()
+	_player_health.name = "TeamHeartBar"
+	_player_health.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_player_health.show_percentage = false
+	_player_health.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_player_health.add_theme_stylebox_override("fill", AppTheme.style_box(AppTheme.ACCENT, AppTheme.ACCENT_TEXT, 12, 2, 0))
+	player_health_overlay.add_child(_player_health)
+	_player_health_text = Label.new()
+	_player_health_text.name = "TeamHeartText"
+	_player_health_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_player_health_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_player_health_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_player_health_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_player_health_text.add_theme_font_size_override("font_size", 21)
+	_player_health_text.add_theme_color_override("font_color", AppTheme.INK)
+	player_health_overlay.add_child(_player_health_text)
 	var hand_panel := PanelContainer.new()
+	hand_panel.name = "PlayerHandPanel"
 	hand_panel.custom_minimum_size.y = 212
 	root_stack.add_child(hand_panel)
 	var hand_stack := VBoxContainer.new()
@@ -250,8 +313,22 @@ func _refresh() -> void:
 		return
 	var session := controller.session
 	_turn_label.text = "ROUND %d  •  %s" % [session.turn_number, session.phase_name().to_upper().replace("_", " ")]
-	_player_label.text = "TEAM HEART  %d / %d" % [session.player_health, session.rules.player_starting_health]
-	_player_label.add_theme_color_override("font_color", AppTheme.DANGER_TEXT if session.player_health <= 10 else AppTheme.INK)
+	_player_health.max_value = session.rules.player_starting_health
+	_player_health.value = session.player_health
+	_player_health_text.text = "%d / %d" % [session.player_health, session.rules.player_starting_health]
+	_player_health.tooltip_text = "%d / %d Team Heart" % [session.player_health, session.rules.player_starting_health]
+	var low_team_heart := session.player_health <= 10
+	_player_health.add_theme_stylebox_override(
+		"fill",
+		AppTheme.style_box(
+			AppTheme.DANGER if low_team_heart else AppTheme.ACCENT,
+			AppTheme.DANGER_TEXT if low_team_heart else AppTheme.ACCENT_TEXT,
+			12,
+			2,
+			0
+		)
+	)
+	_player_health_text.add_theme_color_override("font_color", AppTheme.SURFACE if low_team_heart else AppTheme.INK)
 	_enemy_name.text = session.enemy.definition.display_name.to_upper()
 	_enemy_artwork.texture = session.enemy.definition.artwork if session.enemy.definition.artwork != null else load("res://icon.svg")
 	_enemy_artwork.tooltip_text = session.enemy.definition.description
@@ -260,7 +337,7 @@ func _refresh() -> void:
 	_enemy_health.value = session.enemy.current_health
 	_enemy_health.tooltip_text = "%d / %d monster Heart" % [session.enemy.current_health, session.enemy.definition.maximum_health]
 	_intent_label.text = controller.get_enemy_intent()
-	_energy_label.text = "SPARK  %d / %d" % [session.current_energy, session.rules.energy_per_turn]
+	_refresh_spark_icons(session.current_energy, session.rules.energy_per_turn)
 	_piles_label.text = "DECK %d  •  REST PILE %d  •  HAND %d / %d     " % [
 		session.draw_pile.size(),
 		session.discard_pile.size(),
@@ -277,6 +354,14 @@ func _refresh() -> void:
 		_result_title.text = "BARRIER BUSTED!" if won else "TIME FOR A REST"
 		_result_title.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT if won else AppTheme.DANGER_TEXT)
 		_result_body.text = "%s's barriers came tumbling down. Great teamwork!" % session.enemy.definition.display_name if won else "The team needs a rest after round %d. A new plan and a snack can help." % session.turn_number
+
+
+func _refresh_spark_icons(current_spark: int, maximum_spark: int) -> void:
+	_spark_row.tooltip_text = "%d of %d Spark available" % [current_spark, maximum_spark]
+	for index in _spark_icons.size():
+		var available := index < current_spark and index < maximum_spark
+		_spark_icons[index].texture = SPARK_AVAILABLE_TEXTURE if available else SPARK_SPENT_TEXTURE
+		_spark_icons[index].tooltip_text = "Available Spark" if available else "Spent Spark"
 
 
 func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_board: bool) -> void:
@@ -316,10 +401,10 @@ func _on_event_presented(event: BattleEvent) -> void:
 			if event.data.target == "enemy":
 				_pulse(_enemy_health, AppTheme.DANGER)
 			elif event.data.target == "player":
-				_pulse(_player_label, AppTheme.DANGER)
+				_pulse(_player_health, AppTheme.DANGER)
 			else:
 				_pulse(_board_container, AppTheme.DANGER)
-		&"HealingApplied": _pulse(_player_label, AppTheme.ACCENT)
+		&"HealingApplied": _pulse(_player_health, AppTheme.ACCENT)
 		&"CardDrawn": _pulse(_hand_container, AppTheme.ACCENT)
 		&"UnitAttacked":
 			var attacker: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
@@ -354,7 +439,7 @@ func _show_damage_number(event: BattleEvent) -> void:
 		"enemy":
 			target_rect = _enemy_artwork.get_global_rect()
 		"player":
-			target_rect = _player_label.get_global_rect()
+			target_rect = _player_health.get_global_rect()
 		"unit":
 			var instance_id := int(event.data.get("instance_id", -1))
 			var card_view: CardBase = _card_views_by_instance.get(instance_id)
