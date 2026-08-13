@@ -21,6 +21,10 @@ var _result_layer: Control
 var _result_title: Label
 var _result_body: Label
 var _toast: Label
+var _damage_overlay_layer: CanvasLayer
+var _damage_overlay_root: Control
+var _card_views_by_instance: Dictionary = {}
+var _last_card_artwork_rects: Dictionary = {}
 
 
 func _ready() -> void:
@@ -64,6 +68,7 @@ func _build_ui() -> void:
 	enemy_row.add_theme_constant_override("separation", 14)
 	enemy_panel.add_child(enemy_row)
 	_enemy_artwork = TextureRect.new()
+	_enemy_artwork.name = "EnemyArtwork"
 	_enemy_artwork.custom_minimum_size = Vector2(88, 88)
 	_enemy_artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_enemy_artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
@@ -103,7 +108,7 @@ func _build_ui() -> void:
 	board_stack.add_theme_constant_override("separation", 6)
 	board_panel.add_child(board_stack)
 	var board_heading := Label.new()
-	board_heading.text = "ALLY CIRCLE  •  Choose a ready ally to help bust the barrier"
+	board_heading.text = "ALLY CIRCLE  •  Allies help automatically at the start of each round"
 	board_heading.add_theme_font_size_override("font_size", 14)
 	board_heading.add_theme_color_override("font_color", AppTheme.MUTED)
 	board_stack.add_child(board_heading)
@@ -169,6 +174,19 @@ func _build_ui() -> void:
 	_hand_container.add_theme_constant_override("separation", 10)
 	hand_scroll.add_child(_hand_container)
 	_build_result_layer()
+	_build_damage_overlay_layer()
+
+
+func _build_damage_overlay_layer() -> void:
+	_damage_overlay_layer = CanvasLayer.new()
+	_damage_overlay_layer.name = "DamageNumberLayer"
+	_damage_overlay_layer.layer = 90
+	add_child(_damage_overlay_layer)
+	_damage_overlay_root = Control.new()
+	_damage_overlay_root.name = "DamageNumbers"
+	_damage_overlay_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_damage_overlay_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_damage_overlay_layer.add_child(_damage_overlay_root)
 
 
 func _build_result_layer() -> void:
@@ -250,6 +268,7 @@ func _refresh() -> void:
 		session.rules.maximum_hand_size,
 	]
 	_end_turn_button.disabled = controller.input_locked or session.phase != BattleSession.Phase.PLAYER_TURN
+	_card_views_by_instance.clear()
 	_rebuild_cards(_board_container, session.battlefield, true)
 	_rebuild_cards(_hand_container, session.hand, false)
 	if session.is_finished():
@@ -262,6 +281,8 @@ func _refresh() -> void:
 
 func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_board: bool) -> void:
 	for child in container.get_children():
+		if child is CardBase and child.instance != null:
+			_last_card_artwork_rects[child.instance.instance_id] = child.get_artwork_global_rect()
 		container.remove_child(child)
 		child.queue_free()
 	if cards.is_empty():
@@ -281,6 +302,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 		view.set_interactive(available)
 		view.card_activated.connect(controller.request_attack_enemy if on_board else controller.request_play_card)
 		container.add_child(view)
+		_card_views_by_instance[card.instance_id] = view
 
 
 func _on_event_presented(event: BattleEvent) -> void:
@@ -288,7 +310,9 @@ func _on_event_presented(event: BattleEvent) -> void:
 	if not message.is_empty():
 		_log.append_text("• %s\n" % message)
 	match event.kind:
+		&"EnemyActionStarted": _animate_attacker(_enemy_artwork)
 		&"DamageApplied":
+			_show_damage_number(event)
 			if event.data.target == "enemy":
 				_pulse(_enemy_health, AppTheme.DANGER)
 			elif event.data.target == "player":
@@ -297,7 +321,72 @@ func _on_event_presented(event: BattleEvent) -> void:
 				_pulse(_board_container, AppTheme.DANGER)
 		&"HealingApplied": _pulse(_player_label, AppTheme.ACCENT)
 		&"CardDrawn": _pulse(_hand_container, AppTheme.ACCENT)
-		&"UnitAttacked": _pulse(_board_container, AppTheme.GOLD)
+		&"UnitAttacked":
+			var attacker: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
+			_animate_attacker(attacker)
+			_pulse(_board_container, AppTheme.GOLD)
+
+
+func _animate_attacker(control: Control) -> void:
+	if control == null or not is_instance_valid(control):
+		return
+	control.pivot_offset = control.size * 0.5
+	control.scale = Vector2.ONE
+	control.z_index = 30
+	var tween := control.create_tween()
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "scale", Vector2(1.16, 1.16), 0.12)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(control, "scale", Vector2.ONE, 0.16)
+	tween.tween_callback(func():
+		if is_instance_valid(control):
+			control.z_index = 0
+	)
+
+
+func _show_damage_number(event: BattleEvent) -> void:
+	if _damage_overlay_root == null or int(event.data.get("amount", 0)) <= 0:
+		return
+	var target_rect := Rect2()
+	match str(event.data.get("target", "")):
+		"enemy":
+			target_rect = _enemy_artwork.get_global_rect()
+		"player":
+			target_rect = _player_label.get_global_rect()
+		"unit":
+			var instance_id := int(event.data.get("instance_id", -1))
+			var card_view: CardBase = _card_views_by_instance.get(instance_id)
+			if card_view != null and is_instance_valid(card_view):
+				target_rect = card_view.get_artwork_global_rect()
+			else:
+				target_rect = _last_card_artwork_rects.get(instance_id, _board_container.get_global_rect())
+	if target_rect.size == Vector2.ZERO:
+		return
+	var number := Label.new()
+	number.text = "-%d" % int(event.data.amount)
+	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	number.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	number.position = target_rect.position
+	number.size = target_rect.size
+	number.pivot_offset = target_rect.size * 0.5
+	number.add_theme_font_override("font", AppTheme.FREDOKA)
+	number.add_theme_font_size_override("font_size", 78)
+	number.add_theme_color_override("font_color", AppTheme.DANGER)
+	number.add_theme_color_override("font_outline_color", AppTheme.SURFACE)
+	number.add_theme_constant_override("outline_size", 11)
+	number.scale = Vector2(0.45, 0.45)
+	_damage_overlay_root.add_child(number)
+	var tween := number.create_tween()
+	tween.set_parallel(true)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(number, "scale", Vector2(1.12, 1.12), 0.30)
+	tween.tween_property(number, "position:y", number.position.y - 48.0, 0.95)
+	tween.tween_property(number, "modulate:a", 0.0, 0.85).set_delay(0.50)
+	tween.chain().tween_callback(number.queue_free)
 
 
 func _event_message(event: BattleEvent) -> String:

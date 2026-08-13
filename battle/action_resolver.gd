@@ -156,7 +156,18 @@ func end_turn(session: BattleSession) -> Array[BattleEvent]:
 		"turn": session.turn_number,
 		"energy": session.current_energy,
 	}))
+	_resolve_automatic_ally_help(session, events)
 	return events
+
+
+func _resolve_automatic_ally_help(session: BattleSession, events: Array[BattleEvent]) -> void:
+	for card in session.battlefield.duplicate():
+		if session.is_finished():
+			return
+		if not can_attack_enemy(session, card.instance_id):
+			continue
+		var attack_events := attack_enemy(session, card.instance_id)
+		events.append_array(attack_events)
 
 
 func draw_cards(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:

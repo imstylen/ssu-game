@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CardDefinition" load_steps=6 format=3 uid="uid://x4j1jmt3daxg"]
 
 [ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
-[ext_resource type="Texture2D" uid="uid://b4ahxmgbrm15p" path="res://cards/definitions/life_drain/spoonie_sloth.png" id="1_ustrq"]
+[ext_resource type="Texture2D" uid="uid://b0vp0os0us45i" path="res://cards/definitions/life_drain/cup_of_tea.png" id="1_ustrq"]
 [ext_resource type="Script" path="res://cards/behaviors/heal_player_behavior.gd" id="2_behavior"]
 [ext_resource type="Resource" path="res://cards/styles/berry.tres" id="3_style"]
 
@@ -12,8 +12,8 @@ heal_amount = 5
 [resource]
 script = ExtResource("1_card")
 id = &"life_drain"
-display_name = "Spoonie Sloth"
-description = "Sloth rests without apology and shares a soothing snack. Heal 5 Heart."
+display_name = "Cup of Tea"
+description = "A warm cup and a quiet pause help the team recharge. Heal 5 Heart."
 artwork = ExtResource("1_ustrq")
 card_type = 1
 attack = 0

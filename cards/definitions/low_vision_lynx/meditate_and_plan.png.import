@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4ahxmgbrm15p"
-path="res://.godot/imported/spoonie_sloth.png-2c6c05a096484fcb813a325360563825.ctex"
+uid="uid://c17oy2w7jpwhj"
+path="res://.godot/imported/meditate_and_plan.png-3a45ca9bdaf2fe9648eb3714b28ae339.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://cards/definitions/life_drain/spoonie_sloth.png"
-dest_files=["res://.godot/imported/spoonie_sloth.png-2c6c05a096484fcb813a325360563825.ctex"]
+source_file="res://cards/definitions/low_vision_lynx/meditate_and_plan.png"
+dest_files=["res://.godot/imported/meditate_and_plan.png-3a45ca9bdaf2fe9648eb3714b28ae339.ctex"]
 
 [params]
 

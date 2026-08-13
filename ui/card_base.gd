@@ -131,6 +131,10 @@ func get_displayed_artwork() -> Texture2D:
 	return _artwork.texture if is_node_ready() else null
 
 
+func get_artwork_global_rect() -> Rect2:
+	return _artwork.get_global_rect() if is_node_ready() else get_global_rect()
+
+
 func _refresh() -> void:
 	if not is_node_ready():
 		return

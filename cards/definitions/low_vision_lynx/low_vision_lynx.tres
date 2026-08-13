@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://cards/card_definition.gd" id="1_card"]
 [ext_resource type="Script" path="res://cards/behaviors/draw_cards_behavior.gd" id="2_behavior"]
 [ext_resource type="Resource" path="res://cards/styles/mint.tres" id="3_style"]
-[ext_resource type="Texture2D" path="res://cards/definitions/low_vision_lynx/low_vision_lynx.png" id="4_art"]
+[ext_resource type="Texture2D" path="res://cards/definitions/low_vision_lynx/meditate_and_plan.png" id="4_art"]
 
 [sub_resource type="Resource" id="DrawBehavior"]
 script = ExtResource("2_behavior")
@@ -12,8 +12,8 @@ draw_amount = 2
 [resource]
 script = ExtResource("1_card")
 id = &"low_vision_lynx"
-display_name = "Low-Vision Lynx"
-description = "A white cane and high-contrast map reveal new choices. Draw 2 cards."
+display_name = "Meditate & Plan"
+description = "Pause, breathe, and make space for new choices. Draw 2 cards."
 artwork = ExtResource("4_art")
 card_type = 1
 attack = 0

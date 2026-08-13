@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://ui/card_base.gd" id="1_card_base"]
 [ext_resource type="Resource" path="res://cards/definitions/life_drain/life_drain.tres" id="2_preview"]
-[ext_resource type="Texture2D" path="res://cards/definitions/life_drain/spoonie_sloth.png" id="3_preview_art"]
+[ext_resource type="Texture2D" path="res://cards/definitions/life_drain/cup_of_tea.png" id="3_preview_art"]
 [ext_resource type="FontFile" path="res://assets/fonts/Fredoka-Variable.ttf" id="4_font"]
 
 [sub_resource type="StyleBoxFlat" id="CardNormal"]
@@ -164,7 +164,7 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(0.294, 0.192, 0.353, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 22
-text = "Spoonie Sloth"
+text = "Cup of Tea"
 text_overrun_behavior = 3
 
 [node name="CostBadge" type="PanelContainer" parent="ContentMargin/ContentStack/Header"]
@@ -216,7 +216,7 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(0.49, 0.4, 0.529, 1)
 theme_override_fonts/font = ExtResource("4_font")
 theme_override_font_sizes/font_size = 15
-text = "Sloth rests without apology and shares a soothing snack. Heal 5 Heart."
+text = "A warm cup and a quiet pause help the team recharge. Heal 5 Heart."
 autowrap_mode = 2
 vertical_alignment = 1
 

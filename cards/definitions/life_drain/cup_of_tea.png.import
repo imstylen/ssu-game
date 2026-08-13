@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cnux5fxbtb3aw"
-path="res://.godot/imported/low_vision_lynx.png-d91214605515ee19ecd16fc55c8b9694.ctex"
+uid="uid://b0vp0os0us45i"
+path="res://.godot/imported/cup_of_tea.png-d884db9d1d27b004c50db8bbb494d79d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://cards/definitions/low_vision_lynx/low_vision_lynx.png"
-dest_files=["res://.godot/imported/low_vision_lynx.png-d91214605515ee19ecd16fc55c8b9694.ctex"]
+source_file="res://cards/definitions/life_drain/cup_of_tea.png"
+dest_files=["res://.godot/imported/cup_of_tea.png-d884db9d1d27b004c50db8bbb494d79d.ctex"]
 
 [params]
 

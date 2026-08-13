@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://db36tbo7elgp7"
-path="res://.godot/imported/tourette_toucan.png-e4924059925401ead6ff4f40866d3fdc.ctex"
+uid="uid://dqe2exukcemge"
+path="res://.godot/imported/speak_up.png-caddecfdfb8175a29e51f4fb5237852e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://cards/definitions/arc_bolt/tourette_toucan.png"
-dest_files=["res://.godot/imported/tourette_toucan.png-e4924059925401ead6ff4f40866d3fdc.ctex"]
+source_file="res://cards/definitions/arc_bolt/speak_up.png"
+dest_files=["res://.godot/imported/speak_up.png-caddecfdfb8175a29e51f4fb5237852e.ctex"]
 
 [params]
 

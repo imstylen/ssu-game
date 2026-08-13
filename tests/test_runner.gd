@@ -8,9 +8,9 @@ const EXPECTED_CARDS := {
 	&"dyslexic_duckling": ["Dyslexic Duckling", CardDefinition.CardType.UNIT, 3, 5, 3],
 	&"prosthetic_paw_puppy": ["Prosthetic-Paw Puppy", CardDefinition.CardType.UNIT, 4, 4, 7],
 	&"grounding_alpaca": ["Grounding Alpaca", CardDefinition.CardType.UNIT, 2, 1, 6],
-	&"arc_bolt": ["Tourette Toucan", CardDefinition.CardType.ACTION, 2, 0, 1],
-	&"life_drain": ["Spoonie Sloth", CardDefinition.CardType.ACTION, 2, 0, 1],
-	&"low_vision_lynx": ["Low-Vision Lynx", CardDefinition.CardType.ACTION, 1, 0, 1],
+	&"arc_bolt": ["Speak Up!", CardDefinition.CardType.ACTION, 2, 0, 1],
+	&"life_drain": ["Cup of Tea", CardDefinition.CardType.ACTION, 2, 0, 1],
+	&"low_vision_lynx": ["Meditate & Plan", CardDefinition.CardType.ACTION, 1, 0, 1],
 }
 
 var EXPECTED_ENEMIES := {
@@ -44,7 +44,7 @@ func _run_all() -> void:
 	_test_heal_one_shot()
 	_test_draw_one_shot()
 	_test_full_hand_burn()
-	_test_summoning_sickness_and_help()
+	_test_automatic_start_of_round_help()
 	_test_spread_damage_and_overflow()
 	_test_discard_reshuffle()
 	_test_invalid_action_is_atomic()
@@ -157,7 +157,7 @@ func _test_card_base_artwork_and_style() -> void:
 	var plain_box := fallback_view.get_theme_stylebox("normal") as StyleBoxFlat
 	_expect(styled_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card panel color is applied")
 	_expect(not plain_box.bg_color.is_equal_approx(visual_style.panel_color), "Per-card styling does not leak")
-	_expect(view.editor_preview_definition != null and view.editor_preview_definition.id == &"life_drain", "Editor preview defaults to Spoonie Sloth's stable resource")
+	_expect(view.editor_preview_definition != null and view.editor_preview_definition.id == &"life_drain", "Editor preview defaults to Cup of Tea's stable resource")
 	view.free()
 	fallback_view.free()
 	styled_view.free()
@@ -175,8 +175,8 @@ func _test_battle_setup() -> void:
 func _test_damage_one_shot() -> void:
 	var bundle := _forced_hand_bundle(_cards[&"arc_bolt"], [_cards[&"shield_bot"]])
 	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
-	_expect(bundle.session.enemy.current_health == 26, "Tourette Toucan deals exactly 4 damage")
-	_expect(bundle.session.current_energy == 3, "Tourette Toucan spends 2 Spark")
+	_expect(bundle.session.enemy.current_health == 26, "Speak Up deals exactly 4 damage")
+	_expect(bundle.session.current_energy == 3, "Speak Up spends 2 Spark")
 	_expect(bundle.session.hand.is_empty() and bundle.session.discard_pile.size() == 1, "Damage one-shot moves to the rest pile")
 	_expect(_event_count(events, &"DamageApplied") == 1, "Damage one-shot emits one damage event")
 
@@ -186,20 +186,20 @@ func _test_heal_one_shot() -> void:
 	bundle.session.player_health = 27
 	var enemy_health: int = bundle.session.enemy.current_health
 	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
-	_expect(bundle.session.player_health == 30, "Spoonie Sloth heals up to maximum Team Heart")
-	_expect(bundle.session.enemy.current_health == enemy_health, "Spoonie Sloth does not damage the monster")
+	_expect(bundle.session.player_health == 30, "Cup of Tea heals up to maximum Team Heart")
+	_expect(bundle.session.enemy.current_health == enemy_health, "Cup of Tea does not damage the monster")
 	var healing := _first_event(events, &"HealingApplied")
 	_expect(healing != null and healing.data.amount == 3, "Heal-5 effect reports only the clamped amount")
 	var second := _forced_hand_bundle(_cards[&"life_drain"], [_cards[&"shield_bot"]])
 	second.session.player_health = 20
 	second.resolver.play_card(second.session, second.session.hand[0].instance_id)
-	_expect(second.session.player_health == 25, "Spoonie Sloth heals exactly 5 when room is available")
+	_expect(second.session.player_health == 25, "Cup of Tea heals exactly 5 when room is available")
 
 
 func _test_draw_one_shot() -> void:
 	var bundle := _forced_hand_bundle(_cards[&"low_vision_lynx"], [_cards[&"shield_bot"], _cards[&"arc_bolt"]])
 	var events: Array[BattleEvent] = bundle.resolver.play_card(bundle.session, bundle.session.hand[0].instance_id)
-	_expect(bundle.session.hand.size() == 2, "Low-Vision Lynx draws exactly 2 cards")
+	_expect(bundle.session.hand.size() == 2, "Meditate & Plan draws exactly 2 cards")
 	_expect(_event_count(events, &"CardDrawn") == 2, "Draw-2 emits two draw events")
 	_expect(bundle.session.discard_pile.size() == 1 and bundle.session.discard_pile[0].definition.id == &"low_vision_lynx", "Draw one-shot moves itself to the rest pile")
 
@@ -221,18 +221,18 @@ func _test_full_hand_burn() -> void:
 	_expect(bundle.session.discard_pile.size() == 2, "Burned card and played one-shot both reach the rest pile")
 
 
-func _test_summoning_sickness_and_help() -> void:
+func _test_automatic_start_of_round_help() -> void:
 	var bundle := _forced_hand_bundle(_cards[&"shield_bot"], [_cards[&"arc_bolt"]])
 	var unit_id: int = bundle.session.hand[0].instance_id
 	bundle.resolver.play_card(bundle.session, unit_id)
 	_expect(bundle.session.battlefield.size() == 1, "An ally joins the Ally Circle")
 	_expect(not bundle.resolver.can_attack_enemy(bundle.session, unit_id), "A new ally rests until the next round")
-	bundle.resolver.end_turn(bundle.session)
+	var events: Array[BattleEvent] = bundle.resolver.end_turn(bundle.session)
 	_expect(bundle.session.turn_number == 2, "Ending a round advances the adventure")
 	_expect(bundle.session.battlefield[0].current_health == 1, "The Ally Circle shares incoming barrier damage")
-	_expect(bundle.resolver.can_attack_enemy(bundle.session, unit_id), "The ally is ready to help next round")
-	bundle.resolver.attack_enemy(bundle.session, unit_id)
-	_expect(bundle.session.enemy.current_health == 28, "Rolling Rabbit helps for 2 Power")
+	_expect(bundle.session.enemy.current_health == 28, "Rolling Rabbit automatically helps for 2 Power at round start")
+	_expect(_event_count(events, &"UnitAttacked") == 1, "Automatic help emits an attacker presentation event")
+	_expect(not bundle.resolver.can_attack_enemy(bundle.session, unit_id), "An ally cannot help twice after its automatic attack")
 
 
 func _test_spread_damage_and_overflow() -> void:
@@ -410,6 +410,16 @@ func _test_enemy_portrait_binding() -> void:
 	await process_frame
 	_expect(battle_ui.get_enemy_portrait_texture() == _enemies[&"barrier_blob"].artwork, "Battle header binds selected monster artwork")
 	_expect(battle_ui.get_enemy_description_text() == _enemies[&"barrier_blob"].description, "Battle header binds selected monster description")
+	var damage_event := BattleEvent.new(&"DamageApplied", {"target": "enemy", "amount": 3, "health": 23})
+	battle_ui._show_damage_number(damage_event)
+	var damage_root: Control = battle_ui.find_child("DamageNumbers", true, false)
+	_expect(damage_root != null and damage_root.get_child_count() == 1, "Enemy damage creates a large overlay number")
+	var damage_number := damage_root.get_child(0) as Label if damage_root != null and damage_root.get_child_count() > 0 else null
+	_expect(damage_number != null and damage_number.text == "-3" and damage_number.get_theme_color("font_color").is_equal_approx(AppTheme.DANGER), "Damage overlay shows the red negative amount")
+	var enemy_artwork: Control = battle_ui.find_child("EnemyArtwork", true, false)
+	battle_ui._animate_attacker(enemy_artwork)
+	await process_frame
+	_expect(enemy_artwork != null and enemy_artwork.scale.x > 1.0, "Monster artwork grows briefly when it attacks")
 	battle_ui.free()
 
 
