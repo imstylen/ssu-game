@@ -182,16 +182,7 @@ func _build_ui() -> void:
 	_spark_row.name = "SparkIconRow"
 	_spark_row.add_theme_constant_override("separation", 3)
 	spark_group.add_child(_spark_row)
-	for index in 5:
-		var icon := TextureRect.new()
-		icon.name = "Spark%d" % (index + 1)
-		icon.custom_minimum_size = Vector2(42, 42)
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.texture = SPARK_SPENT_TEXTURE
-		_spark_row.add_child(icon)
-		_spark_icons.append(icon)
+	_set_spark_icon_count(5)
 	_toast = Label.new()
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -253,6 +244,24 @@ func _build_ui() -> void:
 	hand_scroll.add_child(_hand_container)
 	_build_result_layer()
 	_build_damage_overlay_layer()
+
+
+func _set_spark_icon_count(icon_count: int) -> void:
+	while _spark_icons.size() < icon_count:
+		var index := _spark_icons.size()
+		var icon := TextureRect.new()
+		icon.name = "Spark%d" % (index + 1)
+		icon.custom_minimum_size = Vector2(42, 42)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.texture = SPARK_SPENT_TEXTURE
+		_spark_row.add_child(icon)
+		_spark_icons.append(icon)
+	while _spark_icons.size() > icon_count:
+		var icon := _spark_icons.pop_back() as TextureRect
+		_spark_row.remove_child(icon)
+		icon.queue_free()
 
 
 func _build_damage_overlay_layer() -> void:
@@ -373,9 +382,16 @@ func _refresh() -> void:
 
 
 func _refresh_spark_icons(current_spark: int, maximum_spark: int) -> void:
-	_spark_row.tooltip_text = "%d of %d Spark available" % [current_spark, maximum_spark]
+	var displayed_spark := maxi(current_spark, maximum_spark)
+	_set_spark_icon_count(displayed_spark)
+	_spark_row.tooltip_text = (
+		"%d Spark available (%d base + %d bonus)" \
+		% [current_spark, maximum_spark, current_spark - maximum_spark]
+		if current_spark > maximum_spark
+		else "%d of %d Spark available" % [current_spark, maximum_spark]
+	)
 	for index in _spark_icons.size():
-		var available := index < current_spark and index < maximum_spark
+		var available := index < current_spark
 		_spark_icons[index].texture = SPARK_AVAILABLE_TEXTURE if available else SPARK_SPENT_TEXTURE
 		_spark_icons[index].tooltip_text = "Available Spark" if available else "Spent Spark"
 

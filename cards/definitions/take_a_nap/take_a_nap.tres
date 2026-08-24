@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="1_card"]
+[ext_resource type="Script" path="res://cards/behaviors/gain_energy_behavior.gd" id="2_behavior"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="3_style"]
+[ext_resource type="Texture2D" path="res://cards/definitions/take_a_nap/take_a_nap.png" id="4_art"]
+
+[sub_resource type="Resource" id="GainEnergyBehavior"]
+script = ExtResource("2_behavior")
+energy_amount = 2
+
+[resource]
+script = ExtResource("1_card")
+id = &"take_a_nap"
+display_name = "Take a Nap"
+description = "A little rest can bring back your Spark. Gain 2 Spark this round."
+artwork = ExtResource("4_art")
+card_type = 1
+attack = 0
+health = 1
+cost = 0
+behavior = SubResource("GainEnergyBehavior")
+visual_style = ExtResource("3_style")

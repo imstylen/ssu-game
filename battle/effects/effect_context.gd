@@ -40,6 +40,10 @@ func draw_cards(amount: int) -> void:
 	_resolver.draw_cards(_session, amount, _events)
 
 
+func gain_energy(amount: int) -> void:
+	_resolver.gain_energy(_session, amount, _events)
+
+
 func modify_unit_attack(instance_id: int, amount: int) -> void:
 	_resolver.modify_unit_attack(_session, instance_id, amount, _events)
 

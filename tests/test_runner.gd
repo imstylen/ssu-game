@@ -11,6 +11,7 @@ const EXPECTED_CARDS := {
 	&"arc_bolt": ["Speak Up!", CardDefinition.CardType.ACTION, 2, 0, 1],
 	&"life_drain": ["Cup of Tea", CardDefinition.CardType.ACTION, 2, 0, 1],
 	&"low_vision_lynx": ["Meditate & Plan", CardDefinition.CardType.ACTION, 1, 0, 1],
+	&"take_a_nap": ["Take a Nap", CardDefinition.CardType.ACTION, 0, 0, 1],
 }
 
 var EXPECTED_ENEMIES := {
@@ -43,6 +44,7 @@ func _run_all() -> void:
 	_test_damage_one_shot()
 	_test_heal_one_shot()
 	_test_draw_one_shot()
+	_test_take_a_nap_one_shot()
 	_test_full_hand_burn()
 	_test_automatic_start_of_round_help()
 	_test_spread_damage_and_overflow()
@@ -67,7 +69,7 @@ func _run_all() -> void:
 func _test_content_resources() -> void:
 	var cards: Array[CardDefinition] = _catalog.get_all_cards()
 	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
-	_expect(cards.size() == 10, "Catalog contains exactly ten unique cards")
+	_expect(cards.size() == 11, "Catalog contains exactly eleven unique cards")
 	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
 	var allies := 0
 	var one_shots := 0
@@ -94,7 +96,7 @@ func _test_content_resources() -> void:
 		else:
 			one_shots += 1
 	_expect(allies == 7, "Roster has seven allies")
-	_expect(one_shots == 3, "Roster has three one-shots")
+	_expect(one_shots == 4, "Roster has four one-shots")
 	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
 	for enemy_id in EXPECTED_ENEMIES:
 		var enemy: EnemyDefinition = _enemies[enemy_id]
@@ -217,6 +219,32 @@ func _test_draw_one_shot() -> void:
 	_expect(bundle.session.hand.size() == 2, "Meditate & Plan draws exactly 2 cards")
 	_expect(_event_count(events, &"CardDrawn") == 2, "Draw-2 emits two draw events")
 	_expect(bundle.session.discard_pile.size() == 1 and bundle.session.discard_pile[0].definition.id == &"low_vision_lynx", "Draw one-shot moves itself to the rest pile")
+
+
+func _test_take_a_nap_one_shot() -> void:
+	var definition: CardDefinition = _cards[&"take_a_nap"]
+	_expect(
+		definition.behavior is GainEnergyBehavior and definition.behavior.energy_amount == 2,
+		"Take a Nap has a Gain-2 Energy behavior"
+	)
+	var bundle := _forced_hand_bundle(definition, [])
+	var events: Array[BattleEvent] = bundle.resolver.play_card(
+		bundle.session,
+		bundle.session.hand[0].instance_id
+	)
+	_expect(bundle.session.current_energy == 7, "Take a Nap gains 2 Spark for zero cost")
+	var energy_event := _last_event(events, &"EnergyChanged")
+	_expect(
+		energy_event != null and energy_event.data.amount == 2 and energy_event.data.energy == 7,
+		"Take a Nap reports the amount gained and current Spark"
+	)
+	_expect(
+		bundle.session.discard_pile.size() == 1 \
+		and bundle.session.discard_pile[0].definition.id == &"take_a_nap",
+		"Take a Nap moves to the rest pile after use"
+	)
+	bundle.resolver.end_turn(bundle.session)
+	_expect(bundle.session.current_energy == 5, "Gained Spark expires when the round ends")
 
 
 func _test_full_hand_burn() -> void:
@@ -469,6 +497,11 @@ func _test_enemy_portrait_binding() -> void:
 	_expect(spark_row != null and spark_row.get_child(0).texture == available_spark and spark_row.get_child(4).texture == available_spark, "Full Spark displays five available icons")
 	battle_ui._refresh_spark_icons(2, 5)
 	_expect(spark_row.get_child(0).texture == available_spark and spark_row.get_child(1).texture == available_spark and spark_row.get_child(2).texture == spent_spark and spark_row.get_child(4).texture == spent_spark, "Spent Spark swaps individual icons without a numeric counter")
+	battle_ui._refresh_spark_icons(7, 5)
+	_expect(spark_row.get_child_count() == 7 and spark_row.get_child(6).texture == available_spark, "Bonus Spark appears as additional available icons")
+	_expect(spark_row.tooltip_text == "7 Spark available (5 base + 2 bonus)", "Bonus Spark has an exact accessible value")
+	battle_ui._refresh_spark_icons(5, 5)
+	_expect(spark_row.get_child_count() == 5, "Bonus Spark icons disappear after the round resets")
 	battle_ui._animate_attacker(enemy_artwork)
 	await process_frame
 	_expect(enemy_artwork != null and enemy_artwork.scale.x > 1.0, "Monster artwork grows briefly when it attacks")
@@ -528,6 +561,13 @@ func _first_event(events: Array[BattleEvent], kind: StringName) -> BattleEvent:
 	for event in events:
 		if event.kind == kind:
 			return event
+	return null
+
+
+func _last_event(events: Array[BattleEvent], kind: StringName) -> BattleEvent:
+	for index in range(events.size() - 1, -1, -1):
+		if events[index].kind == kind:
+			return events[index]
 	return null
 
 

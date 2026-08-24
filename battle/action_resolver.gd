@@ -201,6 +201,16 @@ func draw_cards(session: BattleSession, amount: int, events: Array[BattleEvent])
 			}))
 
 
+func gain_energy(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+	if session.is_finished() or amount <= 0:
+		return
+	session.current_energy += amount
+	events.append(BattleEvent.new(&"EnergyChanged", {
+		"amount": amount,
+		"energy": session.current_energy,
+	}))
+
+
 func apply_enemy_damage(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
 	if session.is_finished() or amount <= 0:
 		return
