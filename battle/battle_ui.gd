@@ -15,6 +15,7 @@ var _enemy_name: Label
 var _enemy_artwork: TextureRect
 var _enemy_description: Label
 var _enemy_health: ProgressBar
+var _enemy_health_text: Label
 var _intent_label: Label
 var _board_container: HBoxContainer
 var _hand_container: HBoxContainer
@@ -103,15 +104,29 @@ func _build_ui() -> void:
 	_intent_label.add_theme_color_override("font_color", AppTheme.GOLD_TEXT)
 	encounter_details.add_child(_intent_label)
 	var health_heading := Label.new()
-	health_heading.text = "MONSTER HEART"
+	health_heading.text = "MONSTER HEALTH"
 	health_heading.add_theme_font_size_override("font_size", 14)
 	health_heading.add_theme_color_override("font_color", AppTheme.DANGER_TEXT)
 	encounter_details.add_child(health_heading)
+	var enemy_health_overlay := Control.new()
+	enemy_health_overlay.custom_minimum_size.y = 44
+	encounter_details.add_child(enemy_health_overlay)
 	_enemy_health = ProgressBar.new()
+	_enemy_health.name = "MonsterHealthBar"
+	_enemy_health.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_enemy_health.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_enemy_health.custom_minimum_size.y = 44
 	_enemy_health.show_percentage = false
-	encounter_details.add_child(_enemy_health)
+	_enemy_health.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	enemy_health_overlay.add_child(_enemy_health)
+	_enemy_health_text = Label.new()
+	_enemy_health_text.name = "MonsterHealthText"
+	_enemy_health_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_enemy_health_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_enemy_health_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_enemy_health_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_enemy_health_text.add_theme_font_size_override("font_size", 21)
+	_enemy_health_text.add_theme_color_override("font_color", AppTheme.INK)
+	enemy_health_overlay.add_child(_enemy_health_text)
 	var center_row := HBoxContainer.new()
 	center_row.name = "PlayerBoardRow"
 	center_row.custom_minimum_size.y = 242
@@ -193,7 +208,7 @@ func _build_ui() -> void:
 	player_health_stack.add_theme_constant_override("separation", 3)
 	root_stack.add_child(player_health_stack)
 	var player_health_heading := Label.new()
-	player_health_heading.text = "TEAM HEART"
+	player_health_heading.text = "TEAM HEALTH"
 	player_health_heading.add_theme_font_size_override("font_size", 14)
 	player_health_heading.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
 	player_health_stack.add_child(player_health_heading)
@@ -335,6 +350,7 @@ func _refresh() -> void:
 	_enemy_description.text = session.enemy.definition.description
 	_enemy_health.max_value = session.enemy.definition.maximum_health
 	_enemy_health.value = session.enemy.current_health
+	_enemy_health_text.text = "%d / %d" % [session.enemy.current_health, session.enemy.definition.maximum_health]
 	_enemy_health.tooltip_text = "%d / %d monster Heart" % [session.enemy.current_health, session.enemy.definition.maximum_health]
 	_intent_label.text = controller.get_enemy_intent()
 	_refresh_spark_icons(session.current_energy, session.rules.energy_per_turn)
