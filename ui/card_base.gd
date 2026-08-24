@@ -42,6 +42,7 @@ var instance: CardInstance
 var interactive: bool = false
 var footer_text: String = ""
 var compact: bool = false
+var battlefield_health_bar: bool = false
 
 @onready var _background: TextureRect = %CardBackground
 @onready var _frame_overlay: TextureRect = %FrameOverlay
@@ -55,6 +56,7 @@ var compact: bool = false
 @onready var _description_label: Label = %DescriptionLabel
 @onready var _attack_label: Label = %AttackLabel
 @onready var _health_label: Label = %HealthLabel
+@onready var _health_progress: ProgressBar = %HealthProgress
 @onready var _action_label: Label = %ActionLabel
 @onready var _footer_label: Label = %FooterLabel
 @onready var _interactive_outline: Panel = %InteractiveOutline
@@ -127,6 +129,12 @@ func set_compact(enabled: bool = true) -> void:
 		_refresh()
 
 
+func set_battlefield_health_bar(enabled: bool = true) -> void:
+	battlefield_health_bar = enabled
+	if is_node_ready():
+		_refresh()
+
+
 func get_displayed_artwork() -> Texture2D:
 	return _artwork.texture if is_node_ready() else null
 
@@ -155,6 +163,7 @@ func _bind_card_data() -> void:
 		_description_label.text = "This ally's details need a quick check."
 		_attack_label.visible = false
 		_health_label.visible = false
+		_health_progress.visible = false
 		_action_label.visible = true
 		_action_label.text = "NO DETAILS"
 		_footer_label.text = footer_text
@@ -172,11 +181,18 @@ func _bind_card_data() -> void:
 		_attack_label.visible = true
 		_health_label.visible = true
 		_action_label.visible = false
+		_health_progress.visible = battlefield_health_bar and instance != null
+		if _health_progress.visible:
+			_health_progress.max_value = definition.health
+			_health_progress.value = health
+			_health_progress.tooltip_text = "%d / %d Heart" % [health, definition.health]
+			_apply_health_progress_style(health, definition.health)
 	else:
 		_attack_label.visible = false
 		_health_label.visible = false
 		_action_label.visible = true
 		_action_label.text = "ONE-SHOT"
+		_health_progress.visible = false
 	_footer_label.text = footer_text
 
 
@@ -199,6 +215,17 @@ func _apply_layout() -> void:
 			label.add_theme_font_size_override("font_size", compact_body_font_size)
 		for label in [_cost_label, _attack_label, _health_label, _action_label]:
 			label.add_theme_font_size_override("font_size", compact_stats_font_size)
+
+
+func _apply_health_progress_style(current_health: int, maximum_health: int) -> void:
+	var low_health := current_health * 3 <= maximum_health
+	var fill := _health_progress.get_theme_stylebox("fill") as StyleBoxFlat
+	if fill == null:
+		return
+	fill = fill.duplicate(true)
+	fill.bg_color = Color("#D9547F") if low_health else Color("#48CFAE")
+	fill.border_color = Color("#A52E57") if low_health else Color("#176B59")
+	_health_progress.add_theme_stylebox_override("fill", fill)
 
 
 func _apply_visual_style(style: CardVisualStyle) -> void:
@@ -347,6 +374,7 @@ func _show_hover_preview() -> void:
 	_hover_preview_card.hover_preview_enabled = false
 	_hover_preview_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hover_preview_card.set_compact(false)
+	_hover_preview_card.set_battlefield_health_bar(battlefield_health_bar)
 	if instance != null:
 		_hover_preview_card.setup_instance(instance, footer_text)
 	else:

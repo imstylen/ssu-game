@@ -124,6 +124,20 @@ func _test_card_base_artwork_and_style() -> void:
 	_expect(view.get_node("%TypeLabel").text == "ALLY", "Unit type is displayed as ALLY")
 	_expect(view.get_node("%AttackLabel").text == "POWER 2", "Attack stat is displayed as POWER")
 	_expect(view.get_node("%HealthLabel").text == "HEART 5", "Health stat is displayed as HEART")
+	var health_progress: ProgressBar = view.get_node("%HealthProgress")
+	_expect(not health_progress.visible, "Card health progress is hidden outside the battlefield")
+	var battlefield_instance := CardInstance.new(_cards[&"shield_bot"], 9001)
+	battlefield_instance.current_health = 3
+	view.setup_instance(battlefield_instance)
+	view.set_battlefield_health_bar()
+	_expect(health_progress.visible and health_progress.max_value == 5.0 and health_progress.value == 3.0, "Battlefield card health bar binds current and maximum Heart")
+	_expect(health_progress.tooltip_text == "3 / 5 Heart", "Battlefield health bar retains an exact accessible value")
+	battlefield_instance.current_health = 1
+	view.setup_instance(battlefield_instance)
+	var low_health_fill := health_progress.get_theme_stylebox("fill") as StyleBoxFlat
+	_expect(low_health_fill != null and low_health_fill.bg_color.is_equal_approx(AppTheme.DANGER), "Low-Heart card bar switches to berry danger styling")
+	view.set_battlefield_health_bar(false)
+	_expect(not health_progress.visible, "Battlefield health bar can be hidden for hand and catalog cards")
 	view.set_compact()
 	_expect(artwork_rect.visible and artwork_rect.is_visible_in_tree(), "Compact cards retain visible artwork")
 	_expect(view.get_node("%ArtworkFrame").custom_minimum_size == Vector2.ONE * view.compact_artwork_size, "Compact artwork remains square")

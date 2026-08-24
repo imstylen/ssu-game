@@ -384,6 +384,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 		var footer := "READY TO HELP" if on_board and available else ""
 		view.setup_instance(card, footer)
 		view.set_compact()
+		view.set_battlefield_health_bar(on_board)
 		view.set_interactive(available)
 		view.card_activated.connect(controller.request_attack_enemy if on_board else controller.request_play_card)
 		container.add_child(view)
