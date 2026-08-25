@@ -24,12 +24,17 @@ Create a Discord application and bot, invite it with the `bot` and `applications
 
 - View Channels
 - Send Messages
+- Create Private Threads
+- Send Messages in Threads
+- Manage Threads
 - Embed Links
 - Attach Files
 - Read Message History
 - Use Application Commands
 
-The bot only requests the `Guilds` gateway intent. Configure the application, guild, intake channel, review channel, and moderator role IDs from Discord.
+Enable the privileged **Message Content Intent** under the bot settings in the Discord Developer Portal. The bot requests the `Guilds`, `GuildMessages`, and `MessageContent` gateway intents so it can read answers and artwork posted inside card threads. The intake channel must be an ordinary guild text channel; the bot creates private threads beneath it and adds the submitter. Members need View Channel and Send Messages in Threads, while moderators need Manage Threads to inspect every private draft.
+
+Configure the application, guild, intake channel, review channel, and moderator role IDs from Discord.
 
 Create and install a GitHub App on the repository with:
 
@@ -56,4 +61,4 @@ docker run --detach --restart unless-stopped \
 
 The image pins Node 24.19 and Godot 4.4.1 and verifies the official Godot SHA-512 checksum while building. The `/data` volume preserves SQLite submissions, normalized artwork, the repository checkout, and Godot's import cache.
 
-On startup the bot refreshes the schema, registers guild commands, and creates or updates the intake panel. Moderators can run `/card-schema-refresh` and `/card-intake-refresh`. Submitters use `/card-artwork` for the private attachment step and `/card-status` for progress.
+On startup the bot refreshes the schema, registers guild commands, and creates or updates the intake panel. Submitters run `/newcard` or click **Create a card** to open a private, persistent conversation. They reply to schema-generated questions and can attach or replace artwork in the thread at any point; submission IDs are never entered manually. Moderators can run `/card-schema-refresh` and `/card-intake-refresh`.
