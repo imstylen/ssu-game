@@ -12,16 +12,24 @@ export interface FormStep {
   includeEffect: boolean;
 }
 
-function chunkFields(id: string, title: string, fields: FieldSchema[]): FormStep[] {
+function chunkFields(
+  id: string,
+  title: string,
+  fields: FieldSchema[],
+  firstStepCapacity = MAX_MODAL_COMPONENTS,
+): FormStep[] {
   const steps: FormStep[] = [];
-  for (let index = 0; index < fields.length; index += MAX_MODAL_COMPONENTS) {
+  let index = 0;
+  while (index < fields.length) {
+    const capacity = steps.length === 0 ? firstStepCapacity : MAX_MODAL_COMPONENTS;
     steps.push({
       id: `${id}-${steps.length + 1}`,
       title: steps.length === 0 ? title : `${title} ${steps.length + 1}`,
-      fields: fields.slice(index, index + MAX_MODAL_COMPONENTS),
+      fields: fields.slice(index, index + capacity),
       includeStyle: false,
       includeEffect: false,
     });
+    index += capacity;
   }
   return steps;
 }
@@ -32,11 +40,17 @@ export function buildFormPlan(schema: CardSchema, payload: CardSubmissionPayload
   );
   const basics = visibleFields.filter((field) => field.type === "string" || field.type === "enum");
   const statistics = visibleFields.filter((field) => !basics.includes(field));
-  const steps = chunkFields("card", "Card Details", basics);
+  const includesStyle = schema.styles.length > 0;
+  const steps = chunkFields(
+    "card",
+    "Card Details",
+    basics,
+    MAX_MODAL_COMPONENTS - (includesStyle ? 1 : 0),
+  );
   if (steps.length === 0) {
     steps.push({ id: "card-1", title: "Card Details", fields: [], includeStyle: false, includeEffect: false });
   }
-  steps[0]!.includeStyle = true;
+  steps[0]!.includeStyle = includesStyle;
   steps.push(...chunkFields("stats", "Card Stats", statistics));
 
   const cardTypeField = schema.fields.find(
