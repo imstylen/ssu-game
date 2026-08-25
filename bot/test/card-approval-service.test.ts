@@ -43,7 +43,7 @@ function submission(artworkPath: string): SubmissionRecord {
   };
 }
 
-test("publishes only Godot-generated files after imports and tests", async () => {
+test("publishes only Godot-generated files after importing generated artwork and running tests", async () => {
   const checkoutPath = await mkdtemp(join(tmpdir(), "card-approval-"));
   const artworkPath = join(checkoutPath, "source.png");
   await writeFile(artworkPath, "artwork");
@@ -90,7 +90,7 @@ test("publishes only Godot-generated files after imports and tests", async () =>
     "cards/definitions/new_card/new_card.png.import",
     "cards/definitions/new_card/new_card.tres",
   ]);
-  assert.equal(commands.filter((arguments_) => arguments_.includes("--import")).length, 2);
+  assert.equal(commands.filter((arguments_) => arguments_.includes("--import")).length, 1);
   assert.equal(commands.some((arguments_) => arguments_.includes("res://tests/test_runner.gd")), true);
 });
 

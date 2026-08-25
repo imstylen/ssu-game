@@ -54,7 +54,6 @@ export class CardApprovalService {
     await mkdir(workDirectory, { recursive: true });
     await writeFile(inputPath, `${JSON.stringify(authoringPayload(schema, submission), null, 2)}\n`);
 
-    await this.#runImport();
     let commandError: unknown;
     try {
       await this.#runner.run(this.#godotExecutable, [

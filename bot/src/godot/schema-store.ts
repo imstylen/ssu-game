@@ -33,6 +33,12 @@ export class SchemaStore {
     await mkdir(workDirectory, { recursive: true });
     await this.#runner.run(this.#godotExecutable, [
       "--headless",
+      "--import",
+      "--path",
+      this.#checkout.path,
+    ], this.#checkout.path);
+    await this.#runner.run(this.#godotExecutable, [
+      "--headless",
       "--path",
       this.#checkout.path,
       "--script",

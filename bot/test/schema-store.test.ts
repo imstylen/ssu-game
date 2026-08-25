@@ -14,8 +14,13 @@ test("caches exported schemas by content version", async () => {
     path: checkoutPath,
     sync: async () => "commit-sha",
   } as WorkingCheckout;
+  const calls: string[][] = [];
   const runner: CommandRunner = {
     async run(_executable, arguments_) {
+      calls.push([...arguments_]);
+      if (!arguments_.includes("res://tools/card_authoring/export_schema.gd")) {
+        return { stdout: "", stderr: "" };
+      }
       const outputIndex = arguments_.indexOf("--output");
       const output = arguments_[outputIndex + 1];
       assert.ok(output);
@@ -39,4 +44,6 @@ test("caches exported schemas by content version", async () => {
   assert.equal(schema.source_commit, "commit-sha");
   assert.equal(store.current, schema);
   assert.equal(store.get(version), schema);
+  assert.deepEqual(calls[0], ["--headless", "--import", "--path", checkoutPath]);
+  assert.equal(calls[1]?.includes("res://tools/card_authoring/export_schema.gd"), true);
 });
