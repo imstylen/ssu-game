@@ -1,10 +1,13 @@
 export const CustomIds = {
   start: "card:start",
-  continue(submissionId: string, stage: string): string {
-    return `card:continue:${submissionId}:${stage}`;
+  answer(submissionId: string, stage: string): string {
+    return checkedCustomId(`card:answer:${submissionId}:${stage}`);
   },
-  step(submissionId: string, stage: string): string {
-    return `card:step:${submissionId}:${stage}`;
+  submit(submissionId: string): string {
+    return `card:submit:${submissionId}`;
+  },
+  cancel(submissionId: string): string {
+    return `card:cancel:${submissionId}`;
   },
   approve(submissionId: string): string {
     return `card:approve:${submissionId}`;
@@ -16,6 +19,11 @@ export const CustomIds = {
     return `card:denial:${submissionId}`;
   },
 };
+
+function checkedCustomId(value: string): string {
+  if (value.length > 100) throw new Error("Schema field ID is too long for a Discord component");
+  return value;
+}
 
 export interface ParsedCustomId {
   action: string;

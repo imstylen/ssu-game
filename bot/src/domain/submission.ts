@@ -1,6 +1,5 @@
 export type SubmissionStatus =
   | "draft"
-  | "awaiting_artwork"
   | "pending"
   | "processing"
   | "approved"

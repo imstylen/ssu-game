@@ -9,33 +9,39 @@ import {
   EmbedBuilder,
   Events,
   MessageFlags,
+  ThreadAutoArchiveDuration,
+  type AnyThreadChannel,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
   type Interaction,
+  type Message,
   type ModalSubmitInteraction,
+  type StringSelectMenuInteraction,
   type TextChannel,
 } from "discord.js";
 import type { ArtworkNormalizer } from "../artwork/artwork-normalizer.js";
 import { MAX_ARTWORK_BYTES } from "../artwork/artwork-normalizer.js";
 import type { BotConfig } from "../config.js";
-import { buildFormPlan } from "../domain/form-plan.js";
+import {
+  applySelectionAnswer,
+  applyTextAnswer,
+  buildConversationPlan,
+  conversationStep,
+  nextConversationStep,
+  type ConversationStep,
+} from "../domain/conversation.js";
 import type { CardSchema } from "../domain/schema.js";
-import type { SubmissionRecord } from "../domain/submission.js";
+import type { CardSubmissionPayload, SubmissionRecord } from "../domain/submission.js";
 import type { CardApprovalService } from "../godot/card-approval-service.js";
 import type { SchemaStore } from "../godot/schema-store.js";
 import type { SubmissionRepository } from "../storage/submission-repository.js";
 import { commandDefinitions } from "./commands.js";
+import { buildConversationPrompt } from "./conversation-components.js";
 import { CustomIds, parseCustomId } from "./custom-ids.js";
-import {
-  applyContributionFields,
-  applyStepFields,
-  buildContinueButton,
-  buildContributionModal,
-  buildDenialModal,
-  buildStepModal,
-  denialReason,
-} from "./form-components.js";
+import { buildDenialModal, denialReason } from "./form-components.js";
 import { buildReviewMessage } from "./review-message.js";
+
+type StartInteraction = ButtonInteraction | ChatInputCommandInteraction;
 
 export class DiscordCardBot {
   readonly #client: Client;
@@ -71,12 +77,16 @@ export class DiscordCardBot {
     this.#client.on(Events.InteractionCreate, (interaction) => {
       void this.#handleInteraction(interaction);
     });
+    this.#client.on(Events.MessageCreate, (message) => {
+      void this.#handleMessage(message);
+    });
     await this.#client.login(this.#config.discordToken);
   }
 
   async #handleInteraction(interaction: Interaction): Promise<void> {
     try {
       if (interaction.isChatInputCommand()) await this.#handleCommand(interaction);
+      else if (interaction.isStringSelectMenu()) await this.#handleSelection(interaction);
       else if (interaction.isButton()) await this.#handleButton(interaction);
       else if (interaction.isModalSubmit()) await this.#handleModal(interaction);
     } catch (error) {
@@ -91,11 +101,8 @@ export class DiscordCardBot {
 
   async #handleCommand(interaction: ChatInputCommandInteraction): Promise<void> {
     switch (interaction.commandName) {
-      case "card-artwork":
-        await this.#handleArtwork(interaction);
-        return;
-      case "card-status":
-        await this.#handleStatus(interaction);
+      case "newcard":
+        await this.#startConversation(interaction);
         return;
       case "card-schema-refresh": {
         this.#requireModerator(interaction);
@@ -115,40 +122,147 @@ export class DiscordCardBot {
     }
   }
 
-  async #handleButton(interaction: ButtonInteraction): Promise<void> {
-    const customId = parseCustomId(interaction.customId);
-    if (!customId) return;
-    if (customId.action === "start") {
-      if (interaction.guildId !== this.#config.discordGuildId) throw new Error("Card submissions are only available in the configured server");
-      const schema = this.#schemas.current;
+  async #startConversation(interaction: StartInteraction): Promise<void> {
+    if (interaction.guildId !== this.#config.discordGuildId) {
+      throw new Error("Card submissions are only available in the configured server");
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    const existing = this.#repository.findDraftBySubmitter(interaction.guildId, interaction.user.id);
+    if (existing?.threadId) {
+      try {
+        const thread = await this.#threadChannel(existing.threadId);
+        if (thread.archived) await thread.setArchived(false, "Submitter resumed their card draft");
+        await interaction.editReply(`You already have a card in progress: ${thread}`);
+        return;
+      } catch (error) {
+        console.error("Could not resume the existing card thread", error);
+        this.#repository.cancel(existing.id, interaction.user.id);
+      }
+    }
+
+    const schema = this.#schemas.current;
+    const seed: CardSubmissionPayload = { card: {} };
+    const firstStep = buildConversationPlan(schema, seed)[0];
+    if (!firstStep) throw new Error("The game schema did not provide any card questions");
+    const intakeChannel = await this.#textChannel(this.#config.intakeChannelId);
+    const thread = await intakeChannel.threads.create({
+      name: cardThreadName(interaction.user.username),
+      type: ChannelType.PrivateThread,
+      autoArchiveDuration: ThreadAutoArchiveDuration.OneDay,
+      invitable: false,
+      reason: `Card draft for ${interaction.user.tag}`,
+    });
+
+    try {
+      await thread.members.add(interaction.user.id);
       const submission = this.#repository.createDraft({
         id: randomUUID(),
         guildId: interaction.guildId,
         submitterId: interaction.user.id,
         schemaVersion: schema.schema_version,
+        stage: firstStep.id,
+        threadId: thread.id,
       });
-      const firstStep = buildFormPlan(schema, submission.payload)[0];
-      if (!firstStep) throw new Error("The game schema did not provide any card fields");
-      await interaction.showModal(buildStepModal(schema, submission.id, submission.payload, firstStep));
+      await thread.send({
+        content: [
+          `<@${interaction.user.id}> this is your private card workspace.`,
+          "Answer the current question, then I’ll ask the next one. You can attach or replace the artwork at any time.",
+        ].join("\n"),
+        allowedMentions: { users: [interaction.user.id] },
+      });
+      await thread.send(buildConversationPrompt(schema, submission, firstStep));
+      await interaction.editReply(`Your private card thread is ready: ${thread}`);
+    } catch (error) {
+      await thread.setArchived(true, "Card draft setup failed").catch(() => undefined);
+      throw error;
+    }
+  }
+
+  async #handleMessage(message: Message): Promise<void> {
+    if (message.author.bot || !message.inGuild() || message.guildId !== this.#config.discordGuildId) return;
+    if (!message.channel.isThread()) return;
+    let submission = this.#repository.findByThread(message.channelId);
+    if (!submission || submission.status !== "draft" || submission.submitterId !== message.author.id) return;
+
+    try {
+      const schema = this.#schemaFor(submission);
+      let artworkSaved = false;
+      if (message.attachments.size > 0) {
+        submission = await this.#saveArtwork(message, submission);
+        artworkSaved = true;
+      }
+
+      const step = conversationStep(schema, submission.payload, submission.stage);
+      const answer = message.content.trim();
+      if (acceptsText(step) && answer.length > 0) {
+        const payload = applyTextAnswer(submission.payload, step, answer);
+        if (artworkSaved) await message.channel.send("Artwork saved.");
+        await this.#advanceConversation(message.channel, schema, submission, step.id, payload, submission.artworkPath !== null);
+        return;
+      }
+      if (step.kind === "artwork" && artworkSaved) {
+        await message.channel.send("Artwork saved and normalized to 1024×1024 PNG.");
+        await this.#advanceConversation(message.channel, schema, submission, step.id, submission.payload, true);
+        return;
+      }
+      if (artworkSaved) {
+        if (step.kind === "ready") await message.channel.send(buildConversationPrompt(schema, submission, step));
+        else await message.reply("Artwork saved. Continue with the bot’s current question above.");
+        return;
+      }
+      if (answer.length > 0) {
+        await message.reply("Use the choice menu or buttons on the bot’s current question.");
+      }
+    } catch (error) {
+      console.error(error);
+      await message.reply(userFacingError(error));
+    }
+  }
+
+  async #handleSelection(interaction: StringSelectMenuInteraction): Promise<void> {
+    const customId = parseCustomId(interaction.customId);
+    if (customId?.action !== "answer" || !customId.submissionId || !customId.stage) return;
+    const submission = this.#repository.getRequired(customId.submissionId);
+    this.#requireSubmitter(interaction, submission);
+    if (submission.status !== "draft" || submission.stage !== customId.stage) {
+      throw new Error("That card question is no longer active");
+    }
+    if (submission.threadId !== interaction.channelId) throw new Error("Use this choice inside its card thread");
+    const selected = interaction.values[0];
+    if (!selected) throw new Error("Choose one option");
+    const schema = this.#schemaFor(submission);
+    const step = conversationStep(schema, submission.payload, submission.stage);
+    const payload = applySelectionAnswer(submission.payload, step, selected);
+    const next = nextConversationStep(schema, payload, step.id, submission.artworkPath !== null);
+    const updated = this.#repository.saveProgress(submission.id, payload, next.id);
+    await interaction.update({ components: [] });
+    const thread = await this.#threadChannel(interaction.channelId);
+    await thread.send(buildConversationPrompt(schema, updated, next));
+  }
+
+  async #handleButton(interaction: ButtonInteraction): Promise<void> {
+    const customId = parseCustomId(interaction.customId);
+    if (!customId) return;
+    if (customId.action === "start") {
+      await this.#startConversation(interaction);
       return;
     }
     if (!customId.submissionId) throw new Error("Invalid submission action");
     const submission = this.#repository.getRequired(customId.submissionId);
-    if (customId.action === "continue") {
-      this.#requireSubmitter(interaction, submission);
-      if (submission.status !== "draft" || submission.stage !== customId.stage) {
-        throw new Error("This form step is no longer active");
-      }
-      if (customId.stage === "contribution") {
-        await interaction.showModal(buildContributionModal(submission.id, submission.payload));
-        return;
-      }
-      const schema = this.#schemaFor(submission);
-      const step = buildFormPlan(schema, submission.payload).find((candidate) => candidate.id === customId.stage);
-      if (!step) throw new Error("This form step is no longer available");
-      await interaction.showModal(buildStepModal(schema, submission.id, submission.payload, step));
+    if (customId.action === "submit") {
+      await this.#submitForReview(interaction, submission);
       return;
     }
+    if (customId.action === "cancel") {
+      this.#requireSubmitter(interaction, submission);
+      if (!this.#repository.cancel(submission.id, interaction.user.id)) throw new Error("This draft can no longer be cancelled");
+      await interaction.update({ content: "Card draft cancelled.", embeds: [], components: [], attachments: [] });
+      const thread = await this.#threadChannel(interaction.channelId);
+      await thread.setArchived(true, "Submitter cancelled card draft");
+      return;
+    }
+
     this.#requireModerator(interaction);
     if (customId.action === "deny") {
       if (submission.status !== "pending") throw new Error("This submission is no longer pending");
@@ -183,91 +297,69 @@ export class DiscordCardBot {
     }
   }
 
-  async #handleModal(interaction: ModalSubmitInteraction): Promise<void> {
-    const customId = parseCustomId(interaction.customId);
-    if (!customId?.submissionId) return;
-    const submission = this.#repository.getRequired(customId.submissionId);
-    if (customId.action === "denial") {
-      this.#requireModerator(interaction);
-      const reason = denialReason(interaction.fields);
-      if (!reason) throw new Error("A denial reason is required");
-      if (!this.#repository.deny(submission.id, interaction.user.id, reason)) {
-        throw new Error("Another moderator already decided this submission");
-      }
-      await this.#updateReviewStatus(submission, "Denied", Colors.Red);
-      await this.#notifySubmitter(submission, `Your card submission was denied: ${reason}`);
-      await interaction.reply({ content: "Submission denied.", flags: MessageFlags.Ephemeral });
-      return;
-    }
-    if (customId.action !== "step" || !customId.stage) return;
+  async #submitForReview(interaction: ButtonInteraction, submission: SubmissionRecord): Promise<void> {
     this.#requireSubmitter(interaction, submission);
-    if (submission.status !== "draft" || submission.stage !== customId.stage) {
-      throw new Error("This form step is no longer active");
+    if (submission.status !== "draft" || submission.stage !== "ready") throw new Error("This card is not ready to submit");
+    if (submission.threadId !== interaction.channelId) throw new Error("Submit this card inside its card thread");
+    if (!submission.payload.consent_confirmed) throw new Error("Artwork permission must be confirmed");
+    if (!submission.artworkPath) throw new Error("Attach artwork before submitting this card");
+
+    await interaction.update({ content: "Submitting to moderators…", embeds: [], components: [], attachments: [] });
+    const pending = this.#repository.queueForReview(submission.id);
+    try {
+      const reviewChannel = await this.#textChannel(this.#config.reviewChannelId);
+      const reviewMessage = await reviewChannel.send(buildReviewMessage(this.#schemaFor(pending), pending));
+      this.#repository.attachReviewMessage(pending.id, reviewChannel.id, reviewMessage.id);
+      await interaction.editReply("Submitted to the moderator review queue. Updates will appear in this thread.");
+    } catch (error) {
+      this.#repository.restoreDraftAfterReviewFailure(submission.id);
+      const restored = this.#repository.getRequired(submission.id);
+      await interaction.editReply(`Could not reach the review queue: ${userFacingError(error)}`);
+      const thread = await this.#threadChannel(interaction.channelId);
+      await thread.send(buildConversationPrompt(this.#schemaFor(restored), restored, conversationStep(this.#schemaFor(restored), restored.payload, restored.stage)));
     }
-    if (customId.stage === "contribution") {
-      const payload = applyContributionFields(submission.payload, interaction.fields);
-      this.#repository.awaitArtwork(submission.id, payload);
-      await interaction.reply({
-        content: [
-          "Card details saved. Add the image privately with:",
-          `\`/card-artwork submission:${submission.id} artwork:<your file>\``,
-          "Accepted formats: PNG or JPEG, up to 10 MB.",
-        ].join("\n"),
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-    const schema = this.#schemaFor(submission);
-    const currentPlan = buildFormPlan(schema, submission.payload);
-    const step = currentPlan.find((candidate) => candidate.id === customId.stage);
-    if (!step) throw new Error("This form step is no longer available");
-    const payload = applyStepFields(schema, submission.payload, step, interaction.fields);
-    const nextPlan = buildFormPlan(schema, payload);
-    const completedIndex = nextPlan.findIndex((candidate) => candidate.id === step.id);
-    const nextStage = nextPlan[completedIndex + 1]?.id ?? "contribution";
-    this.#repository.saveProgress(submission.id, payload, nextStage);
-    await interaction.reply({
-      content: `Saved. Submission ID: \`${submission.id}\``,
-      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(buildContinueButton(submission.id, nextStage))],
-      flags: MessageFlags.Ephemeral,
-    });
   }
 
-  async #handleArtwork(interaction: ChatInputCommandInteraction): Promise<void> {
-    const submissionId = interaction.options.getString("submission", true);
-    const attachment = interaction.options.getAttachment("artwork", true);
-    const submission = this.#repository.getRequired(submissionId);
-    this.#requireSubmitter(interaction, submission);
-    if (submission.status !== "awaiting_artwork") throw new Error("This submission is not waiting for artwork");
-    if (attachment.size > MAX_ARTWORK_BYTES) throw new Error("Artwork must be 10 MB or smaller");
-    if (attachment.contentType && !["image/png", "image/jpeg"].includes(attachment.contentType)) {
-      throw new Error("Artwork must be a PNG or JPEG image");
+  async #handleModal(interaction: ModalSubmitInteraction): Promise<void> {
+    const customId = parseCustomId(interaction.customId);
+    if (customId?.action !== "denial" || !customId.submissionId) return;
+    const submission = this.#repository.getRequired(customId.submissionId);
+    this.#requireModerator(interaction);
+    const reason = denialReason(interaction.fields);
+    if (!reason) throw new Error("A denial reason is required");
+    if (!this.#repository.deny(submission.id, interaction.user.id, reason)) {
+      throw new Error("Another moderator already decided this submission");
     }
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await this.#updateReviewStatus(submission, "Denied", Colors.Red);
+    await this.#notifySubmitter(submission, `Your card submission was denied: ${reason}`);
+    await interaction.reply({ content: "Submission denied.", flags: MessageFlags.Ephemeral });
+  }
+
+  async #saveArtwork(message: Message<true>, submission: SubmissionRecord): Promise<SubmissionRecord> {
+    const attachment = [...message.attachments.values()].find((candidate) =>
+      candidate.contentType === "image/png"
+      || candidate.contentType === "image/jpeg"
+      || /\.(png|jpe?g)$/i.test(candidate.name));
+    if (!attachment) throw new Error("Attach a PNG or JPEG image");
+    if (attachment.size > MAX_ARTWORK_BYTES) throw new Error("Artwork must be 10 MB or smaller");
     const response = await fetch(attachment.url);
     if (!response.ok) throw new Error("Discord could not provide the artwork attachment");
     const source = Buffer.from(await response.arrayBuffer());
     const artworkPath = await this.#artwork.normalize(submission.id, source);
-    const pending: SubmissionRecord = { ...submission, status: "pending", stage: "review", artworkPath };
-    const reviewChannel = await this.#textChannel(this.#config.reviewChannelId);
-    const reviewMessage = await reviewChannel.send(buildReviewMessage(this.#schemaFor(submission), pending));
-    this.#repository.queueForReview(submission.id, artworkPath);
-    this.#repository.attachReviewMessage(submission.id, reviewChannel.id, reviewMessage.id);
-    await interaction.editReply("Artwork normalized to 1024×1024 PNG and sent to the moderator review queue.");
+    return this.#repository.saveArtwork(submission.id, artworkPath);
   }
 
-  async #handleStatus(interaction: ChatInputCommandInteraction): Promise<void> {
-    const submission = this.#repository.getRequired(interaction.options.getString("submission", true));
-    if (submission.submitterId !== interaction.user.id && !this.#isModerator(interaction)) {
-      throw new Error("You can only view your own card submissions");
-    }
-    const details = submission.pullRequestUrl
-      ?? submission.decisionReason
-      ?? (submission.status === "awaiting_artwork" ? "Upload artwork with /card-artwork." : "No additional details.");
-    await interaction.reply({
-      content: `Status: **${submission.status.replaceAll("_", " ")}**\n${details}`,
-      flags: MessageFlags.Ephemeral,
-    });
+  async #advanceConversation(
+    thread: AnyThreadChannel,
+    schema: CardSchema,
+    submission: SubmissionRecord,
+    completedStage: string,
+    payload: CardSubmissionPayload,
+    hasArtwork: boolean,
+  ): Promise<void> {
+    const next = nextConversationStep(schema, payload, completedStage, hasArtwork);
+    const updated = this.#repository.saveProgress(submission.id, payload, next.id);
+    await thread.send(buildConversationPrompt(schema, updated, next));
   }
 
   async #publishIntakePanel(): Promise<void> {
@@ -275,7 +367,7 @@ export class DiscordCardBot {
     const payload = {
       embeds: [new EmbedBuilder()
         .setTitle("Create a community card")
-        .setDescription("Build a card from the game’s current fields, styles, and effects. Your submission goes to moderators for review.")
+        .setDescription("Start a private thread where the bot walks you through the game’s current fields, styles, effects, and artwork.")
         .setColor(Colors.Blurple)],
       components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder().setCustomId(CustomIds.start).setLabel("Create a card").setStyle(ButtonStyle.Primary),
@@ -309,6 +401,18 @@ export class DiscordCardBot {
   }
 
   async #notifySubmitter(submission: SubmissionRecord, message: string): Promise<void> {
+    if (submission.threadId) {
+      try {
+        const thread = await this.#threadChannel(submission.threadId);
+        await thread.send({
+          content: `<@${submission.submitterId}> ${message}`,
+          allowedMentions: { users: [submission.submitterId] },
+        });
+        return;
+      } catch (error) {
+        console.error("Could not notify card submitter in their thread", error);
+      }
+    }
     try {
       const user = await this.#client.users.fetch(submission.submitterId);
       await user.send(message);
@@ -340,6 +444,22 @@ export class DiscordCardBot {
     if (!channel || channel.type !== ChannelType.GuildText) throw new Error(`Configured channel is not a text channel: ${id}`);
     return channel;
   }
+
+  async #threadChannel(id: string): Promise<AnyThreadChannel> {
+    const channel = await this.#client.channels.fetch(id);
+    if (!channel?.isThread()) throw new Error(`Card thread is unavailable: ${id}`);
+    return channel;
+  }
+}
+
+function acceptsText(step: ConversationStep): boolean {
+  return step.kind === "credit"
+    || (step.kind === "field" && step.field.type !== "enum" && step.field.type !== "boolean");
+}
+
+function cardThreadName(username: string): string {
+  const name = `card-${username}`.trim();
+  return name.slice(0, 100) || "card-draft";
 }
 
 function userFacingError(error: unknown): string {

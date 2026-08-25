@@ -81,13 +81,6 @@ export class SubmissionRepository {
     return this.getRequired(id);
   }
 
-  awaitArtwork(id: string, payload: CardSubmissionPayload): SubmissionRecord {
-    this.#database
-      .prepare("UPDATE submissions SET payload_json = ?, status = 'awaiting_artwork', stage = 'artwork', updated_at = ? WHERE id = ? AND status = 'draft'")
-      .run(JSON.stringify(payload), new Date().toISOString(), id);
-    return this.getRequired(id);
-  }
-
   saveArtwork(id: string, artworkPath: string): SubmissionRecord {
     const result = this.#database
       .prepare("UPDATE submissions SET artwork_path = ?, updated_at = ? WHERE id = ? AND status = 'draft'")
@@ -102,7 +95,7 @@ export class SubmissionRepository {
       .prepare(`
         UPDATE submissions
         SET artwork_path = COALESCE(?, artwork_path), status = 'pending', stage = 'review', updated_at = ?
-        WHERE id = ? AND status IN ('draft', 'awaiting_artwork') AND COALESCE(?, artwork_path) IS NOT NULL
+        WHERE id = ? AND status = 'draft' AND COALESCE(?, artwork_path) IS NOT NULL
       `)
       .run(suppliedArtwork, new Date().toISOString(), id, suppliedArtwork);
     if (result.changes !== 1) throw new Error("This submission is not ready for review");
@@ -219,7 +212,7 @@ export class SubmissionRepository {
     if (!columns.some((column) => column.name === "thread_id")) {
       this.#database.exec("ALTER TABLE submissions ADD COLUMN thread_id TEXT;");
     }
-    this.#database.exec("CREATE INDEX IF NOT EXISTS submissions_thread_id ON submissions(thread_id);");
+    this.#database.exec("CREATE UNIQUE INDEX IF NOT EXISTS submissions_thread_id ON submissions(thread_id) WHERE thread_id IS NOT NULL;");
   }
 }
 

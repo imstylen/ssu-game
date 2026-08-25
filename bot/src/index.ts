@@ -27,7 +27,13 @@ const publisher = new GithubPublisher({
   baseBranch: config.githubBaseBranch,
 });
 const approval = new CardApprovalService(checkout, schemas, config.godotExecutable, runner, publisher);
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+});
 const bot = new DiscordCardBot(
   client,
   config,
