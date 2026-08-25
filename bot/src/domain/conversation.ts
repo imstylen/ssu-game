@@ -7,7 +7,6 @@ export type ConversationStep =
   | { id: "style"; kind: "style"; styles: StyleSchema[] }
   | { id: "effect-choice"; kind: "effect"; effects: EffectSchema[] }
   | { id: "credit"; kind: "credit" }
-  | { id: "consent"; kind: "consent" }
   | { id: "artwork"; kind: "artwork" }
   | { id: "ready"; kind: "ready" };
 
@@ -42,7 +41,6 @@ export function buildConversationPlan(
 
   steps.push(
     { id: "credit", kind: "credit" },
-    { id: "consent", kind: "consent" },
     { id: "artwork", kind: "artwork" },
     { id: "ready", kind: "ready" },
   );
@@ -125,11 +123,6 @@ export function applySelectionAnswer(
   if (step.kind === "effect") {
     if (!step.effects.some((effect) => effect.id === selectedId)) throw new Error("Choose a valid card effect");
     next.effect = { id: selectedId, parameters: {} };
-    return next;
-  }
-  if (step.kind === "consent") {
-    if (selectedId !== "confirmed") throw new Error("Artwork permission must be confirmed");
-    next.consent_confirmed = true;
     return next;
   }
   throw new Error("Reply to the thread for the bot's current question");

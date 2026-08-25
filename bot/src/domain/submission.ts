@@ -16,7 +16,6 @@ export interface CardSubmissionPayload {
     parameters: Record<string, unknown>;
   };
   credit_name?: string;
-  consent_confirmed?: boolean;
 }
 
 export interface SubmissionRecord {

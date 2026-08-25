@@ -60,7 +60,7 @@ test("text answers enforce schema constraints and support defaults", () => {
 });
 
 test("next step skips artwork already uploaded earlier in the conversation", () => {
-  const payload: CardSubmissionPayload = { card: {}, consent_confirmed: true };
-  assert.equal(nextConversationStep(schema, payload, "consent", true).id, "ready");
-  assert.equal(nextConversationStep(schema, payload, "consent", false).id, "artwork");
+  const payload: CardSubmissionPayload = { card: {} };
+  assert.equal(nextConversationStep(schema, payload, "credit", true).id, "ready");
+  assert.equal(nextConversationStep(schema, payload, "credit", false).id, "artwork");
 });

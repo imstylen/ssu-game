@@ -301,7 +301,6 @@ export class DiscordCardBot {
     this.#requireSubmitter(interaction, submission);
     if (submission.status !== "draft" || submission.stage !== "ready") throw new Error("This card is not ready to submit");
     if (submission.threadId !== interaction.channelId) throw new Error("Submit this card inside its card thread");
-    if (!submission.payload.consent_confirmed) throw new Error("Artwork permission must be confirmed");
     if (!submission.artworkPath) throw new Error("Attach artwork before submitting this card");
 
     await interaction.update({ content: "Submitting to moderators…", embeds: [], components: [], attachments: [] });

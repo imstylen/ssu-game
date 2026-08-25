@@ -52,14 +52,6 @@ export function buildConversationPrompt(
       );
     case "credit":
       return { content: "**Credit name (optional)**\nWho should be credited in the pull request? Reply with a name, or `skip`." };
-    case "consent":
-      return selectionPrompt(
-        submission.id,
-        step.id,
-        "Artwork permission",
-        "Confirm that you have permission to submit the attached image.",
-        [{ label: "I confirm", value: "confirmed" }],
-      );
     case "artwork":
       return { content: "**Artwork**\nAttach a PNG or JPEG to your next message (up to 10 MB)." };
     case "ready":
