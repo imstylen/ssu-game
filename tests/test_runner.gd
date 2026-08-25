@@ -79,12 +79,9 @@ func _test_content_resources() -> void:
 	var cards: Array[CardDefinition] = _catalog.get_all_cards()
 	var effects: Array[CardEffectDefinition] = _catalog.get_all_effects()
 	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
-	_expect(cards.size() == 11, "Catalog contains exactly eleven unique cards")
+	_expect(cards.size() >= EXPECTED_CARDS.size(), "Catalog retains every established card")
 	_expect(effects.size() == EXPECTED_EFFECTS.size(), "Catalog contains every reusable card effect")
 	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
-	var allies := 0
-	var one_shots := 0
-	var style_paths: Dictionary = {}
 	for card_id in EXPECTED_CARDS:
 		var card: CardDefinition = _cards[card_id]
 		var expected: Array = EXPECTED_CARDS[card_id]
@@ -95,20 +92,25 @@ func _test_content_resources() -> void:
 		_expect(card.card_type == expected[1], "%s has the expected type" % card_id)
 		_expect(card.cost == expected[2], "%s has the expected Spark cost" % card_id)
 		_expect(card.attack == expected[3] and card.health == expected[4], "%s has expected Power and Heart" % card_id)
-		_expect(not card.description.is_empty(), "%s has warm rules text" % card_id)
-		_expect(card.artwork != null, "%s has assigned artwork" % card_id)
-		_expect(card.artwork != null and card.artwork.get_width() == 1024 and card.artwork.get_height() == 1024, "%s artwork is 1024x1024" % card_id)
-		_expect(card.visual_style != null, "%s has a reusable pastel variant" % card_id)
+	var allies := 0
+	var one_shots := 0
+	var style_paths: Dictionary = {}
+	for card in cards:
+		_expect(not card.description.is_empty(), "%s has warm rules text" % card.id)
+		_expect(card.artwork != null, "%s has assigned artwork" % card.id)
+		_expect(card.artwork != null and card.artwork.get_width() == 1024 and card.artwork.get_height() == 1024, "%s artwork is 1024x1024" % card.id)
+		_expect(card.visual_style != null, "%s has a reusable pastel variant" % card.id)
 		if card.visual_style != null:
 			style_paths[card.visual_style.resource_path] = true
-		_expect(card.validation_errors().is_empty(), "%s validates" % card_id)
+		_expect(card.validation_errors().is_empty(), "%s validates" % card.id)
 		if card.card_type == CardDefinition.CardType.UNIT:
 			allies += 1
-		else:
+		elif card.card_type == CardDefinition.CardType.ACTION:
 			one_shots += 1
-	_expect(allies == 7, "Roster has seven allies")
-	_expect(one_shots == 4, "Roster has four one-shots")
-	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
+	_expect(allies + one_shots == cards.size(), "Every catalog card has a supported card type")
+	_expect(allies >= 7, "Roster retains the seven established allies")
+	_expect(one_shots >= 4, "Roster retains the four established one-shots")
+	_expect(style_paths.size() >= 5, "Roster retains every established visual style")
 	for effect_id in EXPECTED_EFFECTS:
 		var effect: CardEffectDefinition = _catalog.get_effect(effect_id)
 		var expected: Array = EXPECTED_EFFECTS[effect_id]
@@ -153,7 +155,7 @@ func _test_card_submission_schema() -> void:
 	_expect(first.card_types.size() == 2 and first.card_types[0].label == "Ally" and first.card_types[1].label == "One-Shot", "Card type enum and presentation labels are reflected")
 	_expect(first.effects.size() == EXPECTED_EFFECTS.size(), "Every registered effect is exported")
 	_expect(first.styles.size() == 5, "Every reusable visual style is exported")
-	_expect(first.existing_card_ids.size() == EXPECTED_CARDS.size(), "Existing catalog IDs are exported")
+	_expect(first.existing_card_ids.size() >= EXPECTED_CARDS.size(), "Every existing catalog ID is exported")
 	for effect in first.effects:
 		_expect(effect.fields.size() == 1, "%s inherits its behavior parameter" % effect.id)
 
