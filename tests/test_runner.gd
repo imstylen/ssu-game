@@ -46,6 +46,7 @@ func _run_all() -> void:
 	for enemy_id in EXPECTED_ENEMIES:
 		_enemies[enemy_id] = _catalog.get_enemy(enemy_id)
 	_test_content_resources()
+	_test_card_submission_schema()
 	_test_card_base_artwork_and_style()
 	_test_battle_setup()
 	_test_damage_one_shot()
@@ -134,6 +135,26 @@ func _test_content_resources() -> void:
 		_expect(enemy.artwork != null and enemy.artwork.get_width() == 1024 and enemy.artwork.get_height() == 1024, "%s artwork is 1024x1024" % enemy_id)
 		_expect(enemy.validation_errors().is_empty(), "%s validates" % enemy_id)
 	_expect(_catalog.validation_errors.is_empty(), "Catalog scan reports no content errors")
+
+
+func _test_card_submission_schema() -> void:
+	var builder := CardSchemaBuilder.new()
+	var first := builder.build_schema(_catalog, "commit-one")
+	var second := builder.build_schema(_catalog, "commit-two")
+	_expect(builder.errors.is_empty(), "Submission schema supports every exported community field")
+	_expect(first.schema_version.length() == 64, "Submission schema has a SHA-256 content version")
+	_expect(first.schema_version == second.schema_version, "Source commit does not change the schema version")
+	_expect(first.source_commit != second.source_commit, "Source commit remains separate provenance")
+	var field_ids: Array[String] = []
+	for field in first.fields:
+		field_ids.append(field.id)
+	_expect(field_ids == ["display_name", "description", "card_type", "attack", "health", "cost"], "Card fields inherit their Godot export order")
+	_expect(first.card_types.size() == 2 and first.card_types[0].label == "Ally" and first.card_types[1].label == "One-Shot", "Card type enum and presentation labels are reflected")
+	_expect(first.effects.size() == EXPECTED_EFFECTS.size(), "Every registered effect is exported")
+	_expect(first.styles.size() == 5, "Every reusable visual style is exported")
+	_expect(first.existing_card_ids.size() == EXPECTED_CARDS.size(), "Existing catalog IDs are exported")
+	for effect in first.effects:
+		_expect(effect.fields.size() == 1, "%s inherits its behavior parameter" % effect.id)
 
 
 func _test_card_base_artwork_and_style() -> void:
