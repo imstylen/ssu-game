@@ -26,6 +26,8 @@ func validation_errors() -> PackedStringArray:
 		errors.append("This ally card needs an internal ID.")
 	if display_name.strip_edges().is_empty():
 		errors.append("Ally card '%s' needs a display name." % id)
+	if description.strip_edges().is_empty():
+		errors.append("Ally card '%s' needs a description." % id)
 	if card_type == CardType.ACTION and attack != 0:
 		errors.append("One-shot '%s' must have zero Power." % id)
 	return errors

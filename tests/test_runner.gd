@@ -47,6 +47,7 @@ func _run_all() -> void:
 		_enemies[enemy_id] = _catalog.get_enemy(enemy_id)
 	_test_content_resources()
 	_test_card_submission_schema()
+	_test_card_authoring_validation()
 	_test_card_base_artwork_and_style()
 	_test_battle_setup()
 	_test_damage_one_shot()
@@ -155,6 +156,57 @@ func _test_card_submission_schema() -> void:
 	_expect(first.existing_card_ids.size() == EXPECTED_CARDS.size(), "Existing catalog IDs are exported")
 	for effect in first.effects:
 		_expect(effect.fields.size() == 1, "%s inherits its behavior parameter" % effect.id)
+
+
+func _test_card_authoring_validation() -> void:
+	var builder := CardSchemaBuilder.new()
+	var schema := builder.build_schema(_catalog)
+	var service := CardAuthoringService.new()
+	_expect(service.slugify("  Calm & Cozy Fox!  ") == "calm_cozy_fox", "Card IDs use a stable ASCII slug")
+	_expect(service.slugify("!!!").is_empty(), "Card IDs reject names without ASCII letters or numbers")
+	var stale := service.create_card({"schema_version": "old"}, _catalog, schema, "user://card_authoring_test")
+	_expect(not stale.ok and "form has changed" in str(stale.validation_errors[0]), "Stale submissions fail before writing files")
+	var invalid := service.create_card({
+		"schema_version": schema.schema_version,
+		"card": {
+			"display_name": "Broken Test Card",
+			"description": "",
+			"card_type": CardDefinition.CardType.ACTION,
+			"attack": 3,
+			"health": 1,
+			"cost": 2,
+		},
+		"style_id": "not_a_style",
+		"effect": {"id": "not_an_effect", "parameters": {}},
+		"artwork_path": "missing.jpg",
+	}, _catalog, schema, "user://card_authoring_test")
+	_expect(not invalid.ok, "Invalid submissions do not generate resources")
+	_expect(invalid.validation_errors.size() >= 5, "Invalid submissions return all actionable validation errors")
+	_expect(not DirAccess.dir_exists_absolute(ProjectSettings.globalize_path("user://card_authoring_test/broken_test_card")), "Invalid submissions leave no output directory")
+	var valid := service.create_card({
+		"schema_version": schema.schema_version,
+		"card": {
+			"display_name": "Calm Test Ally",
+			"description": "A temporary ally proves schema-driven authoring works.",
+			"card_type": CardDefinition.CardType.UNIT,
+			"attack": 2,
+			"health": 4,
+			"cost": 2,
+		},
+		"style_id": "mint",
+		"artwork_path": "res://cards/definitions/take_a_nap/take_a_nap.png",
+	}, _catalog, schema, "user://card_authoring_test")
+	_expect(valid.ok, "A valid schema payload generates a card")
+	_expect(valid.get("card_id") == "calm_test_ally", "Generated cards receive the canonical slug")
+	_expect(service.created_card != null and service.created_card.attack == 2 and service.created_card.health == 4, "Generated cards inherit reflected attributes")
+	_expect(service.created_card != null and service.created_card.visual_style.resource_path.ends_with("mint.tres"), "Generated cards resolve styles by schema ID")
+	var saved_resource := FileAccess.get_file_as_string(valid.get("card_resource_path", ""))
+	_expect(saved_resource.contains(valid.get("artwork_path", "")), "Generated resources reference their canonical artwork path")
+	for generated_path in valid.get("generated_files", []):
+		_expect(FileAccess.file_exists(generated_path), "Authoring manifest lists an existing generated file")
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(generated_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://card_authoring_test/calm_test_ally"))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://card_authoring_test"))
 
 
 func _test_card_base_artwork_and_style() -> void:
