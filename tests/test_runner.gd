@@ -14,6 +14,13 @@ const EXPECTED_CARDS := {
 	&"take_a_nap": ["Take a Nap", CardDefinition.CardType.ACTION, 0, 0, 1],
 }
 
+var EXPECTED_EFFECTS := {
+	&"damage_enemy": ["Deal Barrier Damage", DamageEnemyBehavior, &"damage_amount", 4],
+	&"heal_player": ["Heal Team Heart", HealPlayerBehavior, &"heal_amount", 5],
+	&"draw_cards": ["Draw Cards", DrawCardsBehavior, &"draw_amount", 2],
+	&"gain_energy": ["Gain Spark", GainEnergyBehavior, &"energy_amount", 1],
+}
+
 var EXPECTED_ENEMIES := {
 	&"siege_core": ["Gatekeeping Gremlin", 30, PackedInt32Array([4, 5, 7])],
 	&"assumption_golem": ["Assumption Golem", 34, PackedInt32Array([3, 6, 5])],
@@ -68,8 +75,10 @@ func _run_all() -> void:
 
 func _test_content_resources() -> void:
 	var cards: Array[CardDefinition] = _catalog.get_all_cards()
+	var effects: Array[CardEffectDefinition] = _catalog.get_all_effects()
 	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
 	_expect(cards.size() == 11, "Catalog contains exactly eleven unique cards")
+	_expect(effects.size() == EXPECTED_EFFECTS.size(), "Catalog contains every reusable card effect")
 	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
 	var allies := 0
 	var one_shots := 0
@@ -98,6 +107,19 @@ func _test_content_resources() -> void:
 	_expect(allies == 7, "Roster has seven allies")
 	_expect(one_shots == 4, "Roster has four one-shots")
 	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
+	for effect_id in EXPECTED_EFFECTS:
+		var effect: CardEffectDefinition = _catalog.get_effect(effect_id)
+		var expected: Array = EXPECTED_EFFECTS[effect_id]
+		_expect(effect != null, "%s effect resource loads" % effect_id)
+		if effect == null:
+			continue
+		var behavior := effect.create_behavior()
+		_expect(effect.display_name == expected[0], "%s has its submission label" % effect_id)
+		_expect(behavior != null and is_instance_of(behavior, expected[1]), "%s creates its behavior" % effect_id)
+		_expect(behavior != null and behavior.get(expected[2]) == expected[3], "%s exposes its default parameter" % effect_id)
+		_expect(effect.supports_card_type(CardDefinition.CardType.ACTION), "%s supports one-shot cards" % effect_id)
+		_expect(not effect.supports_card_type(CardDefinition.CardType.UNIT), "%s does not advertise unsupported ally behavior" % effect_id)
+		_expect(effect.validation_errors().is_empty(), "%s effect validates" % effect_id)
 	for enemy_id in EXPECTED_ENEMIES:
 		var enemy: EnemyDefinition = _enemies[enemy_id]
 		var expected: Array = EXPECTED_ENEMIES[enemy_id]

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CardEffectDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://cards/card_effect_definition.gd" id="1_effect"]
+[ext_resource type="Script" path="res://cards/behaviors/heal_player_behavior.gd" id="2_behavior"]
+
+[resource]
+script = ExtResource("1_effect")
+id = &"heal_player"
+display_name = "Heal Team Heart"
+description = "Restore Heart to the player's team."
+behavior_script = ExtResource("2_behavior")
+allowed_card_types = PackedInt32Array(1)
