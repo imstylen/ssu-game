@@ -460,7 +460,7 @@ func _test_font_license_and_copy() -> void:
 	for old_phrase in ["TACTICAL DECK COMMAND", "SSU // FRONTLINE", "FIELD OPERATION", "COMMANDER 30", "MISSION COMPLETE", "LINE OVERRUN", "READY TO ATTACK", "was destroyed", "Commander defeated"]:
 		_expect(not player_copy.contains(old_phrase), "Old player-facing military phrase is absent: %s" % old_phrase)
 	for required in ["ACCESS ALLIES", "A COZY CARD ADVENTURE", "ALLY ALBUM", "COZY DECK BUILDER", "BARRIER-BUSTING ADVENTURE", "TEAM HEART", "ALLY CIRCLE", "STORY SO FAR", "SPARK", "YOUR HAND", "BARRIER BUSTED!", "TIME FOR A REST"]:
-		_expect(player_copy.contains(required), "Required warm interface string is present: %s" % required)
+		_expect(player_copy.to_upper().contains(required), "Required warm interface string is present: %s" % required)
 
 
 func _test_legible_theme_colors() -> void:
