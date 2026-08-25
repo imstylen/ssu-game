@@ -23,6 +23,25 @@ test("persists schema-shaped JSON and enforces one moderation decision", () => {
   repository.close();
 });
 
+test("finds an active thread draft and stores artwork before review", () => {
+  const repository = new SubmissionRepository(":memory:");
+  repository.createDraft({
+    id: "thread-draft",
+    guildId: "guild",
+    submitterId: "user",
+    schemaVersion: "v1",
+    stage: "card.name",
+    threadId: "thread",
+  });
+
+  assert.equal(repository.findDraftBySubmitter("guild", "user")?.threadId, "thread");
+  assert.equal(repository.findByThread("thread")?.id, "thread-draft");
+  repository.saveArtwork("thread-draft", "/data/thread-draft.png");
+  repository.queueForReview("thread-draft");
+  assert.equal(repository.getRequired("thread-draft").status, "pending");
+  repository.close();
+});
+
 test("normalizes drafts created before the card payload invariant", async () => {
   const directory = await mkdtemp(join(tmpdir(), "card-submissions-"));
   const path = join(directory, "submissions.sqlite");

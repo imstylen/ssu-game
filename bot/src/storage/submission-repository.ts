@@ -10,6 +10,8 @@ interface CreateDraftInput {
   guildId: string;
   submitterId: string;
   schemaVersion: string;
+  stage?: string;
+  threadId?: string;
 }
 
 export class SubmissionRepository {
@@ -31,10 +33,19 @@ export class SubmissionRepository {
       .prepare(`
         INSERT INTO submissions (
           id, guild_id, submitter_id, schema_version, status, stage,
-          payload_json, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, 'draft', 'card-1', '{"card":{}}', ?, ?)
+          thread_id, payload_json, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, 'draft', ?, ?, '{"card":{}}', ?, ?)
       `)
-      .run(input.id, input.guildId, input.submitterId, input.schemaVersion, now, now);
+      .run(
+        input.id,
+        input.guildId,
+        input.submitterId,
+        input.schemaVersion,
+        input.stage ?? "card-1",
+        input.threadId ?? null,
+        now,
+        now,
+      );
     return this.getRequired(input.id);
   }
 
@@ -47,6 +58,20 @@ export class SubmissionRepository {
     const submission = this.get(id);
     if (!submission) throw new Error(`Submission not found: ${id}`);
     return submission;
+  }
+
+  findDraftBySubmitter(guildId: string, submitterId: string): SubmissionRecord | null {
+    const row = this.#database.prepare(`
+      SELECT * FROM submissions
+      WHERE guild_id = ? AND submitter_id = ? AND status = 'draft' AND thread_id IS NOT NULL
+      ORDER BY created_at DESC LIMIT 1
+    `).get(guildId, submitterId);
+    return row ? mapRow(row as unknown as DatabaseRow) : null;
+  }
+
+  findByThread(threadId: string): SubmissionRecord | null {
+    const row = this.#database.prepare("SELECT * FROM submissions WHERE thread_id = ? ORDER BY created_at DESC LIMIT 1").get(threadId);
+    return row ? mapRow(row as unknown as DatabaseRow) : null;
   }
 
   saveProgress(id: string, payload: CardSubmissionPayload, stage: string): SubmissionRecord {
@@ -63,11 +88,38 @@ export class SubmissionRepository {
     return this.getRequired(id);
   }
 
-  queueForReview(id: string, artworkPath: string): SubmissionRecord {
-    this.#database
-      .prepare("UPDATE submissions SET artwork_path = ?, status = 'pending', stage = 'review', updated_at = ? WHERE id = ? AND status = 'awaiting_artwork'")
+  saveArtwork(id: string, artworkPath: string): SubmissionRecord {
+    const result = this.#database
+      .prepare("UPDATE submissions SET artwork_path = ?, updated_at = ? WHERE id = ? AND status = 'draft'")
       .run(artworkPath, new Date().toISOString(), id);
+    if (result.changes !== 1) throw new Error("This submission no longer accepts artwork");
     return this.getRequired(id);
+  }
+
+  queueForReview(id: string, artworkPath?: string): SubmissionRecord {
+    const suppliedArtwork = artworkPath ?? null;
+    const result = this.#database
+      .prepare(`
+        UPDATE submissions
+        SET artwork_path = COALESCE(?, artwork_path), status = 'pending', stage = 'review', updated_at = ?
+        WHERE id = ? AND status IN ('draft', 'awaiting_artwork') AND COALESCE(?, artwork_path) IS NOT NULL
+      `)
+      .run(suppliedArtwork, new Date().toISOString(), id, suppliedArtwork);
+    if (result.changes !== 1) throw new Error("This submission is not ready for review");
+    return this.getRequired(id);
+  }
+
+  restoreDraftAfterReviewFailure(id: string): void {
+    this.#database
+      .prepare("UPDATE submissions SET status = 'draft', stage = 'ready', updated_at = ? WHERE id = ? AND status = 'pending' AND review_message_id IS NULL")
+      .run(new Date().toISOString(), id);
+  }
+
+  cancel(id: string, submitterId: string): boolean {
+    const result = this.#database
+      .prepare("UPDATE submissions SET status = 'cancelled', stage = 'cancelled', updated_at = ? WHERE id = ? AND submitter_id = ? AND status = 'draft'")
+      .run(new Date().toISOString(), id, submitterId);
+    return result.changes === 1;
   }
 
   attachReviewMessage(id: string, channelId: string, messageId: string): void {
@@ -150,6 +202,7 @@ export class SubmissionRepository {
         schema_version TEXT NOT NULL,
         status TEXT NOT NULL,
         stage TEXT NOT NULL,
+        thread_id TEXT,
         payload_json TEXT NOT NULL,
         artwork_path TEXT,
         review_channel_id TEXT,
@@ -162,6 +215,11 @@ export class SubmissionRepository {
         updated_at TEXT NOT NULL
       ) STRICT;
     `);
+    const columns = this.#database.prepare("PRAGMA table_info(submissions)").all() as unknown as Array<{ name: string }>;
+    if (!columns.some((column) => column.name === "thread_id")) {
+      this.#database.exec("ALTER TABLE submissions ADD COLUMN thread_id TEXT;");
+    }
+    this.#database.exec("CREATE INDEX IF NOT EXISTS submissions_thread_id ON submissions(thread_id);");
   }
 }
 
@@ -172,6 +230,7 @@ interface DatabaseRow {
   schema_version: string;
   status: SubmissionStatus;
   stage: string;
+  thread_id: string | null;
   payload_json: string;
   artwork_path: string | null;
   review_channel_id: string | null;
@@ -193,6 +252,7 @@ function mapRow(row: DatabaseRow): SubmissionRecord {
     schemaVersion: row.schema_version,
     status: row.status,
     stage: row.stage,
+    threadId: row.thread_id,
     payload,
     artworkPath: row.artwork_path,
     reviewChannelId: row.review_channel_id,

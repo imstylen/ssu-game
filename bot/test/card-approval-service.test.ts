@@ -30,6 +30,7 @@ function submission(artworkPath: string): SubmissionRecord {
     schemaVersion: version,
     status: "processing",
     stage: "review",
+    threadId: null,
     payload: { card: { future_attribute: 7 }, style_id: "future" },
     artworkPath,
     reviewChannelId: null,

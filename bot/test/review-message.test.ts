@@ -29,6 +29,7 @@ const submission: SubmissionRecord = {
   schemaVersion: schema.schema_version,
   status: "pending",
   stage: "review",
+  threadId: null,
   payload: {
     card: { future_attribute: 7 },
     style_id: "future_style",

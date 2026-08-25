@@ -5,6 +5,7 @@ export type SubmissionStatus =
   | "processing"
   | "approved"
   | "denied"
+  | "cancelled"
   | "failed"
   | "needs_revision";
 
@@ -26,6 +27,7 @@ export interface SubmissionRecord {
   schemaVersion: string;
   status: SubmissionStatus;
   stage: string;
+  threadId: string | null;
   payload: CardSubmissionPayload;
   artworkPath: string | null;
   reviewChannelId: string | null;

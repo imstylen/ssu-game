@@ -21,6 +21,7 @@ test("builds PR content from schema fields instead of production IDs", () => {
     schemaVersion: schema.schema_version,
     status: "processing",
     stage: "review",
+    threadId: null,
     payload: { card: { brand_new: "Inherited" }, style_id: "style" },
     artworkPath: "/data/art.png",
     reviewChannelId: null,
