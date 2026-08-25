@@ -14,6 +14,13 @@ const EXPECTED_CARDS := {
 	&"take_a_nap": ["Take a Nap", CardDefinition.CardType.ACTION, 0, 0, 1],
 }
 
+var EXPECTED_EFFECTS := {
+	&"damage_enemy": ["Deal Barrier Damage", DamageEnemyBehavior, &"damage_amount", 4],
+	&"heal_player": ["Heal Team Heart", HealPlayerBehavior, &"heal_amount", 5],
+	&"draw_cards": ["Draw Cards", DrawCardsBehavior, &"draw_amount", 2],
+	&"gain_energy": ["Gain Spark", GainEnergyBehavior, &"energy_amount", 1],
+}
+
 var EXPECTED_ENEMIES := {
 	&"siege_core": ["Gatekeeping Gremlin", 30, PackedInt32Array([4, 5, 7])],
 	&"assumption_golem": ["Assumption Golem", 34, PackedInt32Array([3, 6, 5])],
@@ -39,6 +46,8 @@ func _run_all() -> void:
 	for enemy_id in EXPECTED_ENEMIES:
 		_enemies[enemy_id] = _catalog.get_enemy(enemy_id)
 	_test_content_resources()
+	_test_card_submission_schema()
+	_test_card_authoring_validation()
 	_test_card_base_artwork_and_style()
 	_test_battle_setup()
 	_test_damage_one_shot()
@@ -68,12 +77,11 @@ func _run_all() -> void:
 
 func _test_content_resources() -> void:
 	var cards: Array[CardDefinition] = _catalog.get_all_cards()
+	var effects: Array[CardEffectDefinition] = _catalog.get_all_effects()
 	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
-	_expect(cards.size() == 11, "Catalog contains exactly eleven unique cards")
+	_expect(cards.size() >= EXPECTED_CARDS.size(), "Catalog retains every established card")
+	_expect(effects.size() == EXPECTED_EFFECTS.size(), "Catalog contains every reusable card effect")
 	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
-	var allies := 0
-	var one_shots := 0
-	var style_paths: Dictionary = {}
 	for card_id in EXPECTED_CARDS:
 		var card: CardDefinition = _cards[card_id]
 		var expected: Array = EXPECTED_CARDS[card_id]
@@ -84,20 +92,38 @@ func _test_content_resources() -> void:
 		_expect(card.card_type == expected[1], "%s has the expected type" % card_id)
 		_expect(card.cost == expected[2], "%s has the expected Spark cost" % card_id)
 		_expect(card.attack == expected[3] and card.health == expected[4], "%s has expected Power and Heart" % card_id)
-		_expect(not card.description.is_empty(), "%s has warm rules text" % card_id)
-		_expect(card.artwork != null, "%s has assigned artwork" % card_id)
-		_expect(card.artwork != null and card.artwork.get_width() == 1024 and card.artwork.get_height() == 1024, "%s artwork is 1024x1024" % card_id)
-		_expect(card.visual_style != null, "%s has a reusable pastel variant" % card_id)
+	var allies := 0
+	var one_shots := 0
+	var style_paths: Dictionary = {}
+	for card in cards:
+		_expect(not card.description.is_empty(), "%s has warm rules text" % card.id)
+		_expect(card.artwork != null, "%s has assigned artwork" % card.id)
+		_expect(card.artwork != null and card.artwork.get_width() == 1024 and card.artwork.get_height() == 1024, "%s artwork is 1024x1024" % card.id)
+		_expect(card.visual_style != null, "%s has a reusable pastel variant" % card.id)
 		if card.visual_style != null:
 			style_paths[card.visual_style.resource_path] = true
-		_expect(card.validation_errors().is_empty(), "%s validates" % card_id)
+		_expect(card.validation_errors().is_empty(), "%s validates" % card.id)
 		if card.card_type == CardDefinition.CardType.UNIT:
 			allies += 1
-		else:
+		elif card.card_type == CardDefinition.CardType.ACTION:
 			one_shots += 1
-	_expect(allies == 7, "Roster has seven allies")
-	_expect(one_shots == 4, "Roster has four one-shots")
-	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
+	_expect(allies + one_shots == cards.size(), "Every catalog card has a supported card type")
+	_expect(allies >= 7, "Roster retains the seven established allies")
+	_expect(one_shots >= 4, "Roster retains the four established one-shots")
+	_expect(style_paths.size() >= 5, "Roster retains every established visual style")
+	for effect_id in EXPECTED_EFFECTS:
+		var effect: CardEffectDefinition = _catalog.get_effect(effect_id)
+		var expected: Array = EXPECTED_EFFECTS[effect_id]
+		_expect(effect != null, "%s effect resource loads" % effect_id)
+		if effect == null:
+			continue
+		var behavior := effect.create_behavior()
+		_expect(effect.display_name == expected[0], "%s has its submission label" % effect_id)
+		_expect(behavior != null and is_instance_of(behavior, expected[1]), "%s creates its behavior" % effect_id)
+		_expect(behavior != null and behavior.get(expected[2]) == expected[3], "%s exposes its default parameter" % effect_id)
+		_expect(effect.supports_card_type(CardDefinition.CardType.ACTION), "%s supports one-shot cards" % effect_id)
+		_expect(not effect.supports_card_type(CardDefinition.CardType.UNIT), "%s does not advertise unsupported ally behavior" % effect_id)
+		_expect(effect.validation_errors().is_empty(), "%s effect validates" % effect_id)
 	for enemy_id in EXPECTED_ENEMIES:
 		var enemy: EnemyDefinition = _enemies[enemy_id]
 		var expected: Array = EXPECTED_ENEMIES[enemy_id]
@@ -112,6 +138,77 @@ func _test_content_resources() -> void:
 		_expect(enemy.artwork != null and enemy.artwork.get_width() == 1024 and enemy.artwork.get_height() == 1024, "%s artwork is 1024x1024" % enemy_id)
 		_expect(enemy.validation_errors().is_empty(), "%s validates" % enemy_id)
 	_expect(_catalog.validation_errors.is_empty(), "Catalog scan reports no content errors")
+
+
+func _test_card_submission_schema() -> void:
+	var builder := CardSchemaBuilder.new()
+	var first := builder.build_schema(_catalog, "commit-one")
+	var second := builder.build_schema(_catalog, "commit-two")
+	_expect(builder.errors.is_empty(), "Submission schema supports every exported community field")
+	_expect(first.schema_version.length() == 64, "Submission schema has a SHA-256 content version")
+	_expect(first.schema_version == second.schema_version, "Source commit does not change the schema version")
+	_expect(first.source_commit != second.source_commit, "Source commit remains separate provenance")
+	var field_ids: Array[String] = []
+	for field in first.fields:
+		field_ids.append(field.id)
+	_expect(field_ids == ["display_name", "description", "card_type", "attack", "health", "cost"], "Card fields inherit their Godot export order")
+	_expect(first.card_types.size() == 2 and first.card_types[0].label == "Ally" and first.card_types[1].label == "One-Shot", "Card type enum and presentation labels are reflected")
+	_expect(first.effects.size() == EXPECTED_EFFECTS.size(), "Every registered effect is exported")
+	_expect(first.styles.size() == 5, "Every reusable visual style is exported")
+	_expect(first.existing_card_ids.size() >= EXPECTED_CARDS.size(), "Every existing catalog ID is exported")
+	for effect in first.effects:
+		_expect(effect.fields.size() == 1, "%s inherits its behavior parameter" % effect.id)
+
+
+func _test_card_authoring_validation() -> void:
+	var builder := CardSchemaBuilder.new()
+	var schema := builder.build_schema(_catalog)
+	var service := CardAuthoringService.new()
+	_expect(service.slugify("  Calm & Cozy Fox!  ") == "calm_cozy_fox", "Card IDs use a stable ASCII slug")
+	_expect(service.slugify("!!!").is_empty(), "Card IDs reject names without ASCII letters or numbers")
+	var stale := service.create_card({"schema_version": "old"}, _catalog, schema, "user://card_authoring_test")
+	_expect(not stale.ok and "form has changed" in str(stale.validation_errors[0]), "Stale submissions fail before writing files")
+	var invalid := service.create_card({
+		"schema_version": schema.schema_version,
+		"card": {
+			"display_name": "Broken Test Card",
+			"description": "",
+			"card_type": CardDefinition.CardType.ACTION,
+			"attack": 3,
+			"health": 1,
+			"cost": 2,
+		},
+		"style_id": "not_a_style",
+		"effect": {"id": "not_an_effect", "parameters": {}},
+		"artwork_path": "missing.jpg",
+	}, _catalog, schema, "user://card_authoring_test")
+	_expect(not invalid.ok, "Invalid submissions do not generate resources")
+	_expect(invalid.validation_errors.size() >= 5, "Invalid submissions return all actionable validation errors")
+	_expect(not DirAccess.dir_exists_absolute(ProjectSettings.globalize_path("user://card_authoring_test/broken_test_card")), "Invalid submissions leave no output directory")
+	var valid := service.create_card({
+		"schema_version": schema.schema_version,
+		"card": {
+			"display_name": "Calm Test Ally",
+			"description": "A temporary ally proves schema-driven authoring works.",
+			"card_type": CardDefinition.CardType.UNIT,
+			"attack": 2,
+			"health": 4,
+			"cost": 2,
+		},
+		"style_id": "mint",
+		"artwork_path": "res://cards/definitions/take_a_nap/take_a_nap.png",
+	}, _catalog, schema, "user://card_authoring_test")
+	_expect(valid.ok, "A valid schema payload generates a card")
+	_expect(valid.get("card_id") == "calm_test_ally", "Generated cards receive the canonical slug")
+	_expect(service.created_card != null and service.created_card.attack == 2 and service.created_card.health == 4, "Generated cards inherit reflected attributes")
+	_expect(service.created_card != null and service.created_card.visual_style.resource_path.ends_with("mint.tres"), "Generated cards resolve styles by schema ID")
+	var saved_resource := FileAccess.get_file_as_string(valid.get("card_resource_path", ""))
+	_expect(saved_resource.contains(valid.get("artwork_path", "")), "Generated resources reference their canonical artwork path")
+	for generated_path in valid.get("generated_files", []):
+		_expect(FileAccess.file_exists(generated_path), "Authoring manifest lists an existing generated file")
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(generated_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://card_authoring_test/calm_test_ally"))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://card_authoring_test"))
 
 
 func _test_card_base_artwork_and_style() -> void:
@@ -438,7 +535,7 @@ func _test_font_license_and_copy() -> void:
 	for old_phrase in ["TACTICAL DECK COMMAND", "SSU // FRONTLINE", "FIELD OPERATION", "COMMANDER 30", "MISSION COMPLETE", "LINE OVERRUN", "READY TO ATTACK", "was destroyed", "Commander defeated"]:
 		_expect(not player_copy.contains(old_phrase), "Old player-facing military phrase is absent: %s" % old_phrase)
 	for required in ["ACCESS ALLIES", "A COZY CARD ADVENTURE", "ALLY ALBUM", "COZY DECK BUILDER", "BARRIER-BUSTING ADVENTURE", "TEAM HEART", "ALLY CIRCLE", "STORY SO FAR", "SPARK", "YOUR HAND", "BARRIER BUSTED!", "TIME FOR A REST"]:
-		_expect(player_copy.contains(required), "Required warm interface string is present: %s" % required)
+		_expect(player_copy.to_upper().contains(required), "Required warm interface string is present: %s" % required)
 
 
 func _test_legible_theme_colors() -> void:

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CardEffectDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://cards/card_effect_definition.gd" id="1_effect"]
+[ext_resource type="Script" path="res://cards/behaviors/draw_cards_behavior.gd" id="2_behavior"]
+
+[resource]
+script = ExtResource("1_effect")
+id = &"draw_cards"
+display_name = "Draw Cards"
+description = "Draw cards from the player's deck."
+behavior_script = ExtResource("2_behavior")
+allowed_card_types = PackedInt32Array(1)

@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="CardSubmissionPolicy" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://cards/card_submission_policy.gd" id="1_policy"]
+
+[resource]
+script = ExtResource("1_policy")
+field_overrides = {
+"attack": {
+"description": "Power used when this ally helps bust a barrier.",
+"label": "Power",
+"visible_when": {"field": "card_type", "equals": 0}
+},
+"card_type": {
+"description": "Allies remain in the Ally Circle; one-shots resolve once.",
+"label": "Card Type",
+"option_labels": {"0": "Ally", "1": "One-Shot"}
+},
+"cost": {
+"description": "Spark spent to play this card.",
+"label": "Spark Cost"
+},
+"description": {
+"component": "paragraph",
+"description": "Warm card copy, including the mechanical outcome.",
+"max_length": 1000
+},
+"display_name": {
+"description": "The player-facing card name.",
+"label": "Card Name",
+"max_length": 80
+},
+"damage_amount": {
+"description": "Barrier damage dealt when played.",
+"label": "Damage"
+},
+"draw_amount": {
+"description": "Cards drawn when played.",
+"label": "Cards Drawn"
+},
+"energy_amount": {
+"description": "Spark gained during this round.",
+"label": "Spark Gained"
+},
+"health": {
+"description": "Heart available before this ally needs a rest.",
+"label": "Heart",
+"visible_when": {"field": "card_type", "equals": 0}
+},
+"heal_amount": {
+"description": "Team Heart restored when played.",
+"label": "Heart Restored"
+}
+}
