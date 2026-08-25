@@ -91,6 +91,10 @@ export class SubmissionRepository {
     this.#finish(id, "failed", { reason });
   }
 
+  markNeedsRevision(id: string, reason: string): void {
+    this.#finish(id, "needs_revision", { reason });
+  }
+
   deny(id: string, moderatorId: string, reason: string): boolean {
     const result = this.#database
       .prepare("UPDATE submissions SET status = 'denied', moderator_id = ?, decision_reason = ?, updated_at = ? WHERE id = ? AND status = 'pending'")
@@ -113,7 +117,7 @@ export class SubmissionRepository {
 
   #finish(
     id: string,
-    status: Extract<SubmissionStatus, "approved" | "failed">,
+    status: Extract<SubmissionStatus, "approved" | "failed" | "needs_revision">,
     values: { pullRequestUrl?: string; pullRequestNumber?: number; reason?: string },
   ): void {
     this.#database
