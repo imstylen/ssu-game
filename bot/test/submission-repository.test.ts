@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import { SubmissionRepository } from "../src/storage/submission-repository.js";
 
 test("persists schema-shaped JSON and enforces one moderation decision", () => {
   const repository = new SubmissionRepository(":memory:");
-  repository.createDraft({ id: "submission-1", guildId: "guild", submitterId: "user", schemaVersion: "v1" });
+  const draft = repository.createDraft({ id: "submission-1", guildId: "guild", submitterId: "user", schemaVersion: "v1" });
+  assert.deepEqual(draft.payload, { card: {} });
   repository.saveProgress("submission-1", { card: { future_attribute: 42 }, style_id: "mint" }, "details");
   repository.awaitArtwork("submission-1", repository.getRequired("submission-1").payload);
   repository.queueForReview("submission-1", "/data/art.png");
@@ -16,6 +21,21 @@ test("persists schema-shaped JSON and enforces one moderation decision", () => {
   repository.markApproved("submission-1", "https://github.test/pr/1", 1);
   assert.equal(repository.getRequired("submission-1").status, "approved");
   repository.close();
+});
+
+test("normalizes drafts created before the card payload invariant", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "card-submissions-"));
+  const path = join(directory, "submissions.sqlite");
+  const repository = new SubmissionRepository(path);
+  repository.createDraft({ id: "legacy", guildId: "guild", submitterId: "user", schemaVersion: "v1" });
+  repository.close();
+  const database = new DatabaseSync(path);
+  database.prepare("UPDATE submissions SET payload_json = '{}' WHERE id = 'legacy'").run();
+  database.close();
+
+  const reopened = new SubmissionRepository(path);
+  assert.deepEqual(reopened.getRequired("legacy").payload, { card: {} });
+  reopened.close();
 });
 
 test("records denial reasons atomically", () => {

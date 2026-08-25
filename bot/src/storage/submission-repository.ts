@@ -32,7 +32,7 @@ export class SubmissionRepository {
         INSERT INTO submissions (
           id, guild_id, submitter_id, schema_version, status, stage,
           payload_json, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, 'draft', 'card-1', '{}', ?, ?)
+        ) VALUES (?, ?, ?, ?, 'draft', 'card-1', '{"card":{}}', ?, ?)
       `)
       .run(input.id, input.guildId, input.submitterId, input.schemaVersion, now, now);
     return this.getRequired(input.id);
@@ -185,6 +185,7 @@ interface DatabaseRow {
 }
 
 function mapRow(row: DatabaseRow): SubmissionRecord {
+  const payload = normalizedPayload(row.payload_json);
   return {
     id: row.id,
     guildId: row.guild_id,
@@ -192,7 +193,7 @@ function mapRow(row: DatabaseRow): SubmissionRecord {
     schemaVersion: row.schema_version,
     status: row.status,
     stage: row.stage,
-    payload: JSON.parse(row.payload_json) as CardSubmissionPayload,
+    payload,
     artworkPath: row.artwork_path,
     reviewChannelId: row.review_channel_id,
     reviewMessageId: row.review_message_id,
@@ -203,4 +204,17 @@ function mapRow(row: DatabaseRow): SubmissionRecord {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function normalizedPayload(json: string): CardSubmissionPayload {
+  const parsed: unknown = JSON.parse(json);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { card: {} };
+  const values = parsed as Record<string, unknown>;
+  const card = values.card;
+  return {
+    ...values,
+    card: card && typeof card === "object" && !Array.isArray(card)
+      ? card as Record<string, unknown>
+      : {},
+  } as CardSubmissionPayload;
 }

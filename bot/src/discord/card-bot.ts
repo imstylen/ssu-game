@@ -8,6 +8,7 @@ import {
   Colors,
   EmbedBuilder,
   Events,
+  MessageFlags,
   type ButtonInteraction,
   type ChatInputCommandInteraction,
   type Interaction,
@@ -83,7 +84,7 @@ export class DiscordCardBot {
       const message = userFacingError(error);
       if (interaction.isRepliable()) {
         if (interaction.deferred || interaction.replied) await interaction.editReply({ content: message, components: [] });
-        else await interaction.reply({ content: message, ephemeral: true });
+        else await interaction.reply({ content: message, flags: MessageFlags.Ephemeral });
       }
     }
   }
@@ -98,19 +99,19 @@ export class DiscordCardBot {
         return;
       case "card-schema-refresh": {
         this.#requireModerator(interaction);
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const schema = await this.#schemas.refresh();
         await interaction.editReply(`Schema refreshed: \`${schema.schema_version.slice(0, 12)}\``);
         return;
       }
       case "card-intake-refresh":
         this.#requireModerator(interaction);
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         await this.#publishIntakePanel();
         await interaction.editReply("The card submission panel is up to date.");
         return;
       default:
-        await interaction.reply({ content: "Unknown card command.", ephemeral: true });
+        await interaction.reply({ content: "Unknown card command.", flags: MessageFlags.Ephemeral });
     }
   }
 
@@ -158,7 +159,7 @@ export class DiscordCardBot {
       if (!this.#repository.claimForApproval(submission.id, interaction.user.id)) {
         throw new Error("Another moderator already claimed this submission");
       }
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       try {
         const claimed = this.#repository.getRequired(submission.id);
         const result = await this.#approval.approve(claimed);
@@ -195,7 +196,7 @@ export class DiscordCardBot {
       }
       await this.#updateReviewStatus(submission, "Denied", Colors.Red);
       await this.#notifySubmitter(submission, `Your card submission was denied: ${reason}`);
-      await interaction.reply({ content: "Submission denied.", ephemeral: true });
+      await interaction.reply({ content: "Submission denied.", flags: MessageFlags.Ephemeral });
       return;
     }
     if (customId.action !== "step" || !customId.stage) return;
@@ -212,7 +213,7 @@ export class DiscordCardBot {
           `\`/card-artwork submission:${submission.id} artwork:<your file>\``,
           "Accepted formats: PNG or JPEG, up to 10 MB.",
         ].join("\n"),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -228,7 +229,7 @@ export class DiscordCardBot {
     await interaction.reply({
       content: `Saved. Submission ID: \`${submission.id}\``,
       components: [new ActionRowBuilder<ButtonBuilder>().addComponents(buildContinueButton(submission.id, nextStage))],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -242,7 +243,7 @@ export class DiscordCardBot {
     if (attachment.contentType && !["image/png", "image/jpeg"].includes(attachment.contentType)) {
       throw new Error("Artwork must be a PNG or JPEG image");
     }
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const response = await fetch(attachment.url);
     if (!response.ok) throw new Error("Discord could not provide the artwork attachment");
     const source = Buffer.from(await response.arrayBuffer());
@@ -265,7 +266,7 @@ export class DiscordCardBot {
       ?? (submission.status === "awaiting_artwork" ? "Upload artwork with /card-artwork." : "No additional details.");
     await interaction.reply({
       content: `Status: **${submission.status.replaceAll("_", " ")}**\n${details}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
