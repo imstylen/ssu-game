@@ -437,7 +437,13 @@ func _on_event_presented(event: BattleEvent) -> void:
 				_pulse(_player_health, AppTheme.DANGER)
 			else:
 				_pulse(_board_container, AppTheme.DANGER)
-		&"HealingApplied": _pulse(_player_health, AppTheme.ACCENT)
+		&"HealingApplied":
+			match str(event.data.get("target", "")):
+				"enemy": _pulse(_enemy_health, AppTheme.ACCENT)
+				"unit":
+					var ally: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
+					_pulse(ally if ally != null else _board_container, AppTheme.ACCENT)
+				_: _pulse(_player_health, AppTheme.ACCENT)
 		&"CardDrawn": _pulse(_hand_container, AppTheme.ACCENT)
 		&"UnitAttacked":
 			var attacker: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
@@ -519,7 +525,10 @@ func _event_message(event: BattleEvent) -> String:
 			if event.data.target == "unit":
 				return "%s lost %d Heart." % [event.data.name, event.data.amount]
 			return "%s lost %d Heart." % ["The monster" if event.data.target == "enemy" else "The team", event.data.amount]
-		&"HealingApplied": return "%s restored %d Heart." % ["The team" if event.data.target == "player" else "The monster", event.data.amount]
+		&"HealingApplied":
+			if event.data.target == "unit":
+				return "%s restored %d Heart." % [event.data.name, event.data.amount]
+			return "%s restored %d Heart." % ["The team" if event.data.target == "player" else "The monster", event.data.amount]
 		&"CardDestroyed": return "[color=#A52E57]%s needs a rest.[/color]" % event.data.name
 		&"DiscardReshuffled": return "The rest pile became a fresh deck."
 		&"CardBurned": return "%s moved to the rest pile because your hand is full." % event.data.name

@@ -1,8 +1,14 @@
-[gd_resource type="Resource" script_class="CardDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=6 format=3 uid="uid://dmhqvbs2ecyeo"]
 
-[ext_resource type="Script" path="res://cards/card_definition.gd" id="1_card"]
+[ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
+[ext_resource type="Script" uid="uid://bu4p0uydusdnd" path="res://cards/behaviors/damage_enemy_behavior.gd" id="2_pd7lh"]
 [ext_resource type="Resource" path="res://cards/styles/sky.tres" id="2_style"]
-[ext_resource type="Texture2D" path="res://cards/definitions/deaf_deer/signing_deer.png" id="3_art"]
+[ext_resource type="Texture2D" uid="uid://c55ljn14t5nhy" path="res://cards/definitions/deaf_deer/signing_deer.png" id="3_art"]
+
+[sub_resource type="Resource" id="Resource_4fwhg"]
+script = ExtResource("2_pd7lh")
+damage_amount = 10
+metadata/_custom_type_script = "uid://bu4p0uydusdnd"
 
 [resource]
 script = ExtResource("1_card")
@@ -14,4 +20,5 @@ card_type = 0
 attack = 4
 health = 4
 cost = 3
+behavior = SubResource("Resource_4fwhg")
 visual_style = ExtResource("2_style")

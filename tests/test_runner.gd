@@ -12,6 +12,7 @@ const EXPECTED_CARDS := {
 	&"life_drain": ["Cup of Tea", CardDefinition.CardType.ACTION, 2, 0, 1],
 	&"low_vision_lynx": ["Meditate & Plan", CardDefinition.CardType.ACTION, 1, 0, 1],
 	&"take_a_nap": ["Take a Nap", CardDefinition.CardType.ACTION, 0, 0, 1],
+	&"rally": ["Rally", CardDefinition.CardType.ACTION, 2, 0, 1],
 }
 
 var EXPECTED_ENEMIES := {
@@ -45,6 +46,7 @@ func _run_all() -> void:
 	_test_heal_one_shot()
 	_test_draw_one_shot()
 	_test_take_a_nap_one_shot()
+	_test_rally_one_shot()
 	_test_full_hand_burn()
 	_test_automatic_start_of_round_help()
 	_test_spread_damage_and_overflow()
@@ -69,7 +71,7 @@ func _run_all() -> void:
 func _test_content_resources() -> void:
 	var cards: Array[CardDefinition] = _catalog.get_all_cards()
 	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
-	_expect(cards.size() == 11, "Catalog contains exactly eleven unique cards")
+	_expect(cards.size() == 12, "Catalog contains exactly twelve unique cards")
 	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
 	var allies := 0
 	var one_shots := 0
@@ -96,7 +98,7 @@ func _test_content_resources() -> void:
 		else:
 			one_shots += 1
 	_expect(allies == 7, "Roster has seven allies")
-	_expect(one_shots == 4, "Roster has four one-shots")
+	_expect(one_shots == 5, "Roster has five one-shots")
 	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
 	for enemy_id in EXPECTED_ENEMIES:
 		var enemy: EnemyDefinition = _enemies[enemy_id]
@@ -245,6 +247,48 @@ func _test_take_a_nap_one_shot() -> void:
 	)
 	bundle.resolver.end_turn(bundle.session)
 	_expect(bundle.session.current_energy == 5, "Gained Spark expires when the round ends")
+
+
+func _test_rally_one_shot() -> void:
+	var definition: CardDefinition = _cards[&"rally"]
+	_expect(
+		definition.behavior is HealAllyBehavior and definition.behavior.heal_amount == 2,
+		"Rally has a Heal-Allies-for-2 behavior"
+	)
+	var bundle := _forced_hand_bundle(
+		definition,
+		[_cards[&"shield_bot"], _cards[&"grounding_alpaca"], _cards[&"autistic_axolotl"]]
+	)
+	for ally_id in [&"shield_bot", &"grounding_alpaca", &"autistic_axolotl"]:
+		for card in bundle.session.draw_pile:
+			if card.definition.id == ally_id:
+				bundle.session.draw_pile.erase(card)
+				bundle.session.battlefield.append(card)
+				break
+	bundle.session.battlefield[0].current_health = 1
+	bundle.session.battlefield[1].current_health = 5
+	var full_health: int = bundle.session.battlefield[2].current_health
+	var events: Array[BattleEvent] = bundle.resolver.play_card(
+		bundle.session,
+		bundle.session.hand[0].instance_id
+	)
+	_expect(bundle.session.current_energy == 3, "Rally spends 2 Spark")
+	_expect(bundle.session.battlefield[0].current_health == 3, "Rally restores 2 Heart to a damaged ally")
+	_expect(bundle.session.battlefield[1].current_health == 6, "Rally clamps healing at an ally's maximum Heart")
+	_expect(bundle.session.battlefield[2].current_health == full_health, "Rally leaves a full-Heart ally unchanged")
+	_expect(_event_count(events, &"HealingApplied") == 2, "Rally reports healing for each ally that recovered Heart")
+	var first_healing := _first_event(events, &"HealingApplied")
+	_expect(
+		first_healing != null \
+		and first_healing.data.target == "unit" \
+		and first_healing.data.amount == 2,
+		"Rally identifies healed allies in presentation events"
+	)
+	_expect(
+		bundle.session.discard_pile.size() == 1 \
+		and bundle.session.discard_pile[0].definition.id == &"rally",
+		"Rally moves to the rest pile after use"
+	)
 
 
 func _test_full_hand_burn() -> void:

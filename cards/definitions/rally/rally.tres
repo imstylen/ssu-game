@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="CardDefinition" load_steps=6 format=3 uid="uid://cc7c3nyp608yn"]
+
+[ext_resource type="Script" uid="uid://dadsmsxgj4qif" path="res://cards/card_definition.gd" id="1_card"]
+[ext_resource type="Script" uid="uid://ceoj5ylbbwa3s" path="res://cards/behaviors/heal_ally_behavior.gd" id="2_behavior"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="3_style"]
+[ext_resource type="Texture2D" uid="uid://bowlwjyyrsqcg" path="res://cards/definitions/rally/rally.png" id="4_art"]
+
+[sub_resource type="Resource" id="HealAllyBehavior"]
+script = ExtResource("2_behavior")
+heal_amount = 2
+
+[resource]
+script = ExtResource("1_card")
+id = &"rally"
+display_name = "Rally"
+description = "A shared cheer restores the whole Ally Circle. Heal every ally for 2 Heart."
+artwork = ExtResource("4_art")
+card_type = 1
+attack = 0
+health = 1
+cost = 2
+behavior = SubResource("HealAllyBehavior")
+visual_style = ExtResource("3_style")

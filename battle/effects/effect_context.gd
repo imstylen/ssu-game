@@ -28,6 +28,10 @@ func damage_board(amount: int) -> void:
 	_resolver.apply_board_damage(_session, amount, _events)
 
 
+func heal_allies(amount: int) -> void:
+	_resolver.apply_ally_healing(_session, amount, _events)
+
+
 func damage_player(amount: int) -> void:
 	_resolver.apply_player_damage(_session, amount, _events)
 

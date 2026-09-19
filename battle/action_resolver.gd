@@ -277,6 +277,23 @@ func apply_board_damage(session: BattleSession, amount: int, events: Array[Battl
 	board_damage_policy.apply_damage(context, amount)
 
 
+func apply_ally_healing(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+	if amount <= 0 or session.is_finished():
+		return
+	for card in session.battlefield:
+		var old_health := card.current_health
+		card.current_health = mini(card.current_health + amount, card.definition.health)
+		var applied := card.current_health - old_health
+		if applied > 0:
+			events.append(BattleEvent.new(&"HealingApplied", {
+				"target": "unit",
+				"instance_id": card.instance_id,
+				"name": card.definition.display_name,
+				"amount": applied,
+				"health": card.current_health,
+			}))
+
+
 func apply_player_damage(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
 	if session.is_finished() or amount <= 0:
 		return
