@@ -36,6 +36,22 @@ godot --headless --path . -- --smoke-test
 - Allies that reach zero Heart need a rest. Resting allies and played one-shots enter the rest pile, which becomes a fresh deck when needed.
 - The Cozy Deck Builder saves to `user://profile.json`. Decks that need help remain editable but cannot start an adventure until valid.
 
+## Zoo campaign
+
+Choose **CAMPAIGN** from the Cozy Corner to explore the eleven-encounter zoo map. Inspect any icon with the mouse or keyboard; **Start Battle** saves your choice. Win one encounter on each of five tiers to reach the boss. Retreat, defeat, or closing the game keeps that encounter committed for a fresh retry.
+
+Every battle uses full Team Heart and your currently selected deck. You can visit Deck Builder and return through the Cozy Corner without losing your route. **Start New Campaign** asks before resetting campaign progress and preserves decks and collection. A failed save offers a retry; an unsaved victory must be saved before leaving its result screen.
+
+The map and tuning live in `campaign/campaign_definition.gd`, progression in `campaign/campaign_progress.gd`, and decorative scenery in `campaign/art/zoo_map.svg`. Campaign variants never enter the standalone enemy pool. Profile schema 3 stores the versioned route beside existing decks.
+
+For reproducible rendered map captures at both supported sizes, run `godot --path . --script res://tests/campaign_visual_check.gd`; images go to `.godot/campaign_*.png`. The domain suite and smoke test include campaign coverage using disposable profiles. Cross-process resume checks run sequentially:
+
+```powershell
+godot --headless --path . --script res://tests/campaign_resume_check.gd -- interrupt
+godot --headless --path . --script res://tests/campaign_resume_check.gd -- win
+godot --headless --path . --script res://tests/campaign_resume_check.gd -- resume
+```
+
 ## Editing card visuals
 
 Open `res://ui/card_base.tscn` in the Godot editor to change the shared card layout, palette, Fredoka typography, square artwork frame, background texture, and decorative overlay. The scene shows Cup of Tea as a live preview; select another **Editor Preview Definition** or toggle **Editor Preview Compact** to inspect the smaller layout.

@@ -40,6 +40,8 @@ func _run_all() -> void:
 	for enemy_id in EXPECTED_ENEMIES:
 		_enemies[enemy_id] = _catalog.get_enemy(enemy_id)
 	_test_content_resources()
+	load("res://tests/campaign_tests.gd").run(_expect, _catalog)
+	await load("res://tests/campaign_tests.gd").run_battles(_expect, self)
 	_test_card_base_artwork_and_style()
 	_test_battle_setup()
 	_test_damage_one_shot()
@@ -454,7 +456,7 @@ func _test_profile_migration() -> void:
 		],
 	}
 	var migrated: Dictionary = ProfileMigrator.migrate_profile_data(legacy)
-	_expect(migrated.changed and migrated.data.schema_version == 2, "Legacy profile migrates to schema 2")
+	_expect(migrated.changed and migrated.data.schema_version == 3, "Legacy profile migrates to schema 3")
 	_expect(migrated.data.decks[0].name == "Access Allies" and migrated.data.decks[0].card_ids.size() == 20, "Untouched six-card starter upgrades and is renamed")
 	_expect(migrated.data.decks[1] == legacy.decks[1], "User-created deck is preserved exactly")
 	var customized := legacy.duplicate(true)
@@ -464,7 +466,7 @@ func _test_profile_migration() -> void:
 	_expect(customized_result.data.decks[0] == customized.decks[0], "Customized starter remains untouched")
 	var current: Dictionary = migrated.data.duplicate(true)
 	var current_result: Dictionary = ProfileMigrator.migrate_profile_data(current)
-	_expect(not current_result.changed and current_result.data == current, "Schema-2 profile is idempotent")
+	_expect(not current_result.changed and current_result.data == current, "Current profile migration is idempotent")
 
 
 func _test_font_license_and_copy() -> void:

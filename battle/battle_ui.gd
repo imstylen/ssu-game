@@ -30,9 +30,16 @@ var _damage_overlay_layer: CanvasLayer
 var _damage_overlay_root: Control
 var _card_views_by_instance: Dictionary = {}
 var _last_card_artwork_rects: Dictionary = {}
+var _campaign_node: String = ""
+var _victory_saved := false
+var _save_attempted := false
+var _retry_button: Button
+var _home_button: Button
+var _retreat_button: Button
 
 
 func _ready() -> void:
+	_campaign_node = SceneNavigator.campaign_encounter
 	theme = AppTheme.create_theme()
 	AppTheme.make_background(self)
 	_build_ui()
@@ -64,7 +71,8 @@ func _build_ui() -> void:
 	_turn_label.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	header.add_child(_turn_label)
 	var retreat := AppTheme.button("TAKE A BREAK", 160)
-	retreat.pressed.connect(SceneNavigator.go_to_main_menu)
+	_retreat_button = retreat
+	retreat.pressed.connect(_leave_battle)
 	header.add_child(retreat)
 	var enemy_panel := PanelContainer.new()
 	enemy_panel.name = "EnemyEncounterPanel"
@@ -199,7 +207,7 @@ func _build_ui() -> void:
 	player_health_stack.add_theme_constant_override("separation", 3)
 	root_stack.add_child(player_health_stack)
 	var player_health_heading := Label.new()
-	player_health_heading.text = "TEAM HEALTH"
+	player_health_heading.text = "TEAM HEART"
 	player_health_heading.add_theme_font_size_override("font_size", 14)
 	player_health_heading.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
 	player_health_stack.add_child(player_health_heading)
@@ -304,11 +312,16 @@ func _build_result_layer() -> void:
 	_result_body.add_theme_color_override("font_color", AppTheme.SECONDARY_TEXT)
 	stack.add_child(_result_body)
 	var retry := AppTheme.button("TRY ANOTHER MONSTER", 270)
-	retry.pressed.connect(func(): get_tree().reload_current_scene())
+	_retry_button = retry
+	retry.pressed.connect(_retry)
 	stack.add_child(retry)
 	var home := AppTheme.button("BACK TO THE COZY CORNER", 270)
-	home.pressed.connect(SceneNavigator.go_to_main_menu)
+	_home_button = home
+	home.pressed.connect(_leave_battle)
 	stack.add_child(home)
+	if not _campaign_node.is_empty():
+		retry.text = "RETRY ENCOUNTER"
+		home.text = "RETURN TO CAMPAIGN"
 
 
 func _start_battle() -> void:
@@ -316,7 +329,15 @@ func _start_battle() -> void:
 	if not errors.is_empty():
 		_show_blocking_error("DECK NEEDS A LITTLE HELP", "\n".join(errors))
 		return
-	var enemy := CardCatalog.get_random_enemy()
+	var enemy: EnemyDefinition
+	if _campaign_node.is_empty():
+		enemy = CardCatalog.get_random_enemy()
+	else:
+		if ProfileStore.campaign == null or ProfileStore.campaign.committed != _campaign_node:
+			_show_blocking_error("ENCOUNTER UNAVAILABLE", "Return to Campaign and choose an available encounter.")
+			_retry_button.visible = false
+			return
+		enemy = CampaignDefinition.new().enemy_variant(_campaign_node, CardCatalog)
 	if enemy == null:
 		_show_blocking_error("MONSTER TAKING A BREAK", "No ableism monster is ready for an adventure yet.")
 		return
@@ -379,6 +400,46 @@ func _refresh() -> void:
 		_result_title.text = "BARRIER BUSTED!" if won else "TIME FOR A REST"
 		_result_title.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT if won else AppTheme.DANGER_TEXT)
 		_result_body.text = "%s's barriers came tumbling down. Great teamwork!" % session.enemy.definition.display_name if won else "The team needs a rest after round %d. A new plan and a snack can help." % session.turn_number
+		if not _campaign_node.is_empty():
+			_refresh_campaign_result(won)
+
+
+func _refresh_campaign_result(won: bool) -> void:
+	if not won:
+		_retry_button.text = "RETRY ENCOUNTER"
+		return
+	if not _save_attempted:
+		_save_attempted = true
+		_victory_saved = ProfileStore.complete_campaign_encounter(_campaign_node)
+	_home_button.disabled = not _victory_saved
+	_retreat_button.disabled = not _victory_saved
+	_retry_button.visible = not _victory_saved
+	if not _victory_saved:
+		_retry_button.text = "RETRY SAVING VICTORY"
+		_result_title.text = "VICTORY NOT SAVED YET"
+		_result_body.text = ProfileStore.last_save_error + "\nKeep this battle open and retry saving."
+	elif _campaign_node == CampaignDefinition.BOSS:
+		_result_title.text = "CAMPAIGN COMPLETE!"
+		_result_body.text = "Five barriers overcome together! Your completed zoo route is saved."
+	else:
+		_result_body.text += "\nRoute saved. Your next connected encounters are ready."
+
+
+func _retry() -> void:
+	if not _campaign_node.is_empty() and controller.session != null and controller.session.phase == BattleSession.Phase.VICTORY:
+		_save_attempted = false
+		_refresh()
+		return
+	get_tree().reload_current_scene()
+
+
+func _leave_battle() -> void:
+	if not _campaign_node.is_empty():
+		if controller.session != null and controller.session.phase == BattleSession.Phase.VICTORY and not _victory_saved:
+			return
+		SceneNavigator.go_to(SceneNavigator.CAMPAIGN)
+	else:
+		SceneNavigator.go_to_main_menu()
 
 
 func _refresh_spark_icons(current_spark: int, maximum_spark: int) -> void:

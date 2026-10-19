@@ -91,6 +91,9 @@ func _build_ui() -> void:
 	_battle_button = AppTheme.button("BATTLE!")
 	_battle_button.pressed.connect(_start_battle)
 	menu.add_child(_battle_button)
+	var campaign_button := AppTheme.button("CAMPAIGN")
+	campaign_button.pressed.connect(func(): SceneNavigator.go_to(SceneNavigator.CAMPAIGN))
+	menu.add_child(campaign_button)
 	var decks_button := AppTheme.button("DECK BUILDER")
 	decks_button.pressed.connect(func(): SceneNavigator.go_to(SceneNavigator.DECK_BUILDER))
 	menu.add_child(decks_button)
@@ -135,9 +138,14 @@ func _start_battle() -> void:
 
 func _run_scene_smoke_test() -> void:
 	await get_tree().process_frame
+	# Smoke checks must never initialize or replace the player's real campaign.
+	var original_profile_path := ProfileStore.profile_path
+	ProfileStore.profile_path = "user://campaign_smoke_%d.json" % Time.get_ticks_usec()
+	ProfileStore.load_profile()
 	var paths := [
 		SceneNavigator.COLLECTION,
 		SceneNavigator.DECK_BUILDER,
+		SceneNavigator.CAMPAIGN,
 		SceneNavigator.BATTLE,
 	]
 	for path in paths:
@@ -156,5 +164,22 @@ func _run_scene_smoke_test() -> void:
 		await get_tree().process_frame
 		instance.queue_free()
 		await get_tree().process_frame
+	ProfileStore.initialize_campaign()
+	ProfileStore.commit_campaign("t1_a")
+	SceneNavigator.campaign_encounter = "t1_a"
+	var campaign_battle = load(SceneNavigator.BATTLE).instantiate()
+	campaign_battle.get_node("BattleController").presentation_delay = 0.0
+	get_tree().root.add_child(campaign_battle)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if campaign_battle.controller.session == null or campaign_battle.controller.session.enemy.definition.id != &"barrier_blob":
+		push_error("Campaign smoke battle did not start the committed encounter")
+		get_tree().quit(1)
+		return
+	campaign_battle.queue_free()
+	SceneNavigator.campaign_encounter = ""
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(ProfileStore.profile_path))
+	ProfileStore.profile_path = original_profile_path
+	ProfileStore.load_profile()
 	print("SCENE_SMOKE_OK")
 	get_tree().call_deferred("quit", 0)

@@ -1,7 +1,7 @@
 class_name ProfileMigrator
 extends RefCounted
 
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const LEGACY_STARTER_IDS: Array[StringName] = [
 	&"shield_bot", &"shield_bot",
 	&"arc_bolt", &"arc_bolt",
@@ -25,7 +25,7 @@ static func migrate_profile_data(source: Dictionary) -> Dictionary:
 	var migrated: Dictionary = source.duplicate(true)
 	var changed := false
 	var schema_version := int(migrated.get("schema_version", 1))
-	if schema_version < SCHEMA_VERSION:
+	if schema_version < 2:
 		var migrated_decks: Array = migrated.get("decks", [])
 		for index in migrated_decks.size():
 			var deck_data = migrated_decks[index]
@@ -39,7 +39,12 @@ static func migrate_profile_data(source: Dictionary) -> Dictionary:
 				migrated_decks[index] = upgraded
 				changed = true
 		migrated["decks"] = migrated_decks
-		migrated["schema_version"] = SCHEMA_VERSION
+		migrated["schema_version"] = 2
+		changed = true
+	if schema_version < 3:
+		if not migrated.has("campaign"):
+			migrated["campaign"] = null
+		migrated["schema_version"] = 3
 		changed = true
 	return {"data": migrated, "changed": changed}
 

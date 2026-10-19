@@ -9,6 +9,13 @@ const SCHEMA_VERSION := ProfileMigrator.SCHEMA_VERSION
 var selected_deck_id: String = ""
 var decks: Array[DeckRecord] = []
 var deck_rules: DeckRules
+var campaign: CampaignProgress
+var campaign_error: String = ""
+var last_save_error: String = ""
+var profile_path: String = PROFILE_PATH
+# Injectable disk boundary for persistence tests. Production uses atomic replacement.
+var profile_writer: Callable
+var _campaign_data: Variant = null
 
 
 func _ready() -> void:
@@ -19,11 +26,14 @@ func _ready() -> void:
 
 func load_profile() -> void:
 	decks.clear()
-	if not FileAccess.file_exists(PROFILE_PATH):
+	campaign = null
+	campaign_error = ""
+	_campaign_data = null
+	if not FileAccess.file_exists(profile_path):
 		_create_default_profile()
 		save_profile()
 		return
-	var file := FileAccess.open(PROFILE_PATH, FileAccess.READ)
+	var file := FileAccess.open(profile_path, FileAccess.READ)
 	if file == null:
 		_create_default_profile()
 		save_failed.emit("We could not open your cozy corner, so a fresh one is ready.")
@@ -35,6 +45,10 @@ func load_profile() -> void:
 		return
 	var migrated := ProfileMigrator.migrate_profile_data(parsed)
 	parsed = migrated.data
+	_campaign_data = parsed.get("campaign")
+	if _campaign_data != null:
+		campaign_error = CampaignProgress.validation_error(_campaign_data)
+		campaign = CampaignProgress.from_dictionary(_campaign_data)
 	selected_deck_id = str(parsed.get("selected_deck_id", ""))
 	for deck_data in parsed.get("decks", []):
 		if deck_data is Dictionary:
@@ -58,13 +72,73 @@ func save_profile() -> bool:
 		"schema_version": SCHEMA_VERSION,
 		"selected_deck_id": selected_deck_id,
 		"decks": serialized_decks,
+		"campaign": _campaign_data,
 	}
-	var file := FileAccess.open(PROFILE_PATH, FileAccess.WRITE)
-	if file == null:
-		var message := "We could not save your cozy corner (error %s)." % FileAccess.get_open_error()
-		save_failed.emit(message)
+	last_save_error = ""
+	var error: Error = profile_writer.call(data) if profile_writer.is_valid() else _write_profile(data)
+	if error != OK:
+		last_save_error = "We could not save your cozy corner (error %s). Your last saved campaign is unchanged. Please try again." % error
+		save_failed.emit(last_save_error)
 		return false
+	return true
+
+
+func _write_profile(data: Dictionary) -> Error:
+	# Never truncate the previous good save before the replacement is fully written.
+	var temporary := profile_path + ".tmp"
+	var file := FileAccess.open(temporary, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
 	file.store_string(JSON.stringify(data, "\t"))
+	file.flush()
+	var error := file.get_error()
+	file.close()
+	if error != OK:
+		return error
+	return DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary), ProjectSettings.globalize_path(profile_path))
+
+
+func initialize_campaign() -> bool:
+	if not campaign_error.is_empty():
+		return false
+	if campaign != null:
+		return true
+	return _save_campaign(CampaignProgress.new())
+
+
+func reset_campaign() -> bool:
+	return _save_campaign(CampaignProgress.new())
+
+
+func commit_campaign(node_id: String) -> bool:
+	if campaign == null or not campaign_error.is_empty() or not selected_deck_errors().is_empty():
+		return false
+	var candidate := CampaignProgress.from_dictionary(campaign.to_dictionary())
+	if not candidate.commit(node_id):
+		return false
+	return _save_campaign(candidate)
+
+
+func complete_campaign_encounter(node_id: String) -> bool:
+	if campaign == null or not campaign_error.is_empty():
+		return false
+	if not campaign.completed.is_empty() and campaign.completed.back() == node_id:
+		return true
+	var candidate := CampaignProgress.from_dictionary(campaign.to_dictionary())
+	if not candidate.complete(node_id):
+		return false
+	return _save_campaign(candidate)
+
+
+func _save_campaign(candidate: CampaignProgress) -> bool:
+	var previous: Variant = _campaign_data
+	_campaign_data = candidate.to_dictionary()
+	if not save_profile():
+		_campaign_data = previous
+		return false
+	campaign = candidate
+	campaign_error = ""
+	profile_changed.emit()
 	return true
 
 
