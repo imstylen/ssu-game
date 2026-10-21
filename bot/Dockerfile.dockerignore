@@ -1,0 +1,5 @@
+.git
+.godot
+bot/data
+bot/dist
+bot/node_modules
