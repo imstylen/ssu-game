@@ -1,7 +1,7 @@
 class_name ProfileMigrator
 extends RefCounted
 
-const SCHEMA_VERSION := 3
+const SCHEMA_VERSION := 4
 const LEGACY_STARTER_IDS: Array[StringName] = [
 	&"shield_bot", &"shield_bot",
 	&"arc_bolt", &"arc_bolt",
@@ -45,6 +45,14 @@ static func migrate_profile_data(source: Dictionary) -> Dictionary:
 		if not migrated.has("campaign"):
 			migrated["campaign"] = null
 		migrated["schema_version"] = 3
+		changed = true
+	if schema_version < 4:
+		# Campaign v1 used the hardcoded tiered map (t1_a..t5_boss). Those IDs no
+		# longer exist in the authored map, so progress quietly restarts.
+		var campaign_data: Variant = migrated.get("campaign")
+		if campaign_data is Dictionary and campaign_data.get("version") == 1:
+			migrated["campaign"] = null
+		migrated["schema_version"] = 4
 		changed = true
 	return {"data": migrated, "changed": changed}
 

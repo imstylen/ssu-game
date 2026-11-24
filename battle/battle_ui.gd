@@ -337,7 +337,7 @@ func _start_battle() -> void:
 			_show_blocking_error("ENCOUNTER UNAVAILABLE", "Return to Campaign and choose an available encounter.")
 			_retry_button.visible = false
 			return
-		enemy = CampaignDefinition.new().enemy_variant(_campaign_node, CardCatalog)
+		enemy = CampaignDefinition.current().enemy_variant(_campaign_node)
 	if enemy == null:
 		_show_blocking_error("MONSTER TAKING A BREAK", "No ableism monster is ready for an adventure yet.")
 		return
@@ -418,9 +418,9 @@ func _refresh_campaign_result(won: bool) -> void:
 		_retry_button.text = "RETRY SAVING VICTORY"
 		_result_title.text = "VICTORY NOT SAVED YET"
 		_result_body.text = ProfileStore.last_save_error + "\nKeep this battle open and retry saving."
-	elif _campaign_node == CampaignDefinition.BOSS:
+	elif _campaign_node == CampaignDefinition.current().final_id:
 		_result_title.text = "CAMPAIGN COMPLETE!"
-		_result_body.text = "Five barriers overcome together! Your completed zoo route is saved."
+		_result_body.text = "Every barrier on your route overcome together! Your completed zoo route is saved."
 	else:
 		_result_body.text += "\nRoute saved. Your next connected encounters are ready."
 

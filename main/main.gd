@@ -164,15 +164,17 @@ func _run_scene_smoke_test() -> void:
 		await get_tree().process_frame
 		instance.queue_free()
 		await get_tree().process_frame
+	var campaign_map := CampaignDefinition.current()
+	var first_encounter: String = campaign_map.start[0]
 	ProfileStore.initialize_campaign()
-	ProfileStore.commit_campaign("t1_a")
-	SceneNavigator.campaign_encounter = "t1_a"
+	ProfileStore.commit_campaign(first_encounter)
+	SceneNavigator.campaign_encounter = first_encounter
 	var campaign_battle = load(SceneNavigator.BATTLE).instantiate()
 	campaign_battle.get_node("BattleController").presentation_delay = 0.0
 	get_tree().root.add_child(campaign_battle)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if campaign_battle.controller.session == null or campaign_battle.controller.session.enemy.definition.id != &"barrier_blob":
+	if campaign_battle.controller.session == null or campaign_battle.controller.session.enemy.definition.id != campaign_map.nodes[first_encounter].enemy.id:
 		push_error("Campaign smoke battle did not start the committed encounter")
 		get_tree().quit(1)
 		return

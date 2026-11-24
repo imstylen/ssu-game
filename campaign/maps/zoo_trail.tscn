@@ -1,0 +1,233 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://campaign/map/campaign_map_canvas.gd" id="1_jo1r8"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/zoo_trail_background.svg" id="2_m131o"]
+[ext_resource type="Script" path="res://campaign/map/campaign_entrance.gd" id="3_5v215"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/entrance_gate.svg" id="4_rxw0u"]
+[ext_resource type="Script" path="res://campaign/map/campaign_encounter.gd" id="5_bcna1"]
+[ext_resource type="Resource" path="res://enemies/definitions/barrier_blob/barrier_blob.tres" id="6_tlqnp"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_meadow.svg" id="7_4ue7a"]
+[ext_resource type="Resource" path="res://enemies/definitions/assumption_golem/assumption_golem.tres" id="8_4kbem"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_pond.svg" id="9_ljjdh"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_aviary.svg" id="10_fhbey"]
+[ext_resource type="Resource" path="res://enemies/definitions/siege_core.tres" id="11_3amf5"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_pen.svg" id="12_eypv6"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_rocks.svg" id="13_a8y8a"]
+[ext_resource type="Texture2D" path="res://campaign/art/placeholder/boss_gate.svg" id="14_bd64f"]
+
+[node name="ZooTrail" type="Control" unique_id=734112632]
+custom_minimum_size = Vector2(2560, 2880)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 2560.0
+offset_bottom = 2880.0
+mouse_filter = 1
+script = ExtResource("1_jo1r8")
+background = ExtResource("2_m131o")
+
+[node name="Entrance" type="Control" parent="." unique_id=1107942148 node_paths=PackedStringArray("next_encounters")]
+anchors_preset = 0
+offset_left = 1100.0
+offset_top = 2600.0
+offset_right = 1460.0
+offset_bottom = 2800.0
+mouse_filter = 2
+script = ExtResource("3_5v215")
+next_encounters = [NodePath("../PettingMeadow"), NodePath("../DuckPond")]
+art = ExtResource("4_rxw0u")
+
+[node name="PettingMeadow" type="TextureButton" parent="." unique_id=229867287 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 800.0
+offset_top = 2200.0
+offset_right = 1000.0
+offset_bottom = 2400.0
+tooltip_text = "Petting Meadow — Barrier Blob"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "petting_meadow"
+display_name = "Petting Meadow"
+enemy = ExtResource("6_tlqnp")
+attack_pattern_override = PackedInt32Array()
+map_art = ExtResource("7_4ue7a")
+next_encounters = [NodePath("../BirdAviary"), NodePath("../GoatPaddock")]
+
+[node name="DuckPond" type="TextureButton" parent="." unique_id=575669398 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 1560.0
+offset_top = 2200.0
+offset_right = 1760.0
+offset_bottom = 2400.0
+tooltip_text = "Duck Pond — Assumption Golem"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "duck_pond"
+display_name = "Duck Pond"
+enemy = ExtResource("8_4kbem")
+attack_pattern_override = PackedInt32Array()
+map_art = ExtResource("9_ljjdh")
+next_encounters = [NodePath("../GoatPaddock"), NodePath("../LilyPond")]
+
+[node name="BirdAviary" type="TextureButton" parent="." unique_id=1212902690 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 520.0
+offset_top = 1750.0
+offset_right = 720.0
+offset_bottom = 1950.0
+tooltip_text = "Bird Aviary — Assumption Golem"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "bird_aviary"
+display_name = "Bird Aviary"
+enemy = ExtResource("8_4kbem")
+maximum_health_override = 36
+attack_pattern_override = PackedInt32Array(4, 7, 6)
+map_art = ExtResource("10_fhbey")
+next_encounters = [NodePath("../RockyRidge"), NodePath("../LlamaPen")]
+
+[node name="GoatPaddock" type="TextureButton" parent="." unique_id=1880047329 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 1180.0
+offset_top = 1750.0
+offset_right = 1380.0
+offset_bottom = 1950.0
+tooltip_text = "Goat Paddock — Gatekeeping Gremlin"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "goat_paddock"
+display_name = "Goat Paddock"
+enemy = ExtResource("11_3amf5")
+maximum_health_override = 32
+attack_pattern_override = PackedInt32Array(5, 6, 8)
+map_art = ExtResource("12_eypv6")
+next_encounters = [NodePath("../RockyRidge"), NodePath("../LlamaPen"), NodePath("../FlamingoLagoon")]
+
+[node name="LilyPond" type="TextureButton" parent="." unique_id=539562186 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 1840.0
+offset_top = 1750.0
+offset_right = 2040.0
+offset_bottom = 1950.0
+tooltip_text = "Lily Pond — Barrier Blob"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "lily_pond"
+display_name = "Lily Pond"
+enemy = ExtResource("6_tlqnp")
+maximum_health_override = 28
+attack_pattern_override = PackedInt32Array(3, 5, 9)
+map_art = ExtResource("9_ljjdh")
+next_encounters = [NodePath("../LlamaPen"), NodePath("../FlamingoLagoon")]
+
+[node name="RockyRidge" type="TextureButton" parent="." unique_id=469148018 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 660.0
+offset_top = 1300.0
+offset_right = 860.0
+offset_bottom = 1500.0
+tooltip_text = "Rocky Ridge — Gatekeeping Gremlin"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "rocky_ridge"
+display_name = "Rocky Ridge"
+enemy = ExtResource("11_3amf5")
+maximum_health_override = 34
+attack_pattern_override = PackedInt32Array(6, 7, 9)
+map_art = ExtResource("13_a8y8a")
+next_encounters = [NodePath("../EagleAviary")]
+
+[node name="LlamaPen" type="TextureButton" parent="." unique_id=1167677662 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 1220.0
+offset_top = 1300.0
+offset_right = 1420.0
+offset_bottom = 1500.0
+tooltip_text = "Llama Pen — Barrier Blob"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "llama_pen"
+display_name = "Llama Pen"
+enemy = ExtResource("6_tlqnp")
+maximum_health_override = 30
+attack_pattern_override = PackedInt32Array(4, 6, 10)
+map_art = ExtResource("12_eypv6")
+next_encounters = [NodePath("../EagleAviary"), NodePath("../BoulderCave")]
+
+[node name="FlamingoLagoon" type="TextureButton" parent="." unique_id=1004002707 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 1780.0
+offset_top = 1300.0
+offset_right = 1980.0
+offset_bottom = 1500.0
+tooltip_text = "Flamingo Lagoon — Assumption Golem"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "flamingo_lagoon"
+display_name = "Flamingo Lagoon"
+enemy = ExtResource("8_4kbem")
+maximum_health_override = 38
+attack_pattern_override = PackedInt32Array(5, 8, 7)
+map_art = ExtResource("9_ljjdh")
+next_encounters = [NodePath("../BoulderCave")]
+
+[node name="EagleAviary" type="TextureButton" parent="." unique_id=656069554 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 860.0
+offset_top = 850.0
+offset_right = 1060.0
+offset_bottom = 1050.0
+tooltip_text = "Eagle Aviary — Assumption Golem"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "eagle_aviary"
+display_name = "Eagle Aviary"
+enemy = ExtResource("8_4kbem")
+maximum_health_override = 40
+attack_pattern_override = PackedInt32Array(5, 8, 7)
+map_art = ExtResource("10_fhbey")
+next_encounters = [NodePath("../GremlinGate")]
+
+[node name="BoulderCave" type="TextureButton" parent="." unique_id=717243088 node_paths=PackedStringArray("next_encounters")]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 1540.0
+offset_top = 850.0
+offset_right = 1740.0
+offset_bottom = 1050.0
+tooltip_text = "Boulder Cave — Barrier Blob"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "boulder_cave"
+display_name = "Boulder Cave"
+enemy = ExtResource("6_tlqnp")
+maximum_health_override = 32
+attack_pattern_override = PackedInt32Array(4, 6, 10)
+map_art = ExtResource("13_a8y8a")
+next_encounters = [NodePath("../GremlinGate")]
+
+[node name="GremlinGate" type="TextureButton" parent="." unique_id=905704203]
+custom_minimum_size = Vector2(260, 260)
+layout_mode = 0
+offset_left = 1150.0
+offset_top = 350.0
+offset_right = 1410.0
+offset_bottom = 610.0
+tooltip_text = "Gremlin's Gate — Gatekeeping Gremlin"
+mouse_default_cursor_shape = 2
+script = ExtResource("5_bcna1")
+encounter_id = "gremlin_gate"
+display_name = "Gremlin's Gate"
+enemy = ExtResource("11_3amf5")
+maximum_health_override = 42
+attack_pattern_override = PackedInt32Array(5, 7, 8)
+map_art = ExtResource("14_bd64f")
+is_final = true

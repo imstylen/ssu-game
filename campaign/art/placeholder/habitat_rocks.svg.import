@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://duo8vxiijx3vk"
-path="res://.godot/imported/zoo_map.svg-74aeb9d27614a75854044612cec3ee6c.ctex"
+uid="uid://d06rd88lb7egn"
+path="res://.godot/imported/habitat_rocks.svg-f0671969eec448c42d06c1abf28f993d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://campaign/art/zoo_map.svg"
-dest_files=["res://.godot/imported/zoo_map.svg-74aeb9d27614a75854044612cec3ee6c.ctex"]
+source_file="res://campaign/art/placeholder/habitat_rocks.svg"
+dest_files=["res://.godot/imported/habitat_rocks.svg-f0671969eec448c42d06c1abf28f993d.ctex"]
 
 [params]
 

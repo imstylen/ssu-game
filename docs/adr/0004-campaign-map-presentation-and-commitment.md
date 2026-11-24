@@ -1,7 +1,7 @@
 # 0004: Visible zoo map with preview before route commitment
 
 Date: 2026-10-19
-Status: accepted
+Status: accepted; whole-map view and state presentation superseded by [0005](0005-editor-authored-scrolling-campaign-map.md)
 
 ## Context
 

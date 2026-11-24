@@ -38,7 +38,10 @@ func load_profile() -> void:
 		_create_default_profile()
 		save_failed.emit("We could not open your cozy corner, so a fresh one is ready.")
 		return
-	var parsed = JSON.parse_string(file.get_as_text())
+	var text := file.get_as_text()
+	# Close before any migration save: Windows cannot replace a file that is open.
+	file.close()
+	var parsed = JSON.parse_string(text)
 	if not parsed is Dictionary:
 		_create_default_profile()
 		save_failed.emit("That profile was a little tangled, so a fresh cozy corner is ready.")

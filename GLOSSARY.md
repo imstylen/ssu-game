@@ -6,11 +6,23 @@ The planned mode entered through a Campaign option on the main menu, presenting 
 
 ## Campaign node
 
-An enemy encounter represented by an enemy icon on the campaign map. Example: selecting an available node leads to its enemy encounter.
+An enemy encounter represented by habitat art on the campaign map (a `CampaignEncounter` in the map scene), identified in saves by its stable encounter ID. Available nodes appear in color and unavailable ones in black and white, each with a status badge. Example: selecting an available node previews its enemy encounter.
+
+## Campaign map scene
+
+The editor-authored scene (`campaign/maps/zoo_trail.tscn`) that defines the campaign: background, node positions, connections, tuning, and art. See [ADR 0005](docs/adr/0005-editor-authored-scrolling-campaign-map.md).
+
+## Entrance
+
+The non-battle starting point of the campaign map. Its connections are the encounters available at the start of a campaign.
+
+## Current position
+
+Where the "You are here" pin sits and where the map opens: the committed encounter, else the last victory, else the Entrance.
 
 ## Tier
 
-A level of encounters in the campaign's progression toward the final boss. The player starts one encounter per tier, closing off the alternatives on that tier. Example: when two encounters are available, previewing either is free; pressing Start Battle commits to one rather than allowing both to be cleared.
+Retired term. The first campaign grouped encounters into five tiers; since [ADR 0005](docs/adr/0005-editor-authored-scrolling-campaign-map.md), authored connections alone define progression. Each victory still makes only that encounter's connections available, closing off the alternatives.
 
 ## Campaign route
 

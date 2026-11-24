@@ -8,7 +8,7 @@ var _start: Button
 var _save_retry: Button
 var _reset_dialog: ConfirmationDialog
 var _selected: String = ""
-var _definition := CampaignDefinition.new()
+var _definition := CampaignDefinition.current()
 
 
 func _ready() -> void:
@@ -53,11 +53,11 @@ func _build_ui() -> void:
 	panel.add_child(details)
 	details.add_child(AppTheme.heading("PLAN YOUR PATH", 25))
 	var help := Label.new()
-	help.text = "Five encounters. One shared adventure.\nInspect any friend-sized barrier below.\nOnly Start Battle commits your route."
+	help.text = "Scroll, drag, or Tab around the zoo.\nClick an encounter to inspect it.\nOnly Start Battle commits your route."
 	help.add_theme_font_size_override("font_size", 17)
 	details.add_child(help)
 	_portrait = TextureRect.new()
-	_portrait.custom_minimum_size = Vector2(220, 180)
+	_portrait.custom_minimum_size = Vector2(220, 160)
 	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	details.add_child(_portrait)
@@ -74,6 +74,10 @@ func _build_ui() -> void:
 	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_notice.add_theme_font_size_override("font_size", 17)
 	details.add_child(_notice)
+	var recenter := AppTheme.button("RECENTER MAP")
+	recenter.tooltip_text = "Scroll back to where you are on the trail."
+	recenter.pressed.connect(func(): _map.center_on_current(true))
+	details.add_child(recenter)
 	_save_retry = AppTheme.button("RETRY SAVING")
 	_save_retry.pressed.connect(_retry_save)
 	details.add_child(_save_retry)
@@ -81,7 +85,7 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	details.add_child(spacer)
 	var legend := Label.new()
-	legend.text = "> Available    # Locked\n+ Completed    - Skipped\nGold connections: your chosen route"
+	legend.text = "Available: color, play badge\nCompleted: color, check badge\nLocked: gray, lock · Skipped: dim, cross\nGold path: your route · Pin: you are here"
 	legend.add_theme_font_size_override("font_size", 17)
 	details.add_child(legend)
 	var decks := AppTheme.button("DECK BUILDER")
@@ -114,13 +118,16 @@ func _refresh() -> void:
 	_start.disabled = true
 	_save_retry.visible = false
 	_notice.text = "Tab to inspect encounters; Enter or Space activates buttons."
-	if not ProfileStore.campaign_error.is_empty():
+	var map_errors := _definition.validation_errors()
+	if not map_errors.is_empty():
+		_notice.text = "This campaign map needs fixing in the editor:\n" + "\n".join(map_errors.slice(0, 3))
+	elif not ProfileStore.campaign_error.is_empty():
 		_notice.text = ProfileStore.campaign_error
 	elif ProfileStore.campaign == null:
 		_notice.text = ProfileStore.last_save_error
 		_save_retry.visible = true
 	elif ProfileStore.campaign.is_complete():
-		_notice.text = "CAMPAIGN COMPLETE!\nFive barriers overcome together. Your route is saved."
+		_notice.text = "CAMPAIGN COMPLETE!\nEvery barrier on your route overcome together. Your route is saved."
 	else:
 		var errors := ProfileStore.selected_deck_errors()
 		if not errors.is_empty():
@@ -132,12 +139,18 @@ func _refresh() -> void:
 		_start.text = "START BATTLE"
 		_preview.text = "Choose an encounter to see its Heart and repeating damage pattern."
 		return
-	var enemy := _definition.enemy_variant(_selected, CardCatalog)
+	var enemy := _definition.enemy_variant(_selected)
+	if enemy == null:
+		_portrait.texture = null
+		_start.disabled = true
+		_preview.text = "This encounter is not ready yet."
+		return
 	_portrait.texture = enemy.artwork
 	var values := PackedStringArray()
-	for damage in enemy.behavior.attack_pattern:
-		values.append(str(damage))
-	_preview.text = "%s\n%d maximum Heart\nDamage: %s (repeats)" % [enemy.display_name, enemy.maximum_health, " → ".join(values)]
+	if enemy.behavior is PatternEnemyBehavior:
+		for damage in enemy.behavior.attack_pattern:
+			values.append(str(damage))
+	_preview.text = "%s: %s\n%d maximum Heart\nDamage: %s (repeats)" % [_definition.display_name(_selected), enemy.display_name, enemy.maximum_health, " → ".join(values)]
 	_start.text = "RETRY ENCOUNTER" if ProfileStore.campaign != null and ProfileStore.campaign.committed == _selected else "START BATTLE"
 
 

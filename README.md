@@ -38,11 +38,20 @@ godot --headless --path . -- --smoke-test
 
 ## Zoo campaign
 
-Choose **CAMPAIGN** from the Cozy Corner to explore the eleven-encounter zoo map. Inspect any icon with the mouse or keyboard; **Start Battle** saves your choice. Win one encounter on each of five tiers to reach the boss. Retreat, defeat, or closing the game keeps that encounter committed for a fresh retry.
+Choose **CAMPAIGN** from the Cozy Corner to explore the zoo map. It opens on your current position; scroll with the mouse wheel or trackpad, drag, or Tab between encounters, and use **Recenter Map** to return. Available encounters are in color and unavailable ones in black and white, each with a status badge. Click or focus an encounter to inspect it; **Start Battle** saves your choice. Each victory unlocks only that encounter's connections, leading to the boss. Retreat, defeat, or closing the game keeps that encounter committed for a fresh retry.
 
 Every battle uses full Team Heart and your currently selected deck. You can visit Deck Builder and return through the Cozy Corner without losing your route. **Start New Campaign** asks before resetting campaign progress and preserves decks and collection. A failed save offers a retry; an unsaved victory must be saved before leaving its result screen.
 
-The map and tuning live in `campaign/campaign_definition.gd`, progression in `campaign/campaign_progress.gd`, and decorative scenery in `campaign/art/zoo_map.svg`. Campaign variants never enter the standalone enemy pool. Profile schema 3 stores the versioned route beside existing decks.
+Progression lives in `campaign/campaign_progress.gd`, and campaign variants never enter the standalone enemy pool. Profile schema 4 stores the versioned route (campaign version 2) beside existing decks; older tiered campaign progress restarts automatically.
+
+### Editing the campaign map
+
+Open `res://campaign/maps/zoo_trail.tscn` in the Godot editor. The root `CampaignMapCanvas` sets the **Background** texture, the logical **Canvas Size** that node positions use, and **Show Connections**. Its children are:
+
+- one `CampaignEntrance`, whose **Next Encounters** are the starting choices;
+- `CampaignEncounter` nodes, dragged into position. Set **Encounter Id** (a stable save identifier; don't rename it after release), **Display Name**, **Enemy**, optional **Maximum Health Override** and **Attack Pattern Override**, optional **Map Art** (the habitat illustration, shown in color or black and white), and **Next Encounters**. Mark exactly one encounter **Is Final**.
+
+To add an encounter, duplicate an existing one as a direct child of the root and give it a new ID. Arrows update as you edit. The root node's warning icon lists problems such as duplicate IDs, loops, unreachable encounters, or dead ends; the test suite fails on the same problems. Placeholder art is in `campaign/art/placeholder/`. Keep background images under 8192 px on the longest side for the Web export.
 
 For reproducible rendered map captures at both supported sizes, run `godot --path . --script res://tests/campaign_visual_check.gd`; images go to `.godot/campaign_*.png`. The domain suite and smoke test include campaign coverage using disposable profiles. Cross-process resume checks run sequentially:
 

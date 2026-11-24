@@ -12,15 +12,15 @@ func _run() -> void:
 	store.load_profile()
 	var stage := OS.get_cmdline_user_args()[0] if not OS.get_cmdline_user_args().is_empty() else ""
 	if stage == "interrupt":
-		if not store.reset_campaign() or not store.commit_campaign("t1_a"):
+		if not store.reset_campaign() or not store.commit_campaign("petting_meadow"):
 			quit(1)
 			return
 	elif stage == "win":
-		if store.campaign == null or store.campaign.committed != "t1_a" or not store.campaign.completed.is_empty():
+		if store.campaign == null or store.campaign.committed != "petting_meadow" or not store.campaign.completed.is_empty():
 			quit(1)
 			return
 	elif stage == "resume":
-		if store.campaign == null or store.campaign.completed != ["t1_a"] or store.campaign.available_nodes() != ["t2_a", "t2_b"]:
+		if store.campaign == null or store.campaign.completed != ["petting_meadow"] or store.campaign.available_nodes() != ["bird_aviary", "goat_paddock"]:
 			quit(1)
 			return
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(store.profile_path))
@@ -30,7 +30,7 @@ func _run() -> void:
 	else:
 		quit(1)
 		return
-	navigator.campaign_encounter = "t1_a"
+	navigator.campaign_encounter = "petting_meadow"
 	var battle = load("res://battle/battle_scene.tscn").instantiate()
 	battle.get_node("BattleController").presentation_delay = 0.0
 	root.add_child(battle)
@@ -45,7 +45,7 @@ func _run() -> void:
 	else:
 		battle.controller.session.phase = BattleSession.Phase.VICTORY
 		battle._refresh()
-		if store.campaign.completed != ["t1_a"]:
+		if store.campaign.completed != ["petting_meadow"]:
 			quit(1)
 			return
 	print("CAMPAIGN_PROCESS_%s_OK" % stage.to_upper())

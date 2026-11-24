@@ -1,9 +1,13 @@
 class_name CampaignProgress
 extends RefCounted
 
+# Version 2 uses encounter IDs authored in the campaign map scene.
+# Version 1 saves (tiered t1_a..t5_boss IDs) are discarded by ProfileMigrator.
+const VERSION := 2
+
 var completed: Array[String] = []
 var committed: String = ""
-var definition := CampaignDefinition.new()
+var definition := CampaignDefinition.current()
 
 
 func available_nodes() -> Array:
@@ -12,7 +16,7 @@ func available_nodes() -> Array:
 	if not committed.is_empty():
 		return [committed]
 	if completed.is_empty():
-		return ["t1_a", "t1_b"]
+		return definition.start.duplicate()
 	return definition.nodes[completed.back()].next.duplicate()
 
 
@@ -34,6 +38,16 @@ func node_status(node_id: String) -> String:
 	return "locked" if node_id in reachable else "skipped"
 
 
+# The encounter the player is currently at: the committed one, else the last
+# victory. Empty means the player is still at the Entrance.
+func current_position() -> String:
+	if not committed.is_empty():
+		return committed
+	if not completed.is_empty():
+		return completed.back()
+	return ""
+
+
 func commit(node_id: String) -> bool:
 	if node_id not in available_nodes():
 		return false
@@ -42,7 +56,7 @@ func commit(node_id: String) -> bool:
 
 
 func complete(node_id: String) -> bool:
-	# A repeated notification may acknowledge the latest win, never a later tier.
+	# A repeated notification may acknowledge the latest win, never a later encounter.
 	if not completed.is_empty() and completed.back() == node_id:
 		return true
 	if committed.is_empty() or committed != node_id:
@@ -53,15 +67,15 @@ func complete(node_id: String) -> bool:
 
 
 func is_complete() -> bool:
-	return not completed.is_empty() and completed.back() == CampaignDefinition.BOSS
+	return not completed.is_empty() and not definition.final_id.is_empty() and completed.back() == definition.final_id
 
 
 func to_dictionary() -> Dictionary:
-	return {"version": CampaignDefinition.VERSION, "completed": completed.duplicate(), "committed": committed}
+	return {"version": VERSION, "completed": completed.duplicate(), "committed": committed}
 
 
 static func validation_error(data: Variant) -> String:
-	if not data is Dictionary or data.get("version") != CampaignDefinition.VERSION:
+	if not data is Dictionary or data.get("version") != VERSION:
 		return "This campaign uses an unsupported map version. Start New Campaign to reset only campaign progress."
 	if not (data.version is int or data.version is float):
 		return "This campaign uses an invalid map version. Start New Campaign to reset only campaign progress."

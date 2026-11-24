@@ -456,7 +456,7 @@ func _test_profile_migration() -> void:
 		],
 	}
 	var migrated: Dictionary = ProfileMigrator.migrate_profile_data(legacy)
-	_expect(migrated.changed and migrated.data.schema_version == 3, "Legacy profile migrates to schema 3")
+	_expect(migrated.changed and migrated.data.schema_version == ProfileMigrator.SCHEMA_VERSION, "Legacy profile migrates to the current schema")
 	_expect(migrated.data.decks[0].name == "Access Allies" and migrated.data.decks[0].card_ids.size() == 20, "Untouched six-card starter upgrades and is renamed")
 	_expect(migrated.data.decks[1] == legacy.decks[1], "User-created deck is preserved exactly")
 	var customized := legacy.duplicate(true)

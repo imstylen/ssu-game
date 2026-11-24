@@ -1,7 +1,7 @@
 # 0003: Five-tier campaign using the existing enemy roster
 
 Date: 2026-10-19
-Status: accepted
+Status: accepted; tier structure and tier-scaled tuning superseded by [0005](0005-editor-authored-scrolling-campaign-map.md)
 
 ## Context
 
