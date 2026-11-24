@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/pride_march/pride_march.png" id="1_tnmpb"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_g6p2o"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_kfdf8"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_hhw45"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="5_nu0cn"]
+
+[sub_resource type="Resource" id="Resource_mhfnx"]
+script = ExtResource("2_g6p2o")
+amount = 2
+scale = 1
+
+[sub_resource type="Resource" id="Resource_i4jjf"]
+script = ExtResource("3_kfdf8")
+played_effects = Array[ExtResource("2_g6p2o")]([SubResource("Resource_mhfnx")])
+
+[resource]
+script = ExtResource("4_hhw45")
+id = &"pride_march"
+display_name = "Pride March"
+description = "Deal 2 damage for each ally in your Ally Circle. Nothing about us without us!"
+artwork = ExtResource("1_tnmpb")
+card_type = 1
+cost = 3
+behavior = SubResource("Resource_i4jjf")
+visual_style = ExtResource("5_nu0cn")

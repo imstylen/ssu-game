@@ -7,6 +7,7 @@ var current_health: int
 var current_attack: int
 var has_attacked_this_turn: bool = false
 var turn_played: int = -1
+var shield: int = 0
 
 
 func _init(card_definition: CardDefinition = null, new_instance_id: int = 0) -> void:
@@ -25,4 +26,5 @@ func snapshot() -> Dictionary:
 		"attack": current_attack,
 		"has_attacked": has_attacked_this_turn,
 		"turn_played": turn_played,
+		"shield": shield,
 	}

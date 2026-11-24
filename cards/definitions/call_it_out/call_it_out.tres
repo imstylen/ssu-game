@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/call_it_out/call_it_out.png" id="1_2wlts"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_146b6"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_gg35c"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_jxut7"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="5_qoibu"]
+
+[sub_resource type="Resource" id="Resource_rl0rk"]
+script = ExtResource("2_146b6")
+kind = 9
+amount = 3
+
+[sub_resource type="Resource" id="Resource_400en"]
+script = ExtResource("3_gg35c")
+played_effects = Array[ExtResource("2_146b6")]([SubResource("Resource_rl0rk")])
+
+[resource]
+script = ExtResource("4_jxut7")
+id = &"call_it_out"
+display_name = "Call It Out"
+description = "Exposed 3. Naming the barrier is the first step to breaking it."
+artwork = ExtResource("1_2wlts")
+card_type = 1
+cost = 1
+behavior = SubResource("Resource_400en")
+visual_style = ExtResource("5_qoibu")

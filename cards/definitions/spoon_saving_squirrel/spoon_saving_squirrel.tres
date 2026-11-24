@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/spoon_saving_squirrel/spoon_saving_squirrel.png" id="1_dlkw8"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_yypgu"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_yuo1n"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_oii6x"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_r652o"]
+
+[sub_resource type="Resource" id="Resource_8uvnp"]
+script = ExtResource("2_yypgu")
+kind = 4
+
+[sub_resource type="Resource" id="Resource_r7mue"]
+script = ExtResource("3_yuo1n")
+round_start_effects = Array[ExtResource("2_yypgu")]([SubResource("Resource_8uvnp")])
+
+[resource]
+script = ExtResource("4_oii6x")
+id = &"spoon_saving_squirrel"
+display_name = "Spoon-Saving Squirrel"
+description = "Start of round: gain 1 Spark. Squirrel paces their energy and always tucks away a spare spoon."
+artwork = ExtResource("1_dlkw8")
+attack = 1
+health = 2
+cost = 1
+behavior = SubResource("Resource_r7mue")
+visual_style = ExtResource("5_r652o")

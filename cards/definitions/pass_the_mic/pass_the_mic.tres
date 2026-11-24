@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/pass_the_mic/pass_the_mic.png" id="1_mac85"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_gq0ko"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_nbdmo"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_dxav1"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_wrxw2"]
+
+[sub_resource type="Resource" id="Resource_2j63m"]
+script = ExtResource("2_gq0ko")
+kind = 6
+amount = 2
+target = 3
+
+[sub_resource type="Resource" id="Resource_vnk8r"]
+script = ExtResource("3_nbdmo")
+played_effects = Array[ExtResource("2_gq0ko")]([SubResource("Resource_2j63m")])
+
+[resource]
+script = ExtResource("4_dxav1")
+id = &"pass_the_mic"
+display_name = "Pass the Mic"
+description = "Your newest ally gains +2 Power. Good allies listen, then hand over the mic."
+artwork = ExtResource("1_mac85")
+card_type = 1
+cost = 2
+behavior = SubResource("Resource_vnk8r")
+visual_style = ExtResource("5_wrxw2")

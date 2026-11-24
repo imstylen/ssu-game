@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/safety_plan_seal/safety_plan_seal.png" id="1_3ve82"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_ei2hm"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_pjpo1"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_2tlfx"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_ogii8"]
+
+[sub_resource type="Resource" id="Resource_00nq2"]
+script = ExtResource("2_ei2hm")
+kind = 8
+amount = 3
+
+[sub_resource type="Resource" id="Resource_xqe61"]
+script = ExtResource("3_pjpo1")
+played_effects = Array[ExtResource("2_ei2hm")]([SubResource("Resource_00nq2")])
+
+[resource]
+script = ExtResource("4_2tlfx")
+id = &"safety_plan_seal"
+display_name = "Safety-Plan Seal"
+description = "When played: Calm 3. Seal shares their seizure plan, so everyone knows what to do."
+artwork = ExtResource("1_3ve82")
+attack = 2
+health = 3
+cost = 2
+behavior = SubResource("Resource_xqe61")
+visual_style = ExtResource("5_ogii8")

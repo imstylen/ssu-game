@@ -15,6 +15,8 @@ var turn_number: int = 0
 var phase: Phase = Phase.SETUP
 var player_health: int = 0
 var current_energy: int = 0
+## Spark promised for the start of the next player round (for example by Spoon Theory).
+var banked_energy: int = 0
 var draw_pile: Array[CardInstance] = []
 var hand: Array[CardInstance] = []
 var battlefield: Array[CardInstance] = []
@@ -36,6 +38,7 @@ func initialize(
 	phase = Phase.SETUP
 	player_health = rules.player_starting_health
 	current_energy = 0
+	banked_energy = 0
 	draw_pile.clear()
 	hand.clear()
 	battlefield.clear()

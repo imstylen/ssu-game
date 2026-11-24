@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/spoon_theory/spoon_theory.png" id="1_1t0mt"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_5bkwx"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_w81qd"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_vuwdg"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_yhpjh"]
+
+[sub_resource type="Resource" id="Resource_ancta"]
+script = ExtResource("2_5bkwx")
+kind = 5
+amount = 3
+
+[sub_resource type="Resource" id="Resource_rh681"]
+script = ExtResource("2_5bkwx")
+kind = 3
+
+[sub_resource type="Resource" id="Resource_d7cui"]
+script = ExtResource("3_w81qd")
+played_effects = Array[ExtResource("2_5bkwx")]([SubResource("Resource_ancta"), SubResource("Resource_rh681")])
+
+[resource]
+script = ExtResource("4_vuwdg")
+id = &"spoon_theory"
+display_name = "Spoon Theory"
+description = "Next round, gain 3 Spark. Draw 1 card. Plan your spoons; rest is part of the plan."
+artwork = ExtResource("1_1t0mt")
+card_type = 1
+cost = 1
+behavior = SubResource("Resource_d7cui")
+visual_style = ExtResource("5_yhpjh")

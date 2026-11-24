@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/racing_chair_cheetah/racing_chair_cheetah.png" id="1_xy0pg"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="2_3n032"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="3_j456s"]
+
+[resource]
+script = ExtResource("2_3n032")
+id = &"racing_chair_cheetah"
+display_name = "Racing-Chair Cheetah"
+description = "Quick. Cheetah's racing chair hits top speed before the barrier can blink."
+artwork = ExtResource("1_xy0pg")
+attack = 5
+health = 3
+cost = 5
+quick = true
+visual_style = ExtResource("3_j456s")

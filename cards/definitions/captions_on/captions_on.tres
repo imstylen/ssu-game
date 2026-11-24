@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/captions_on/captions_on.png" id="1_qp44r"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_hm5wi"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_cgwdv"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_0fpc5"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_77ch5"]
+
+[sub_resource type="Resource" id="Resource_gua06"]
+script = ExtResource("2_hm5wi")
+kind = 9
+amount = 2
+
+[sub_resource type="Resource" id="Resource_55y0t"]
+script = ExtResource("2_hm5wi")
+kind = 3
+
+[sub_resource type="Resource" id="Resource_gyi3e"]
+script = ExtResource("3_cgwdv")
+played_effects = Array[ExtResource("2_hm5wi")]([SubResource("Resource_gua06"), SubResource("Resource_55y0t")])
+
+[resource]
+script = ExtResource("4_0fpc5")
+id = &"captions_on"
+display_name = "Captions On"
+description = "Exposed 2. Draw 1 card. With captions on, nobody misses the plan."
+artwork = ExtResource("1_qp44r")
+card_type = 1
+cost = 1
+behavior = SubResource("Resource_gyi3e")
+visual_style = ExtResource("5_77ch5")

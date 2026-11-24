@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/oxygen_owl/oxygen_owl.png" id="1_26nvd"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_1hfpm"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_7fgcw"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_42jio"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_mvclp"]
+
+[sub_resource type="Resource" id="Resource_miov2"]
+script = ExtResource("2_1hfpm")
+kind = 6
+target = 1
+
+[sub_resource type="Resource" id="Resource_nq5k0"]
+script = ExtResource("3_7fgcw")
+played_effects = Array[ExtResource("2_1hfpm")]([SubResource("Resource_miov2")])
+
+[resource]
+script = ExtResource("4_42jio")
+id = &"oxygen_owl"
+display_name = "Oxygen Owl"
+description = "When played: all other allies gain +1 Power. Owl's pep talk keeps everyone soaring."
+artwork = ExtResource("1_26nvd")
+attack = 2
+health = 4
+cost = 3
+behavior = SubResource("Resource_nq5k0")
+visual_style = ExtResource("5_mvclp")

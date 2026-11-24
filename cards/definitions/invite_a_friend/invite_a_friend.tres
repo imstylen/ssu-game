@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/invite_a_friend/invite_a_friend.png" id="1_qky4n"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_us27n"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_m48jx"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_81xo5"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_q8fed"]
+
+[sub_resource type="Resource" id="Resource_j5agc"]
+script = ExtResource("2_us27n")
+kind = 10
+target = 3
+
+[sub_resource type="Resource" id="Resource_wal2f"]
+script = ExtResource("3_m48jx")
+played_effects = Array[ExtResource("2_us27n")]([SubResource("Resource_j5agc")])
+
+[resource]
+script = ExtResource("4_81xo5")
+id = &"invite_a_friend"
+display_name = "Invite a Friend"
+description = "Add a copy of your newest ally to your hand. There's always room for one more."
+artwork = ExtResource("1_qky4n")
+card_type = 1
+cost = 2
+behavior = SubResource("Resource_wal2f")
+visual_style = ExtResource("5_q8fed")

@@ -12,6 +12,7 @@ var _player_health_text: Label
 var _spark_row: HBoxContainer
 var _spark_icons: Array[TextureRect] = []
 var _enemy_name: Label
+var _enemy_status: Label
 var _enemy_artwork: TextureRect
 var _enemy_description: Label
 var _enemy_health: ProgressBar
@@ -111,6 +112,14 @@ func _build_ui() -> void:
 	_intent_label.add_theme_font_size_override("font_size", 19)
 	_intent_label.add_theme_color_override("font_color", AppTheme.GOLD_TEXT)
 	encounter_details.add_child(_intent_label)
+	_enemy_status = Label.new()
+	_enemy_status.name = "MonsterStatusBadge"
+	_enemy_status.add_theme_font_size_override("font_size", 19)
+	_enemy_status.add_theme_color_override("font_color", AppTheme.ACCENT_TEXT)
+	_enemy_status.tooltip_text = "Calm lowers the monster's next barrier damage. Exposed adds to the next hit it takes."
+	_enemy_status.mouse_filter = Control.MOUSE_FILTER_PASS
+	_enemy_status.visible = false
+	encounter_details.add_child(_enemy_status)
 	var health_heading := Label.new()
 	health_heading.text = "MONSTER HEALTH"
 	health_heading.add_theme_font_size_override("font_size", 14)
@@ -383,6 +392,8 @@ func _refresh() -> void:
 	_enemy_health_text.text = "%d / %d" % [session.enemy.current_health, session.enemy.definition.maximum_health]
 	_enemy_health.tooltip_text = "%d / %d monster Heart" % [session.enemy.current_health, session.enemy.definition.maximum_health]
 	_intent_label.text = controller.get_enemy_intent()
+	_enemy_status.text = enemy_status_text(session.enemy)
+	_enemy_status.visible = not _enemy_status.text.is_empty()
 	_refresh_spark_icons(session.current_energy, session.rules.energy_per_turn)
 	_piles_label.text = "DECK %d  •  REST PILE %d  •  HAND %d / %d     " % [
 		session.draw_pile.size(),
@@ -474,7 +485,7 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 	for card in cards:
 		var view: CardBase = CARD_BASE_SCENE.instantiate()
 		var available := controller.can_attack_enemy(card.instance_id) if on_board else controller.can_play_card(card.instance_id)
-		var footer := "READY TO HELP" if on_board and available else ""
+		var footer := ally_footer_text(card, available) if on_board else ""
 		view.setup_instance(card, footer)
 		view.set_compact()
 		view.set_battlefield_health_bar(on_board)
@@ -482,6 +493,26 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 		view.card_activated.connect(controller.request_attack_enemy if on_board else controller.request_play_card)
 		container.add_child(view)
 		_card_views_by_instance[card.instance_id] = view
+
+
+static func enemy_status_text(enemy: EnemyInstance) -> String:
+	var parts: PackedStringArray = []
+	if enemy == null:
+		return ""
+	if enemy.calm > 0:
+		parts.append("CALM %d" % enemy.calm)
+	if enemy.exposed > 0:
+		parts.append("EXPOSED %d" % enemy.exposed)
+	return "  •  ".join(parts)
+
+
+static func ally_footer_text(card: CardInstance, ready_to_help: bool) -> String:
+	var parts: PackedStringArray = []
+	if card.shield > 0:
+		parts.append("SHIELD %d" % card.shield)
+	if ready_to_help:
+		parts.append("READY TO HELP")
+	return " • ".join(parts)
 
 
 func _on_event_presented(event: BattleEvent) -> void:
@@ -506,6 +537,7 @@ func _on_event_presented(event: BattleEvent) -> void:
 					_pulse(ally if ally != null else _board_container, AppTheme.ACCENT)
 				_: _pulse(_player_health, AppTheme.ACCENT)
 		&"CardDrawn": _pulse(_hand_container, AppTheme.ACCENT)
+		&"EnemyStatusChanged": _pulse(_enemy_status, AppTheme.GOLD)
 		&"UnitAttacked":
 			var attacker: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
 			_animate_attacker(attacker)
@@ -590,6 +622,13 @@ func _event_message(event: BattleEvent) -> String:
 			if event.data.target == "unit":
 				return "%s restored %d Heart." % [event.data.name, event.data.amount]
 			return "%s restored %d Heart." % ["The team" if event.data.target == "player" else "The monster", event.data.amount]
+		&"ShieldGained": return "%s gained Shield %d." % [event.data.name, event.data.amount]
+		&"ShieldAbsorbed": return "%s's Shield blocked %d." % [event.data.name, event.data.amount]
+		&"UnitAttackChanged": return "%s now has %d Power." % [event.data.get("name", "An ally"), event.data.attack]
+		&"CalmUsed": return "[color=#176B59]Calm softened the barrier by %d.[/color]" % event.data.amount
+		&"ExposedUsed": return "[color=#A56716]Exposed added %d damage![/color]" % event.data.amount
+		&"SparkBanked": return "%d Spark saved for next round." % event.data.amount
+		&"CardCreated": return "%s joined your hand." % event.data.name
 		&"CardDestroyed": return "[color=#A52E57]%s needs a rest.[/color]" % event.data.name
 		&"DiscardReshuffled": return "The rest pile became a fresh deck."
 		&"CardBurned": return "%s moved to the rest pile because your hand is full." % event.data.name

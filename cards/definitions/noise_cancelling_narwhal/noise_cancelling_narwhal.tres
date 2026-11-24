@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/noise_cancelling_narwhal/noise_cancelling_narwhal.png" id="1_juxyw"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_aqkcw"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_53kqp"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_jitfw"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_ce63k"]
+
+[sub_resource type="Resource" id="Resource_ojya4"]
+script = ExtResource("2_aqkcw")
+kind = 8
+
+[sub_resource type="Resource" id="Resource_lunat"]
+script = ExtResource("3_53kqp")
+card_played_effects = Array[ExtResource("2_aqkcw")]([SubResource("Resource_ojya4")])
+card_played_filter = 1
+
+[resource]
+script = ExtResource("4_jitfw")
+id = &"noise_cancelling_narwhal"
+display_name = "Noise-Cancelling Narwhal"
+description = "Whenever you play a one-shot: Calm 1. Headphones on, Narwhal stays focused and steady."
+artwork = ExtResource("1_juxyw")
+attack = 2
+health = 5
+cost = 3
+behavior = SubResource("Resource_lunat")
+visual_style = ExtResource("5_ce63k")

@@ -8,10 +8,11 @@
 script = ExtResource("1_card")
 id = &"shield_bot"
 display_name = "Rolling Rabbit"
-description = "A custom chair and a clever route help Rabbit keep the whole crew safe."
+description = "Guard. A custom chair and a clever route help Rabbit keep the whole crew safe."
 artwork = ExtResource("1_5kjy1")
 card_type = 0
 attack = 2
 health = 5
 cost = 2
 visual_style = ExtResource("3_style")
+guard = true

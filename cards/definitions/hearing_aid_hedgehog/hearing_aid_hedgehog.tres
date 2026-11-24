@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/hearing_aid_hedgehog/hearing_aid_hedgehog.png" id="1_chn88"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_qcqym"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_kou7c"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_mbo1t"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_8gyqc"]
+
+[sub_resource type="Resource" id="Resource_s84cy"]
+script = ExtResource("2_qcqym")
+kind = 9
+amount = 2
+
+[sub_resource type="Resource" id="Resource_hohyd"]
+script = ExtResource("3_kou7c")
+knocked_out_effects = Array[ExtResource("2_qcqym")]([SubResource("Resource_s84cy")])
+
+[resource]
+script = ExtResource("4_mbo1t")
+id = &"hearing_aid_hedgehog"
+display_name = "Hearing-Aid Hedgehog"
+description = "Guard. When knocked out: Exposed 2. Hedgehog's hearing aids catch the barrier's rumble first."
+artwork = ExtResource("1_chn88")
+attack = 1
+health = 3
+cost = 1
+behavior = SubResource("Resource_hohyd")
+guard = true
+visual_style = ExtResource("5_8gyqc")

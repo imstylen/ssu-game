@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/tourettes_toucan/tourettes_toucan.png" id="1_26bhl"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_7cakt"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_2thbw"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_7ucxf"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="5_jrffd"]
+
+[sub_resource type="Resource" id="Resource_kyagn"]
+script = ExtResource("2_7cakt")
+kind = 6
+target = 3
+
+[sub_resource type="Resource" id="Resource_sgdij"]
+script = ExtResource("3_2thbw")
+card_played_effects = Array[ExtResource("2_7cakt")]([SubResource("Resource_kyagn")])
+card_played_filter = 2
+
+[resource]
+script = ExtResource("4_7ucxf")
+id = &"tourettes_toucan"
+display_name = "Tourette's Toucan"
+description = "Whenever you play another ally, it gains +1 Power. Toucan has Tourette's and the warmest welcome in the zoo."
+artwork = ExtResource("1_26bhl")
+attack = 2
+health = 4
+cost = 3
+behavior = SubResource("Resource_sgdij")
+visual_style = ExtResource("5_jrffd")

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/service_dog_help/service_dog_help.png" id="1_fgejl"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_5nq7r"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_6k5ir"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_1826m"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_bnn3c"]
+
+[sub_resource type="Resource" id="Resource_woaw5"]
+script = ExtResource("2_5nq7r")
+kind = 2
+amount = 3
+target = 2
+
+[sub_resource type="Resource" id="Resource_1a4cb"]
+script = ExtResource("2_5nq7r")
+kind = 7
+amount = 2
+target = 2
+
+[sub_resource type="Resource" id="Resource_g67x2"]
+script = ExtResource("3_6k5ir")
+played_effects = Array[ExtResource("2_5nq7r")]([SubResource("Resource_woaw5"), SubResource("Resource_1a4cb")])
+
+[resource]
+script = ExtResource("4_1826m")
+id = &"service_dog_help"
+display_name = "Service Dog Help"
+description = "The lowest-Heart ally heals 3 and gains Shield 2. A trained service dog stays close."
+artwork = ExtResource("1_fgejl")
+card_type = 1
+cost = 1
+behavior = SubResource("Resource_g67x2")
+visual_style = ExtResource("5_bnn3c")

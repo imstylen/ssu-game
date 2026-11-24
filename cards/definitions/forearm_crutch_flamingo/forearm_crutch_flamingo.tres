@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/forearm_crutch_flamingo/forearm_crutch_flamingo.png" id="1_ogeb5"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_t55pr"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_epxbh"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_4qo5u"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="5_ty0ng"]
+
+[sub_resource type="Resource" id="Resource_smmig"]
+script = ExtResource("2_t55pr")
+kind = 7
+target = 1
+
+[sub_resource type="Resource" id="Resource_u53w8"]
+script = ExtResource("3_epxbh")
+played_effects = Array[ExtResource("2_t55pr")]([SubResource("Resource_smmig")])
+
+[resource]
+script = ExtResource("4_4qo5u")
+id = &"forearm_crutch_flamingo"
+display_name = "Forearm-Crutch Flamingo"
+description = "When played: other allies gain Shield 1. Flamingo's crutches set the pace and the flock keeps it."
+artwork = ExtResource("1_ogeb5")
+attack = 2
+health = 3
+cost = 2
+behavior = SubResource("Resource_u53w8")
+visual_style = ExtResource("5_ty0ng")

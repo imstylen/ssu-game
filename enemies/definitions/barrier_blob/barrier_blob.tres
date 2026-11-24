@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://biaxtf32xoxah"]
 
-[ext_resource type="Script" path="res://enemies/enemy_definition.gd" id="1_enemy"]
-[ext_resource type="Script" path="res://enemies/behaviors/pattern_enemy_behavior.gd" id="2_behavior"]
-[ext_resource type="Texture2D" path="res://enemies/definitions/barrier_blob/barrier_blob.png" id="3_art"]
+[ext_resource type="Script" uid="uid://efxhmyybukx8" path="res://enemies/enemy_definition.gd" id="1_enemy"]
+[ext_resource type="Script" uid="uid://tyyf4abqkn5v" path="res://enemies/behaviors/pattern_enemy_behavior.gd" id="2_behavior"]
+[ext_resource type="Texture2D" uid="uid://dahskwsbm6f65" path="res://enemies/definitions/barrier_blob/barrier_blob.png" id="3_art"]
 
 [sub_resource type="Resource" id="PatternBehavior"]
 script = ExtResource("2_behavior")

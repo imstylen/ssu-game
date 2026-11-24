@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/quiet_room/quiet_room.png" id="1_ybg51"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_qvdbl"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_u2pp1"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_uphy4"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_hhnla"]
+
+[sub_resource type="Resource" id="Resource_k58qs"]
+script = ExtResource("2_qvdbl")
+kind = 8
+amount = 5
+
+[sub_resource type="Resource" id="Resource_s2ujg"]
+script = ExtResource("3_u2pp1")
+played_effects = Array[ExtResource("2_qvdbl")]([SubResource("Resource_k58qs")])
+
+[resource]
+script = ExtResource("4_uphy4")
+id = &"quiet_room"
+display_name = "Quiet Room"
+description = "Calm 5. A dim, soft space where anyone can reset."
+artwork = ExtResource("1_ybg51")
+card_type = 1
+cost = 2
+behavior = SubResource("Resource_s2ujg")
+visual_style = ExtResource("5_hhnla")

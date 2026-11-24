@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/calculator_crow/calculator_crow.png" id="1_vk71s"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_d88gb"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_xm8be"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_fj0p8"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_tpdkh"]
+
+[sub_resource type="Resource" id="Resource_iknu3"]
+script = ExtResource("2_d88gb")
+kind = 3
+amount = 2
+
+[sub_resource type="Resource" id="Resource_rp2ry"]
+script = ExtResource("3_xm8be")
+played_effects = Array[ExtResource("2_d88gb")]([SubResource("Resource_iknu3")])
+
+[resource]
+script = ExtResource("4_fj0p8")
+id = &"calculator_crow"
+display_name = "Calculator Crow"
+description = "When played: draw 2 cards. Crow's trusty calculator keeps every count on track."
+artwork = ExtResource("1_vk71s")
+attack = 1
+health = 4
+cost = 3
+behavior = SubResource("Resource_rp2ry")
+visual_style = ExtResource("5_tpdkh")

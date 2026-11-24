@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/insulin_pump_iguana/insulin_pump_iguana.png" id="1_nnqvo"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_hqvjq"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_f05gq"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_xli5m"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_v18cm"]
+
+[sub_resource type="Resource" id="Resource_u6ol5"]
+script = ExtResource("2_hqvjq")
+kind = 1
+amount = 2
+
+[sub_resource type="Resource" id="Resource_12jg1"]
+script = ExtResource("3_f05gq")
+round_start_effects = Array[ExtResource("2_hqvjq")]([SubResource("Resource_u6ol5")])
+
+[resource]
+script = ExtResource("4_xli5m")
+id = &"insulin_pump_iguana"
+display_name = "Insulin-Pump Iguana"
+description = "Start of round: heal 2 Heart. Iguana checks levels, shares snacks, and keeps the team fueled."
+artwork = ExtResource("1_nnqvo")
+attack = 2
+health = 3
+cost = 2
+behavior = SubResource("Resource_12jg1")
+visual_style = ExtResource("5_v18cm")

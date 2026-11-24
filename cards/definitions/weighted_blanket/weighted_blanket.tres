@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/weighted_blanket/weighted_blanket.png" id="1_ejdcv"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_mgcyk"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_0tsgl"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_vvk4i"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_w26l1"]
+
+[sub_resource type="Resource" id="Resource_fw4we"]
+script = ExtResource("2_mgcyk")
+kind = 8
+amount = 2
+
+[sub_resource type="Resource" id="Resource_07sgf"]
+script = ExtResource("2_mgcyk")
+kind = 7
+amount = 2
+target = 2
+
+[sub_resource type="Resource" id="Resource_m84ho"]
+script = ExtResource("3_0tsgl")
+played_effects = Array[ExtResource("2_mgcyk")]([SubResource("Resource_fw4we"), SubResource("Resource_07sgf")])
+
+[resource]
+script = ExtResource("4_vvk4i")
+id = &"weighted_blanket"
+display_name = "Weighted Blanket"
+description = "Calm 2. The lowest-Heart ally gains Shield 2. Deep pressure, deep breath."
+artwork = ExtResource("1_ejdcv")
+card_type = 1
+cost = 1
+behavior = SubResource("Resource_m84ho")
+visual_style = ExtResource("5_w26l1")

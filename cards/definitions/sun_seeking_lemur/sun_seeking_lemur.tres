@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/sun_seeking_lemur/sun_seeking_lemur.png" id="1_t67go"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_00btg"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_5lcmf"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_826kb"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="5_11ec5"]
+
+[sub_resource type="Resource" id="Resource_yebmw"]
+script = ExtResource("2_00btg")
+kind = 2
+amount = 2
+target = 2
+
+[sub_resource type="Resource" id="Resource_skf3s"]
+script = ExtResource("3_5lcmf")
+round_start_effects = Array[ExtResource("2_00btg")]([SubResource("Resource_yebmw")])
+
+[resource]
+script = ExtResource("4_826kb")
+id = &"sun_seeking_lemur"
+display_name = "Sun-Seeking Lemur"
+description = "Start of round: heal the lowest-Heart ally 2. Lemur's light-lamp routine brightens everyone."
+artwork = ExtResource("1_t67go")
+attack = 1
+health = 4
+cost = 2
+behavior = SubResource("Resource_skf3s")
+visual_style = ExtResource("5_11ec5")

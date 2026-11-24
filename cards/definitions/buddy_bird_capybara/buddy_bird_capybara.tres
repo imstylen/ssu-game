@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/buddy_bird_capybara/buddy_bird_capybara.png" id="1_usmvu"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_k43nr"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_ossvq"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_twf5l"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_sx74e"]
+
+[sub_resource type="Resource" id="Resource_rdsp8"]
+script = ExtResource("2_k43nr")
+kind = 8
+amount = 2
+
+[sub_resource type="Resource" id="Resource_00iio"]
+script = ExtResource("3_ossvq")
+round_end_effects = Array[ExtResource("2_k43nr")]([SubResource("Resource_rdsp8")])
+
+[resource]
+script = ExtResource("4_twf5l")
+id = &"buddy_bird_capybara"
+display_name = "Buddy-Bird Capybara"
+description = "End of round: Calm 2. Capybara's support bird helps them stay grounded with PTSD."
+artwork = ExtResource("1_usmvu")
+attack = 2
+health = 6
+cost = 4
+behavior = SubResource("Resource_00iio")
+visual_style = ExtResource("5_sx74e")

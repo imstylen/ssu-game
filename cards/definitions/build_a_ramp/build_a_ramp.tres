@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/build_a_ramp/build_a_ramp.png" id="1_itm1y"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_0rk12"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_rfbx2"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_3bxcf"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="5_sb5qv"]
+
+[sub_resource type="Resource" id="Resource_58fo4"]
+script = ExtResource("2_0rk12")
+kind = 7
+amount = 2
+target = 1
+
+[sub_resource type="Resource" id="Resource_ibbwq"]
+script = ExtResource("3_rfbx2")
+played_effects = Array[ExtResource("2_0rk12")]([SubResource("Resource_58fo4")])
+
+[resource]
+script = ExtResource("4_3bxcf")
+id = &"build_a_ramp"
+display_name = "Build a Ramp"
+description = "All allies gain Shield 2. A ramp helps everyone, strollers and wagons too."
+artwork = ExtResource("1_itm1y")
+card_type = 1
+cost = 2
+behavior = SubResource("Resource_ibbwq")
+visual_style = ExtResource("5_sb5qv")

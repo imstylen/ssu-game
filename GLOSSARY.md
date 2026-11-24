@@ -35,3 +35,23 @@ The final encounter at the top of the campaign map, whose defeat completes the c
 ## Committed encounter
 
 The encounter chosen for a tier by pressing Start Battle. Previewing a node does not commit it. Example: after starting an encounter and retreating, the player may retry it with a different deck but cannot switch to the alternative encounter on that tier.
+
+## Guard
+
+A keyword on an ally. Board damage spreads only across Guard allies while any remain. Leftover damage then reaches other allies, and only after that spills to Team Heart. Example: Walker Wombat soaks the barrier's damage so a fragile Racing-Chair Cheetah stays safe. See [Card Expansion](docs/work/card-expansion/spec.md).
+
+## Shield
+
+An ally status (`Shield N`) that absorbs the next N damage to that ally before its Heart drops. Multiple grants add together. Shield lasts while the ally stays in the Ally Circle and clears when the card is redrawn.
+
+## Quick
+
+A keyword on an ally: it is ready to help (clickable) on the round it is played instead of resting first. It does not help automatically on entry, so the player can set up Exposed first.
+
+## Calm
+
+An enemy status (`Calm N`) that reduces the damage of the enemy's next damaging action by N. Calm stacks, and that action uses up the whole stack. Example: Quiet Room's Calm 5 cancels most of Barrier Blob's 8-damage spike.
+
+## Exposed
+
+An enemy status (`Exposed N`) that adds N to the next instance of damage the enemy takes, whether from ally help or a one-shot. Exposed stacks, and that instance uses up the whole stack. Small pings, such as Tablet-Talking Tapir's, use it up too, so burst decks prefer a few big hits.

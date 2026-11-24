@@ -8,10 +8,11 @@
 script = ExtResource("1_card")
 id = &"prosthetic_paw_puppy"
 display_name = "Prosthetic-Paw Puppy"
-description = "A springy prosthetic paw makes Puppy a sturdy, playful protector."
+description = "Guard. A springy prosthetic paw makes Puppy a sturdy, playful protector."
 artwork = ExtResource("3_art")
 card_type = 0
 attack = 4
 health = 7
 cost = 4
 visual_style = ExtResource("2_style")
+guard = true

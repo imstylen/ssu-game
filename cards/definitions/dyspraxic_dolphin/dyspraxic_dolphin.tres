@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/dyspraxic_dolphin/dyspraxic_dolphin.png" id="1_rm1w3"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_kvomx"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_r32ly"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_3lksa"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_gv8uf"]
+
+[sub_resource type="Resource" id="Resource_c08qq"]
+script = ExtResource("2_kvomx")
+kind = 10
+
+[sub_resource type="Resource" id="Resource_n7fp8"]
+script = ExtResource("3_r32ly")
+knocked_out_effects = Array[ExtResource("2_kvomx")]([SubResource("Resource_c08qq")])
+
+[resource]
+script = ExtResource("4_3lksa")
+id = &"dyspraxic_dolphin"
+display_name = "Dyspraxic Dolphin"
+description = "When knocked out: add a copy of Dolphin to your hand. The pod always saves Dolphin a spot."
+artwork = ExtResource("1_rm1w3")
+attack = 2
+health = 2
+cost = 2
+behavior = SubResource("Resource_n7fp8")
+visual_style = ExtResource("5_gv8uf")

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/tablet_talking_tapir/tablet_talking_tapir.png" id="1_bpxa5"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_qh6ya"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_mwry3"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_3exiy"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_b6mpq"]
+
+[sub_resource type="Resource" id="Resource_bjnre"]
+script = ExtResource("2_qh6ya")
+
+[sub_resource type="Resource" id="Resource_41vjf"]
+script = ExtResource("3_mwry3")
+card_played_effects = Array[ExtResource("2_qh6ya")]([SubResource("Resource_bjnre")])
+card_played_filter = 1
+
+[resource]
+script = ExtResource("4_3exiy")
+id = &"tablet_talking_tapir"
+display_name = "Tablet-Talking Tapir"
+description = "Whenever you play a one-shot, deal 1 damage. Tapir's AAC tablet always has the right word ready."
+artwork = ExtResource("1_bpxa5")
+attack = 1
+health = 4
+cost = 2
+behavior = SubResource("Resource_41vjf")
+visual_style = ExtResource("5_b6mpq")

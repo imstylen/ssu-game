@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/team_captain_otter/team_captain_otter.png" id="1_lyfkm"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_43nmh"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_e2u17"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_tsu1w"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="5_6qjf7"]
+
+[sub_resource type="Resource" id="Resource_gnf36"]
+script = ExtResource("2_43nmh")
+amount = 2
+scale = 1
+
+[sub_resource type="Resource" id="Resource_snk7a"]
+script = ExtResource("3_e2u17")
+played_effects = Array[ExtResource("2_43nmh")]([SubResource("Resource_gnf36")])
+
+[resource]
+script = ExtResource("4_tsu1w")
+id = &"team_captain_otter"
+display_name = "Team-Captain Otter"
+description = "When played: deal 2 damage for each other ally. Otter, who has Down syndrome, leads the huddle."
+artwork = ExtResource("1_lyfkm")
+attack = 2
+health = 3
+cost = 3
+behavior = SubResource("Resource_snk7a")
+visual_style = ExtResource("5_6qjf7")

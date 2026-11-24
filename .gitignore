@@ -1,3 +1,6 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Python bytecode from tools/card_art
+__pycache__/

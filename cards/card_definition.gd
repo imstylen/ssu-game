@@ -15,6 +15,10 @@ enum CardType {
 @export_range(1, 100) var health: int = 1
 @export_range(0, 20) var cost: int = 0
 @export var behavior: CardBehavior
+## Guard: board damage spreads across Guard allies before reaching other allies.
+@export var guard: bool = false
+## Quick: this ally is ready to help on the round it is played.
+@export var quick: bool = false
 @export var visual_style: CardVisualStyle
 
 

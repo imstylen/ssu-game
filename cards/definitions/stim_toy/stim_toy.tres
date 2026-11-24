@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/stim_toy/stim_toy.png" id="1_c6vbg"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_wbmrc"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_ix11v"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_3i3md"]
+[ext_resource type="Resource" path="res://cards/styles/lavender.tres" id="5_4y8cp"]
+
+[sub_resource type="Resource" id="Resource_f10ep"]
+script = ExtResource("2_wbmrc")
+kind = 3
+
+[sub_resource type="Resource" id="Resource_xvopu"]
+script = ExtResource("3_ix11v")
+played_effects = Array[ExtResource("2_wbmrc")]([SubResource("Resource_f10ep")])
+
+[resource]
+script = ExtResource("4_3i3md")
+id = &"stim_toy"
+display_name = "Stim Toy"
+description = "Draw 1 card. A fidget in paw keeps the ideas flowing."
+artwork = ExtResource("1_c6vbg")
+card_type = 1
+behavior = SubResource("Resource_xvopu")
+visual_style = ExtResource("5_4y8cp")

@@ -9,7 +9,7 @@ func _init(damage_amount: int = 0) -> void:
 
 
 func resolve(context: EffectContext) -> void:
-	context.damage_player(amount)
+	context.damage_player(context.reduce_enemy_damage_by_calm(amount))
 
 
 func describe() -> String:

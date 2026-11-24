@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/accessibility_audit/accessibility_audit.png" id="1_jowyx"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_gfb6m"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_go6xc"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_gblkc"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_ttdue"]
+
+[sub_resource type="Resource" id="Resource_nfqao"]
+script = ExtResource("2_gfb6m")
+amount = 7
+
+[sub_resource type="Resource" id="Resource_djg13"]
+script = ExtResource("3_go6xc")
+played_effects = Array[ExtResource("2_gfb6m")]([SubResource("Resource_nfqao")])
+
+[resource]
+script = ExtResource("4_gblkc")
+id = &"accessibility_audit"
+display_name = "Accessibility Audit"
+description = "Deal 7 damage. Every barrier gets written down, checked, and fixed."
+artwork = ExtResource("1_jowyx")
+card_type = 1
+cost = 3
+behavior = SubResource("Resource_djg13")
+visual_style = ExtResource("5_ttdue")

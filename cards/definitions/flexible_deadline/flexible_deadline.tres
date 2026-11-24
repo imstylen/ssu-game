@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/flexible_deadline/flexible_deadline.png" id="1_v2oeu"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_x55vk"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_7pn2y"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_anwg3"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_rxviy"]
+
+[sub_resource type="Resource" id="Resource_y53k5"]
+script = ExtResource("2_x55vk")
+kind = 8
+amount = 3
+
+[sub_resource type="Resource" id="Resource_fj6o1"]
+script = ExtResource("2_x55vk")
+kind = 3
+
+[sub_resource type="Resource" id="Resource_4xyak"]
+script = ExtResource("3_7pn2y")
+played_effects = Array[ExtResource("2_x55vk")]([SubResource("Resource_y53k5"), SubResource("Resource_fj6o1")])
+
+[resource]
+script = ExtResource("4_anwg3")
+id = &"flexible_deadline"
+display_name = "Flexible Deadline"
+description = "Calm 3. Draw 1 card. More time means better work, not less effort."
+artwork = ExtResource("1_v2oeu")
+card_type = 1
+cost = 2
+behavior = SubResource("Resource_4xyak")
+visual_style = ExtResource("5_rxviy")

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/tripod_tiger/tripod_tiger.png" id="1_lckl3"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_evnng"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_vhl7p"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_qfboj"]
+[ext_resource type="Resource" path="res://cards/styles/berry.tres" id="5_0ikjg"]
+
+[sub_resource type="Resource" id="Resource_8n3rg"]
+script = ExtResource("2_evnng")
+kind = 7
+amount = 2
+target = 1
+
+[sub_resource type="Resource" id="Resource_aalx8"]
+script = ExtResource("3_vhl7p")
+knocked_out_effects = Array[ExtResource("2_evnng")]([SubResource("Resource_8n3rg")])
+
+[resource]
+script = ExtResource("4_qfboj")
+id = &"tripod_tiger"
+display_name = "Tripod Tiger"
+description = "Guard. When knocked out: all allies gain Shield 2. Three strong legs, one huge heart."
+artwork = ExtResource("1_lckl3")
+attack = 3
+health = 6
+cost = 4
+behavior = SubResource("Resource_aalx8")
+guard = true
+visual_style = ExtResource("5_0ikjg")

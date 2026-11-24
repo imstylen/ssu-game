@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/magnifier_meerkat/magnifier_meerkat.png" id="1_q6skd"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_hytbb"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_l45qv"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_fgt50"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_6l0u8"]
+
+[sub_resource type="Resource" id="Resource_j0oo6"]
+script = ExtResource("2_hytbb")
+kind = 9
+
+[sub_resource type="Resource" id="Resource_svh1s"]
+script = ExtResource("3_l45qv")
+round_start_effects = Array[ExtResource("2_hytbb")]([SubResource("Resource_j0oo6")])
+
+[resource]
+script = ExtResource("4_fgt50")
+id = &"magnifier_meerkat"
+display_name = "Magnifier Meerkat"
+description = "Start of round: Exposed 1. Meerkat's magnifier spots weak spots before anyone else."
+artwork = ExtResource("1_q6skd")
+attack = 2
+health = 3
+cost = 2
+behavior = SubResource("Resource_svh1s")
+visual_style = ExtResource("5_6l0u8")

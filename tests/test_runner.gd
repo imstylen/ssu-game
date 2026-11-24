@@ -3,8 +3,8 @@ extends SceneTree
 const EXPECTED_CARDS := {
 	&"shield_bot": ["Rolling Rabbit", CardDefinition.CardType.UNIT, 2, 2, 5],
 	&"autistic_axolotl": ["Autistic Axolotl", CardDefinition.CardType.UNIT, 2, 3, 3],
-	&"deaf_deer": ["Signing Deer", CardDefinition.CardType.UNIT, 3, 4, 4],
-	&"adhd_red_panda": ["ADHD Red Panda", CardDefinition.CardType.UNIT, 1, 2, 2],
+	&"deaf_deer": ["Signing Deer", CardDefinition.CardType.UNIT, 3, 3, 4],
+	&"adhd_red_panda": ["ADHD Red Panda", CardDefinition.CardType.UNIT, 1, 2, 1],
 	&"dyslexic_duckling": ["Dyslexic Duckling", CardDefinition.CardType.UNIT, 3, 5, 3],
 	&"prosthetic_paw_puppy": ["Prosthetic-Paw Puppy", CardDefinition.CardType.UNIT, 4, 4, 7],
 	&"grounding_alpaca": ["Grounding Alpaca", CardDefinition.CardType.UNIT, 2, 1, 6],
@@ -43,6 +43,8 @@ func _run_all() -> void:
 	load("res://tests/campaign_tests.gd").run(_expect, _catalog)
 	await load("res://tests/campaign_tests.gd").run_battles(_expect, self)
 	_test_card_base_artwork_and_style()
+	load("res://tests/card_mechanics_tests.gd").run(_expect)
+	load("res://tests/card_content_tests.gd").run(_expect, _catalog)
 	_test_battle_setup()
 	_test_damage_one_shot()
 	_test_heal_one_shot()
@@ -73,7 +75,7 @@ func _run_all() -> void:
 func _test_content_resources() -> void:
 	var cards: Array[CardDefinition] = _catalog.get_all_cards()
 	var enemies: Array[EnemyDefinition] = _catalog.get_all_enemies()
-	_expect(cards.size() == 12, "Catalog contains exactly twelve unique cards")
+	_expect(cards.size() == 50, "Catalog contains exactly fifty unique cards")
 	_expect(enemies.size() == 3, "Catalog contains exactly three ableism monsters")
 	var allies := 0
 	var one_shots := 0
@@ -99,8 +101,13 @@ func _test_content_resources() -> void:
 			allies += 1
 		else:
 			one_shots += 1
-	_expect(allies == 7, "Roster has seven allies")
-	_expect(one_shots == 5, "Roster has five one-shots")
+	_expect(allies == 7, "Original roster has seven allies")
+	_expect(one_shots == 5, "Original roster has five one-shots")
+	var all_allies := 0
+	for card in cards:
+		if card.card_type == CardDefinition.CardType.UNIT:
+			all_allies += 1
+	_expect(all_allies == 30 and cards.size() - all_allies == 20, "Expanded collection has thirty allies and twenty one-shots")
 	_expect(style_paths.size() == 5, "Roster uses five reusable card color variants")
 	for enemy_id in EXPECTED_ENEMIES:
 		var enemy: EnemyDefinition = _enemies[enemy_id]
@@ -467,6 +474,33 @@ func _test_profile_migration() -> void:
 	var current: Dictionary = migrated.data.duplicate(true)
 	var current_result: Dictionary = ProfileMigrator.migrate_profile_data(current)
 	_expect(not current_result.changed and current_result.data == current, "Current profile migration is idempotent")
+	_expect(
+		Array(migrated.data.decks[0].card_ids).map(func(id): return StringName(id)) == Array(ProfileMigrator.ACCESS_ALLIES_STARTER_IDS),
+		"Legacy starter upgrades straight to the current starter"
+	)
+	var previous := {
+		"schema_version": 4,
+		"selected_deck_id": "starter",
+		"campaign": null,
+		"decks": [
+			{"id": "starter", "name": "Access Allies", "card_ids": Array(ProfileMigrator.PREVIOUS_ACCESS_ALLIES_STARTER_IDS).map(func(id): return String(id))},
+			{"id": "personal", "name": "My Own Deck", "card_ids": ["arc_bolt"]},
+		],
+	}
+	var refreshed: Dictionary = ProfileMigrator.migrate_profile_data(previous)
+	_expect(refreshed.changed and refreshed.data.schema_version == 5, "Schema 4 profile migrates to schema 5")
+	_expect(
+		Array(refreshed.data.decks[0].card_ids).map(func(id): return StringName(id)) == Array(ProfileMigrator.ACCESS_ALLIES_STARTER_IDS),
+		"Untouched previous starter is refreshed to the expansion starter"
+	)
+	_expect(refreshed.data.decks[0].name == "Access Allies" and refreshed.data.decks[1] == previous.decks[1], "Starter name and other decks are preserved")
+	var tweaked := previous.duplicate(true)
+	tweaked.decks[0].card_ids[0] = "rally"
+	var tweaked_result: Dictionary = ProfileMigrator.migrate_profile_data(tweaked)
+	_expect(tweaked_result.data.decks[0] == tweaked.decks[0], "A customized previous starter is left untouched")
+	var starter_ids: Array[StringName] = []
+	starter_ids.assign(ProfileMigrator.ACCESS_ALLIES_STARTER_IDS)
+	_expect(DeckRules.new(load("res://battle/rules/battle_rules.tres")).validate(starter_ids, _catalog).is_empty(), "Current starter is a valid deck")
 
 
 func _test_font_license_and_copy() -> void:
@@ -583,7 +617,7 @@ func _find_hand_id(session: BattleSession, card_id: StringName) -> int:
 func _starter_definitions() -> Array[CardDefinition]:
 	var result: Array[CardDefinition] = []
 	for card_id in ProfileMigrator.ACCESS_ALLIES_STARTER_IDS:
-		result.append(_cards[card_id])
+		result.append(_catalog.get_card(card_id))
 	return result
 
 

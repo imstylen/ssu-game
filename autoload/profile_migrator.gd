@@ -1,13 +1,14 @@
 class_name ProfileMigrator
 extends RefCounted
 
-const SCHEMA_VERSION := 4
+const SCHEMA_VERSION := 5
 const LEGACY_STARTER_IDS: Array[StringName] = [
 	&"shield_bot", &"shield_bot",
 	&"arc_bolt", &"arc_bolt",
 	&"life_drain", &"life_drain",
 ]
-const ACCESS_ALLIES_STARTER_IDS: Array[StringName] = [
+## The Access Allies starter used by schemas 2-4, before the card expansion.
+const PREVIOUS_ACCESS_ALLIES_STARTER_IDS: Array[StringName] = [
 	&"shield_bot", &"shield_bot",
 	&"autistic_axolotl", &"autistic_axolotl",
 	&"deaf_deer", &"deaf_deer",
@@ -17,6 +18,20 @@ const ACCESS_ALLIES_STARTER_IDS: Array[StringName] = [
 	&"grounding_alpaca", &"grounding_alpaca",
 	&"arc_bolt", &"arc_bolt",
 	&"life_drain", &"life_drain",
+	&"low_vision_lynx", &"low_vision_lynx",
+]
+## Current starter: one or two cards for every keyword (Guard, Shield, Quick,
+## Calm, Exposed) plus played, round-end and another-card-played triggers.
+const ACCESS_ALLIES_STARTER_IDS: Array[StringName] = [
+	&"shield_bot", &"shield_bot",
+	&"tablet_talking_tapir", &"tablet_talking_tapir",
+	&"deaf_deer", &"deaf_deer",
+	&"adhd_red_panda", &"adhd_red_panda",
+	&"dyslexic_duckling", &"dyslexic_duckling",
+	&"walker_wombat", &"walker_wombat",
+	&"grounding_alpaca", &"grounding_alpaca",
+	&"arc_bolt", &"arc_bolt",
+	&"quiet_room", &"quiet_room",
 	&"low_vision_lynx", &"low_vision_lynx",
 ]
 
@@ -53,6 +68,21 @@ static func migrate_profile_data(source: Dictionary) -> Dictionary:
 		if campaign_data is Dictionary and campaign_data.get("version") == 1:
 			migrated["campaign"] = null
 		migrated["schema_version"] = 4
+		changed = true
+	if schema_version < 5:
+		# The card expansion refreshed the starter. Only an untouched previous
+		# starter is replaced; customized decks are left exactly as they are.
+		var current_decks: Array = migrated.get("decks", [])
+		for index in current_decks.size():
+			var deck_data = current_decks[index]
+			if not deck_data is Dictionary or str(deck_data.get("id", "")) != "starter":
+				continue
+			if _string_name_array(deck_data.get("card_ids", [])) == PREVIOUS_ACCESS_ALLIES_STARTER_IDS:
+				var refreshed: Dictionary = deck_data.duplicate(true)
+				refreshed["card_ids"] = Array(ACCESS_ALLIES_STARTER_IDS, TYPE_STRING_NAME, &"", null)
+				current_decks[index] = refreshed
+		migrated["decks"] = current_decks
+		migrated["schema_version"] = 5
 		changed = true
 	return {"data": migrated, "changed": changed}
 

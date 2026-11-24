@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/celebrate_wins/celebrate_wins.png" id="1_alvit"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_ngrhx"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_vk8wf"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_1ep1n"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="5_ty8o7"]
+
+[sub_resource type="Resource" id="Resource_onw6n"]
+script = ExtResource("2_ngrhx")
+kind = 6
+target = 1
+
+[sub_resource type="Resource" id="Resource_1mp62"]
+script = ExtResource("3_vk8wf")
+played_effects = Array[ExtResource("2_ngrhx")]([SubResource("Resource_onw6n")])
+
+[resource]
+script = ExtResource("4_1ep1n")
+id = &"celebrate_wins"
+display_name = "Celebrate Wins"
+description = "All allies gain +1 Power. Every win counts, big or small."
+artwork = ExtResource("1_alvit")
+card_type = 1
+cost = 3
+behavior = SubResource("Resource_1mp62")
+visual_style = ExtResource("5_ty8o7")

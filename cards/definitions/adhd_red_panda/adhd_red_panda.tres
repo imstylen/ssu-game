@@ -8,10 +8,11 @@
 script = ExtResource("1_card")
 id = &"adhd_red_panda"
 display_name = "ADHD Red Panda"
-description = "Red Panda channels a burst of ideas into joyful momentum."
+description = "Quick. Red Panda turns a burst of ideas into joyful momentum."
 artwork = ExtResource("3_art")
 card_type = 0
 attack = 2
-health = 2
+health = 1
 cost = 1
 visual_style = ExtResource("2_style")
+quick = true

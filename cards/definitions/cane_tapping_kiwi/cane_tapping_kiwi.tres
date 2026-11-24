@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/cane_tapping_kiwi/cane_tapping_kiwi.png" id="1_2r3i2"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_qcess"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_sjv3b"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_44o6m"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="5_alyck"]
+
+[sub_resource type="Resource" id="Resource_126d5"]
+script = ExtResource("2_qcess")
+kind = 9
+
+[sub_resource type="Resource" id="Resource_pkpvk"]
+script = ExtResource("3_sjv3b")
+card_played_effects = Array[ExtResource("2_qcess")]([SubResource("Resource_126d5")])
+card_played_filter = 1
+
+[resource]
+script = ExtResource("4_44o6m")
+id = &"cane_tapping_kiwi"
+display_name = "Cane-Tapping Kiwi"
+description = "Whenever you play a one-shot: Exposed 1. Kiwi's white cane finds every crack in the barrier."
+artwork = ExtResource("1_2r3i2")
+attack = 1
+health = 4
+cost = 2
+behavior = SubResource("Resource_pkpvk")
+visual_style = ExtResource("5_alyck")

@@ -28,12 +28,23 @@ godot --headless --path . -- --smoke-test
 
 ## How an adventure works
 
+For a player-facing walkthrough with worked gameplay examples, see the [Player Guide](docs/player-guide.md).
+
 - Choose a card in your hand to play it.
 - Ally cards join the Ally Circle. After their first rest, each ally automatically helps for its Power at the start of the player's round.
 - One-shots are intentionally non-animal items and activities: Speak Up! deals 4 damage, Cup of Tea heals 5 Team Heart, and Meditate & Plan draws 2 cards.
 - Ending the round resolves the monster's visible barrier action, refills Spark, readies allies, draws a card, and resolves automatic ally help.
 - A large red damage number appears over the affected artwork or Team Heart display. The active ally card or monster portrait briefly grows to make the source of an attack obvious.
 - Allies that reach zero Heart need a rest. Resting allies and played one-shots enter the rest pile, which becomes a fresh deck when needed.
+- Card abilities trigger when a card is played, at the start or end of a round, when an ally is knocked out, or when you play another card. All targets are chosen automatically.
+- Keywords (see [GLOSSARY.md](GLOSSARY.md)):
+  - **Guard** allies soak board damage first.
+  - **Shield N** absorbs damage.
+  - **Quick** allies can help on the round they are played.
+  - **Calm N** softens the monster's next barrier.
+  - **Exposed N** adds to the next hit on the monster.
+
+  The monster panel shows active Calm and Exposed.
 - The Cozy Deck Builder saves to `user://profile.json`. Decks that need help remain editable but cannot start an adventure until valid.
 
 ## Zoo campaign
@@ -70,3 +81,9 @@ Every card shows `CardDefinition.artwork` in a 1:1 aspect-preserving cover frame
 For card-specific styling, assign a reusable `CardVisualStyle`. Disabled overrides inherit from `card_base.tscn`, keeping the base scene the single source of shared styling. The bundled Fredoka font license is at `res://assets/fonts/OFL-Fredoka.txt`.
 
 The battle model is UI-independent. Card and monster definitions are immutable `.tres` resources, while each battle owns mutable session state and emits presentation events through `BattleController`.
+
+## Adding or changing cards
+
+Card definitions live in `cards/definitions/<id>/<id>.tres`. Most abilities use `TriggeredCardBehavior` (`cards/behaviors/triggered_card_behavior.gd`), which holds a list of `CardEffect` lines (`cards/effects/card_effect.gd`) for each hook: played, round start, round end, knocked out, and another card played (with a one-shot or ally filter). Set **Guard** and **Quick** on the `CardDefinition`. Keep rules text first and the description within 110 characters. The design roster is in `docs/work/card-expansion/roster.md`.
+
+Placeholder card art is generated from Python-authored SVG in `tools/card_art/`; see [its README](tools/card_art/README.md).

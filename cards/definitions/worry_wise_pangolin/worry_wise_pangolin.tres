@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/worry_wise_pangolin/worry_wise_pangolin.png" id="1_clhpe"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_dtjfk"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_8yj3c"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_u5ven"]
+[ext_resource type="Resource" path="res://cards/styles/mint.tres" id="5_k3uod"]
+
+[sub_resource type="Resource" id="Resource_8ssno"]
+script = ExtResource("2_dtjfk")
+kind = 7
+amount = 2
+target = 2
+
+[sub_resource type="Resource" id="Resource_spnt2"]
+script = ExtResource("3_8yj3c")
+round_end_effects = Array[ExtResource("2_dtjfk")]([SubResource("Resource_8ssno")])
+
+[resource]
+script = ExtResource("4_u5ven")
+id = &"worry_wise_pangolin"
+display_name = "Worry-Wise Pangolin"
+description = "End of round: the lowest-Heart ally gains Shield 2. Pangolin manages anxiety with a what-if list."
+artwork = ExtResource("1_clhpe")
+attack = 2
+health = 4
+cost = 3
+behavior = SubResource("Resource_spnt2")
+visual_style = ExtResource("5_k3uod")

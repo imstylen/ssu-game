@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/stuttering_starling/stuttering_starling.png" id="1_n7pey"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_co231"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_m5yfk"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_inn87"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_g7nav"]
+
+[sub_resource type="Resource" id="Resource_ph4p0"]
+script = ExtResource("2_co231")
+kind = 6
+
+[sub_resource type="Resource" id="Resource_c1u4q"]
+script = ExtResource("3_m5yfk")
+card_played_effects = Array[ExtResource("2_co231")]([SubResource("Resource_ph4p0")])
+
+[resource]
+script = ExtResource("4_inn87")
+id = &"stuttering_starling"
+display_name = "Stuttering Starling"
+description = "Whenever you play another card, this ally gains +1 Power. Friends wait, and every word lands."
+artwork = ExtResource("1_n7pey")
+attack = 1
+health = 3
+cost = 2
+behavior = SubResource("Resource_c1u4q")
+visual_style = ExtResource("5_g7nav")

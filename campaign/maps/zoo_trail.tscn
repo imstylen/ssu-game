@@ -1,19 +1,19 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b3n4d6bbvctmf"]
 
-[ext_resource type="Script" path="res://campaign/map/campaign_map_canvas.gd" id="1_jo1r8"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/zoo_trail_background.svg" id="2_m131o"]
-[ext_resource type="Script" path="res://campaign/map/campaign_entrance.gd" id="3_5v215"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/entrance_gate.svg" id="4_rxw0u"]
-[ext_resource type="Script" path="res://campaign/map/campaign_encounter.gd" id="5_bcna1"]
-[ext_resource type="Resource" path="res://enemies/definitions/barrier_blob/barrier_blob.tres" id="6_tlqnp"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_meadow.svg" id="7_4ue7a"]
-[ext_resource type="Resource" path="res://enemies/definitions/assumption_golem/assumption_golem.tres" id="8_4kbem"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_pond.svg" id="9_ljjdh"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_aviary.svg" id="10_fhbey"]
-[ext_resource type="Resource" path="res://enemies/definitions/siege_core.tres" id="11_3amf5"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_pen.svg" id="12_eypv6"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/habitat_rocks.svg" id="13_a8y8a"]
-[ext_resource type="Texture2D" path="res://campaign/art/placeholder/boss_gate.svg" id="14_bd64f"]
+[ext_resource type="Script" uid="uid://d2k48b5xqvkgl" path="res://campaign/map/campaign_map_canvas.gd" id="1_jo1r8"]
+[ext_resource type="Texture2D" uid="uid://dwhhr0bls1l1q" path="res://campaign/art/placeholder/zoo_trail_background.svg" id="2_m131o"]
+[ext_resource type="Script" uid="uid://cr8oig6seln63" path="res://campaign/map/campaign_entrance.gd" id="3_5v215"]
+[ext_resource type="Texture2D" uid="uid://u8l13d2q6ww" path="res://campaign/art/placeholder/entrance_gate.svg" id="4_rxw0u"]
+[ext_resource type="Script" uid="uid://bp6ppu2dtc6nu" path="res://campaign/map/campaign_encounter.gd" id="5_bcna1"]
+[ext_resource type="Resource" uid="uid://biaxtf32xoxah" path="res://enemies/definitions/barrier_blob/barrier_blob.tres" id="6_tlqnp"]
+[ext_resource type="Texture2D" uid="uid://bgqf7ee7n0ru" path="res://campaign/art/placeholder/habitat_meadow.svg" id="7_4ue7a"]
+[ext_resource type="Resource" uid="uid://bcukrtoideucu" path="res://enemies/definitions/assumption_golem/assumption_golem.tres" id="8_4kbem"]
+[ext_resource type="Texture2D" uid="uid://c5lfavgyc1nh2" path="res://campaign/art/placeholder/habitat_pond.svg" id="9_ljjdh"]
+[ext_resource type="Texture2D" uid="uid://b80lw1xjj7r65" path="res://campaign/art/placeholder/habitat_aviary.svg" id="10_fhbey"]
+[ext_resource type="Resource" uid="uid://cuojt6le363gq" path="res://enemies/definitions/siege_core.tres" id="11_3amf5"]
+[ext_resource type="Texture2D" uid="uid://hus62ttx58ng" path="res://campaign/art/placeholder/habitat_pen.svg" id="12_eypv6"]
+[ext_resource type="Texture2D" uid="uid://d06rd88lb7egn" path="res://campaign/art/placeholder/habitat_rocks.svg" id="13_a8y8a"]
+[ext_resource type="Texture2D" uid="uid://ldi7htohngi2" path="res://campaign/art/placeholder/boss_gate.svg" id="14_bd64f"]
 
 [node name="ZooTrail" type="Control" unique_id=734112632]
 custom_minimum_size = Vector2(2560, 2880)
@@ -215,12 +215,12 @@ map_art = ExtResource("13_a8y8a")
 next_encounters = [NodePath("../GremlinGate")]
 
 [node name="GremlinGate" type="TextureButton" parent="." unique_id=905704203]
-custom_minimum_size = Vector2(260, 260)
+custom_minimum_size = Vector2(200, 200)
 layout_mode = 0
 offset_left = 1150.0
 offset_top = 350.0
-offset_right = 1410.0
-offset_bottom = 610.0
+offset_right = 1350.0
+offset_bottom = 550.0
 tooltip_text = "Gremlin's Gate — Gatekeeping Gremlin"
 mouse_default_cursor_shape = 2
 script = ExtResource("5_bcna1")

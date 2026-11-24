@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/deaf_elephant/deaf_elephant.png" id="1_sxkt0"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_b0ekn"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_s32sb"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_vm36w"]
+[ext_resource type="Resource" path="res://cards/styles/sky.tres" id="5_r8h6p"]
+
+[sub_resource type="Resource" id="Resource_2w8ry"]
+script = ExtResource("2_b0ekn")
+kind = 8
+amount = 2
+
+[sub_resource type="Resource" id="Resource_fin4p"]
+script = ExtResource("3_s32sb")
+played_effects = Array[ExtResource("2_b0ekn")]([SubResource("Resource_2w8ry")])
+
+[resource]
+script = ExtResource("4_vm36w")
+id = &"deaf_elephant"
+display_name = "Deaf Elephant"
+description = "Guard. When played: Calm 2. Elephant feels trouble through the ground and stands firm."
+artwork = ExtResource("1_sxkt0")
+attack = 4
+health = 8
+cost = 5
+behavior = SubResource("Resource_fin4p")
+guard = true
+visual_style = ExtResource("5_r8h6p")

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CardDefinition" format=3]
+
+[ext_resource type="Texture2D" path="res://cards/definitions/walker_wombat/walker_wombat.png" id="1_rt0ka"]
+[ext_resource type="Script" path="res://cards/effects/card_effect.gd" id="2_yars8"]
+[ext_resource type="Script" path="res://cards/behaviors/triggered_card_behavior.gd" id="3_hq2r7"]
+[ext_resource type="Script" path="res://cards/card_definition.gd" id="4_olhb0"]
+[ext_resource type="Resource" path="res://cards/styles/peach.tres" id="5_8apa2"]
+
+[sub_resource type="Resource" id="Resource_l0p36"]
+script = ExtResource("2_yars8")
+kind = 7
+amount = 3
+
+[sub_resource type="Resource" id="Resource_qe55m"]
+script = ExtResource("3_hq2r7")
+played_effects = Array[ExtResource("2_yars8")]([SubResource("Resource_l0p36")])
+
+[resource]
+script = ExtResource("4_olhb0")
+id = &"walker_wombat"
+display_name = "Walker Wombat"
+description = "Guard. When played: this ally gains Shield 3. Wombat rolls up front with a sturdy walker."
+artwork = ExtResource("1_rt0ka")
+attack = 2
+health = 5
+cost = 3
+behavior = SubResource("Resource_qe55m")
+guard = true
+visual_style = ExtResource("5_8apa2")
