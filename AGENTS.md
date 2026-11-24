@@ -33,7 +33,15 @@ godot --headless --path . -- --smoke-test
 
 These application commands remain **unverified during initial setup**. On 2026-10-19, `godot4console.exe --version` returned `4.3.stable.official.77dcf97d8`; no executable named `godot` was found on PATH. Access to the configured VS Code editor path was denied, so its availability/version could not be verified. The available 4.3 executable is below the documented minimum; tests were not run with it.
 
-`export_presets.cfg` contains a Web preset with output `../SSU_GAME_EXPORT/Index.html`. No build/export CLI command is documented or verified. Check engine, renderer, and export-template compatibility before exporting. No standalone lint or typecheck command is established; use Godot diagnostics and the existing tests when a suitable engine is available. Headless checks do not verify visual layout; inspect affected scenes in the editor or running game for UI changes.
+`export_presets.cfg` contains a Web preset with output `../ssu-game-export/index.html`; it excludes `tests/*` and the unreferenced `SSU Game Map_expl.png` source image. Verified 2026-11-24 with Godot 4.7.2 and its export templates:
+
+```powershell
+godot --headless --path . --export-release Web <out>/index.html
+# Run the exported pack on desktop to catch export-only bugs (e.g. remapped resources)
+godot --headless --main-pack <out>/index.pck -- --smoke-test
+```
+
+Exported builds store `.tres`/`.tscn` as `*.remap` and images only as imported data, so never discover content with raw `DirAccess` listings; use `ResourceLoader.list_directory()` (see `autoload/card_catalog.gd`). No standalone lint or typecheck command is established; use Godot diagnostics and the existing tests when a suitable engine is available. Headless checks do not verify visual layout; inspect affected scenes in the editor or running game for UI changes.
 
 ## Conventions
 

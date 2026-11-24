@@ -95,21 +95,18 @@ func _register_enemy(enemy: EnemyDefinition, path: String) -> void:
 
 
 func _resource_paths(root: String) -> PackedStringArray:
+	# ResourceLoader.list_directory resolves export remaps: exported builds store
+	# `foo.tres` as `foo.tres.remap`, which a raw DirAccess listing would miss.
 	var results := PackedStringArray()
-	var directory := DirAccess.open(root)
-	if directory == null:
+	if not DirAccess.dir_exists_absolute(root):
 		validation_errors.append("We could not open this content folder: %s" % root)
 		return results
-	directory.list_dir_begin()
-	var entry := directory.get_next()
-	while not entry.is_empty():
-		if not entry.begins_with("."):
-			var path := root.path_join(entry)
-			if directory.current_is_dir():
-				results.append_array(_resource_paths(path))
-			elif entry.get_extension().to_lower() == "tres":
-				results.append(path)
-		entry = directory.get_next()
-	directory.list_dir_end()
+	for entry in ResourceLoader.list_directory(root):
+		if entry.begins_with("."):
+			continue
+		if entry.ends_with("/"):
+			results.append_array(_resource_paths(root.path_join(entry.trim_suffix("/"))))
+		elif entry.get_extension().to_lower() == "tres":
+			results.append(root.path_join(entry))
 	results.sort()
 	return results
