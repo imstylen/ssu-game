@@ -20,7 +20,7 @@ extends Control
 
 
 func _init() -> void:
-	size = Vector2(360, 200)
+	size = Vector2(375, 375)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 

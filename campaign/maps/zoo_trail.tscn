@@ -3,12 +3,13 @@
 [ext_resource type="Script" uid="uid://d2k48b5xqvkgl" path="res://campaign/map/campaign_map_canvas.gd" id="1_jo1r8"]
 [ext_resource type="Texture2D" uid="uid://dwhhr0bls1l1q" path="res://campaign/art/placeholder/zoo_trail_background.svg" id="2_m131o"]
 [ext_resource type="Script" uid="uid://cr8oig6seln63" path="res://campaign/map/campaign_entrance.gd" id="3_5v215"]
-[ext_resource type="Texture2D" uid="uid://u8l13d2q6ww" path="res://campaign/art/placeholder/entrance_gate.svg" id="4_rxw0u"]
+[ext_resource type="Texture2D" uid="uid://dc16fubrnoe2m" path="res://campaign/art/entrance.png" id="4_jo1r8"]
 [ext_resource type="Script" uid="uid://bp6ppu2dtc6nu" path="res://campaign/map/campaign_encounter.gd" id="5_bcna1"]
 [ext_resource type="Resource" uid="uid://biaxtf32xoxah" path="res://enemies/definitions/barrier_blob/barrier_blob.tres" id="6_tlqnp"]
-[ext_resource type="Texture2D" uid="uid://bgqf7ee7n0ru" path="res://campaign/art/placeholder/habitat_meadow.svg" id="7_4ue7a"]
+[ext_resource type="Texture2D" uid="uid://s4tvt5sinuxr" path="res://campaign/art/petting meadow.png" id="7_m131o"]
 [ext_resource type="Resource" uid="uid://bcukrtoideucu" path="res://enemies/definitions/assumption_golem/assumption_golem.tres" id="8_4kbem"]
 [ext_resource type="Texture2D" uid="uid://c5lfavgyc1nh2" path="res://campaign/art/placeholder/habitat_pond.svg" id="9_ljjdh"]
+[ext_resource type="Texture2D" uid="uid://b7qggb0jp2hkj" path="res://campaign/art/duck-pond.png" id="9_m131o"]
 [ext_resource type="Texture2D" uid="uid://b80lw1xjj7r65" path="res://campaign/art/placeholder/habitat_aviary.svg" id="10_fhbey"]
 [ext_resource type="Resource" uid="uid://cuojt6le363gq" path="res://enemies/definitions/siege_core.tres" id="11_3amf5"]
 [ext_resource type="Texture2D" uid="uid://hus62ttx58ng" path="res://campaign/art/placeholder/habitat_pen.svg" id="12_eypv6"]
@@ -19,30 +20,32 @@
 custom_minimum_size = Vector2(2560, 2880)
 layout_mode = 3
 anchors_preset = 0
-offset_right = 2560.0
-offset_bottom = 2880.0
+offset_left = 171.0
+offset_top = 114.0
+offset_right = 2731.0
+offset_bottom = 2994.0
 mouse_filter = 1
 script = ExtResource("1_jo1r8")
 background = ExtResource("2_m131o")
 
 [node name="Entrance" type="Control" parent="." unique_id=1107942148 node_paths=PackedStringArray("next_encounters")]
 anchors_preset = 0
-offset_left = 1100.0
-offset_top = 2600.0
-offset_right = 1460.0
-offset_bottom = 2800.0
+offset_left = 1098.0
+offset_top = 2507.0
+offset_right = 1473.0
+offset_bottom = 2882.0
 mouse_filter = 2
 script = ExtResource("3_5v215")
 next_encounters = [NodePath("../PettingMeadow"), NodePath("../DuckPond")]
-art = ExtResource("4_rxw0u")
+art = ExtResource("4_jo1r8")
 
 [node name="PettingMeadow" type="TextureButton" parent="." unique_id=229867287 node_paths=PackedStringArray("next_encounters")]
-custom_minimum_size = Vector2(200, 200)
+custom_minimum_size = Vector2(300, 300)
 layout_mode = 0
-offset_left = 800.0
-offset_top = 2200.0
-offset_right = 1000.0
-offset_bottom = 2400.0
+offset_left = 754.0
+offset_top = 2148.0
+offset_right = 1054.0
+offset_bottom = 2448.0
 tooltip_text = "Petting Meadow — Barrier Blob"
 mouse_default_cursor_shape = 2
 script = ExtResource("5_bcna1")
@@ -50,16 +53,16 @@ encounter_id = "petting_meadow"
 display_name = "Petting Meadow"
 enemy = ExtResource("6_tlqnp")
 attack_pattern_override = PackedInt32Array()
-map_art = ExtResource("7_4ue7a")
+map_art = ExtResource("7_m131o")
 next_encounters = [NodePath("../BirdAviary"), NodePath("../GoatPaddock")]
 
 [node name="DuckPond" type="TextureButton" parent="." unique_id=575669398 node_paths=PackedStringArray("next_encounters")]
-custom_minimum_size = Vector2(200, 200)
+custom_minimum_size = Vector2(350, 350)
 layout_mode = 0
-offset_left = 1560.0
-offset_top = 2200.0
-offset_right = 1760.0
-offset_bottom = 2400.0
+offset_left = 1492.0
+offset_top = 2109.0
+offset_right = 1842.0
+offset_bottom = 2459.0
 tooltip_text = "Duck Pond — Assumption Golem"
 mouse_default_cursor_shape = 2
 script = ExtResource("5_bcna1")
@@ -67,7 +70,7 @@ encounter_id = "duck_pond"
 display_name = "Duck Pond"
 enemy = ExtResource("8_4kbem")
 attack_pattern_override = PackedInt32Array()
-map_art = ExtResource("9_ljjdh")
+map_art = ExtResource("9_m131o")
 next_encounters = [NodePath("../GoatPaddock"), NodePath("../LilyPond")]
 
 [node name="BirdAviary" type="TextureButton" parent="." unique_id=1212902690 node_paths=PackedStringArray("next_encounters")]
@@ -217,10 +220,10 @@ next_encounters = [NodePath("../GremlinGate")]
 [node name="GremlinGate" type="TextureButton" parent="." unique_id=905704203]
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 0
-offset_left = 1150.0
-offset_top = 350.0
-offset_right = 1350.0
-offset_bottom = 550.0
+offset_left = 1187.0
+offset_top = 386.0
+offset_right = 1387.0
+offset_bottom = 586.0
 tooltip_text = "Gremlin's Gate — Gatekeeping Gremlin"
 mouse_default_cursor_shape = 2
 script = ExtResource("5_bcna1")
