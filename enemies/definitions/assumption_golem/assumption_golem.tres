@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://efxhmyybukx8" path="res://enemies/enemy_definition.gd" id="1_enemy"]
 [ext_resource type="Script" uid="uid://tyyf4abqkn5v" path="res://enemies/behaviors/pattern_enemy_behavior.gd" id="2_behavior"]
 [ext_resource type="Texture2D" uid="uid://bnb271ibfls64" path="res://enemies/definitions/assumption_golem/assumption_golem.png" id="3_art"]
+[ext_resource type="Resource" path="res://battle/projectiles/barrier_brick.tres" id="4_projectile"]
 
 [sub_resource type="Resource" id="PatternBehavior"]
 script = ExtResource("2_behavior")
@@ -16,3 +17,4 @@ description = "A wobbly golem built from other people's bad guesses about what s
 artwork = ExtResource("3_art")
 maximum_health = 34
 behavior = SubResource("PatternBehavior")
+projectile = ExtResource("4_projectile")

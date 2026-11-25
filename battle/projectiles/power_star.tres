@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ProjectileStyle" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://battle/projectiles/projectile_style.gd" id="1_style"]
+[ext_resource type="Texture2D" path="res://battle/projectiles/art/power_star.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_style")
+texture = ExtResource("2_art")
+flight_seconds = 0.4
+arc_height = 70.0
+spin_turns_per_second = 1.5
+face_heading = false
+size = 56.0
+impact_color = Color(0.956863, 0.72549, 0.258824, 1)

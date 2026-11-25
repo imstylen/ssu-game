@@ -7,6 +7,8 @@ extends Resource
 @export var artwork: Texture2D
 @export_range(1, 1000) var maximum_health: int = 20
 @export var behavior: EnemyBehavior
+## Optional projectile for this enemy's attacks; empty uses the battle scene's default.
+@export var projectile: ProjectileStyle
 
 
 func validation_errors() -> PackedStringArray:

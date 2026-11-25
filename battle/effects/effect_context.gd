@@ -4,40 +4,49 @@ extends RefCounted
 var _session: BattleSession
 var _resolver: ActionResolver
 var _events: Array[BattleEvent]
+## Who is acting, attached to damage and healing events so presentation can show
+## what hit what: {kind: "unit" | "card", instance_id, card_id} or {kind: "enemy", action}.
+var source: Dictionary
 
 
-func _init(session: BattleSession, resolver: ActionResolver, events: Array[BattleEvent]) -> void:
+func _init(
+	session: BattleSession,
+	resolver: ActionResolver,
+	events: Array[BattleEvent],
+	effect_source: Dictionary = {}
+) -> void:
 	_session = session
 	_resolver = resolver
 	_events = events
+	source = effect_source
 
 
 func damage_enemy(amount: int) -> void:
-	_resolver.apply_enemy_damage(_session, amount, _events)
+	_resolver.apply_enemy_damage(_session, amount, _events, source)
 
 
 func heal_enemy(amount: int) -> void:
-	_resolver.apply_enemy_healing(_session, amount, _events)
+	_resolver.apply_enemy_healing(_session, amount, _events, source)
 
 
 func damage_unit(instance_id: int, amount: int) -> void:
-	_resolver.apply_unit_damage(_session, instance_id, amount, _events)
+	_resolver.apply_unit_damage(_session, instance_id, amount, _events, source)
 
 
 func damage_board(amount: int) -> void:
-	_resolver.apply_board_damage(_session, amount, _events)
+	_resolver.apply_board_damage(_session, amount, _events, source)
 
 
 func heal_allies(amount: int) -> void:
-	_resolver.apply_ally_healing(_session, amount, _events)
+	_resolver.apply_ally_healing(_session, amount, _events, source)
 
 
 func damage_player(amount: int) -> void:
-	_resolver.apply_player_damage(_session, amount, _events)
+	_resolver.apply_player_damage(_session, amount, _events, source)
 
 
 func heal_player(amount: int) -> void:
-	_resolver.apply_player_healing(_session, amount, _events)
+	_resolver.apply_player_healing(_session, amount, _events, source)
 
 
 func draw_cards(amount: int) -> void:
@@ -57,7 +66,7 @@ func create_card_in_hand(card_id: StringName) -> void:
 
 
 func heal_unit(instance_id: int, amount: int) -> void:
-	_resolver.apply_unit_healing(_session, instance_id, amount, _events)
+	_resolver.apply_unit_healing(_session, instance_id, amount, _events, source)
 
 
 ## Power change on a specific instance (works for a card that is still joining the Ally Circle).

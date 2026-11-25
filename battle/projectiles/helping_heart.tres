@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ProjectileStyle" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://battle/projectiles/projectile_style.gd" id="1_style"]
+[ext_resource type="Texture2D" path="res://battle/projectiles/art/helping_heart.png" id="2_art"]
+
+[resource]
+script = ExtResource("1_style")
+texture = ExtResource("2_art")
+flight_seconds = 0.45
+arc_height = 90.0
+spin_turns_per_second = 0.0
+face_heading = false
+size = 52.0
+impact_color = Color(0.435294, 0.839216, 0.607843, 1)

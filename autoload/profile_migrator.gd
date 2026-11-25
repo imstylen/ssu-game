@@ -1,7 +1,7 @@
 class_name ProfileMigrator
 extends RefCounted
 
-const SCHEMA_VERSION := 5
+const SCHEMA_VERSION := 6
 const LEGACY_STARTER_IDS: Array[StringName] = [
 	&"shield_bot", &"shield_bot",
 	&"arc_bolt", &"arc_bolt",
@@ -83,6 +83,16 @@ static func migrate_profile_data(source: Dictionary) -> Dictionary:
 				current_decks[index] = refreshed
 		migrated["decks"] = current_decks
 		migrated["schema_version"] = 5
+		changed = true
+	if schema_version < 6:
+		# Player settings arrived with attack projectiles; reduce motion starts off.
+		var settings: Variant = migrated.get("settings")
+		if not settings is Dictionary:
+			settings = {}
+		if not settings.has("reduce_motion"):
+			settings["reduce_motion"] = false
+		migrated["settings"] = settings
+		migrated["schema_version"] = 6
 		changed = true
 	return {"data": migrated, "changed": changed}
 

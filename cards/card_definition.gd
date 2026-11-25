@@ -20,6 +20,8 @@ enum CardType {
 ## Quick: this ally is ready to help on the round it is played.
 @export var quick: bool = false
 @export var visual_style: CardVisualStyle
+## Optional projectile for this card's damage; empty uses the battle scene's default.
+@export var projectile: ProjectileStyle
 
 
 func validation_errors() -> PackedStringArray:

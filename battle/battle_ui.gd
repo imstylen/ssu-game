@@ -3,6 +3,12 @@ extends Control
 const CARD_BASE_SCENE := preload("res://ui/card_base.tscn")
 const SPARK_AVAILABLE_TEXTURE: Texture2D = preload("res://battle/art/spark_available.png")
 const SPARK_SPENT_TEXTURE: Texture2D = preload("res://battle/art/spark_spent.png")
+const CAST_SECONDS := 0.16
+
+## Default projectile styles and pacing for attacks shown in this battle.
+@export var projectile_config: ProjectilePresentationConfig = preload("res://battle/projectiles/default_projectile_config.tres")
+## -1 follows the saved profile setting; 0 or 1 forces reduce motion off or on (tests, previews).
+@export_range(-1, 1) var reduce_motion_override: int = -1
 
 @onready var controller: BattleController = $BattleController
 
@@ -29,6 +35,10 @@ var _result_body: Label
 var _toast: Label
 var _damage_overlay_layer: CanvasLayer
 var _damage_overlay_root: Control
+var _cast_root: Control
+var _presenter: ProjectilePresenter
+## Played cards hovering above the hand while their effects resolve, by instance ID.
+var _cast_views: Dictionary = {}
 var _card_views_by_instance: Dictionary = {}
 var _last_card_artwork_rects: Dictionary = {}
 var _campaign_node: String = ""
@@ -44,9 +54,9 @@ func _ready() -> void:
 	theme = AppTheme.create_theme()
 	AppTheme.make_background(self)
 	_build_ui()
-	controller.event_presented.connect(_on_event_presented)
+	_build_presenter()
 	controller.session_changed.connect(_refresh)
-	controller.input_lock_changed.connect(func(_locked: bool): _refresh())
+	controller.input_lock_changed.connect(_on_input_lock_changed)
 	controller.invalid_action.connect(_show_message)
 	call_deferred("_start_battle")
 
@@ -286,11 +296,36 @@ func _build_damage_overlay_layer() -> void:
 	_damage_overlay_layer.name = "DamageNumberLayer"
 	_damage_overlay_layer.layer = 90
 	add_child(_damage_overlay_layer)
+	# Cast cards sit below projectiles, which sit below damage numbers.
+	_cast_root = Control.new()
+	_cast_root.name = "CastCards"
+	_cast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cast_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_damage_overlay_layer.add_child(_cast_root)
 	_damage_overlay_root = Control.new()
 	_damage_overlay_root.name = "DamageNumbers"
 	_damage_overlay_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_damage_overlay_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_damage_overlay_layer.add_child(_damage_overlay_root)
+
+
+func _build_presenter() -> void:
+	_presenter = ProjectilePresenter.new()
+	_presenter.name = "ProjectilePresenter"
+	_presenter.config = projectile_config
+	_presenter.controller = controller
+	_presenter.locate = _endpoint_rect
+	_presenter.reduce_motion = ProfileStore.reduce_motion if reduce_motion_override < 0 else reduce_motion_override == 1
+	add_child(_presenter)
+	var projectile_overlay := Control.new()
+	projectile_overlay.name = "ProjectileOverlay"
+	projectile_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	projectile_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_damage_overlay_layer.add_child(projectile_overlay)
+	_damage_overlay_layer.move_child(projectile_overlay, _damage_overlay_root.get_index())
+	_presenter.attach_overlay(projectile_overlay)
+	_presenter.event_landed.connect(_on_event_landed)
+	controller.presenter = _presenter
 
 
 func _build_result_layer() -> void:
@@ -367,11 +402,25 @@ func _refresh() -> void:
 		return
 	var session := controller.session
 	_turn_label.text = "ROUND %d  •  %s" % [session.turn_number, session.phase_name().to_upper().replace("_", " ")]
-	_player_health.max_value = session.rules.player_starting_health
-	_player_health.value = session.player_health
-	_player_health_text.text = "%d / %d" % [session.player_health, session.rules.player_starting_health]
-	_player_health.tooltip_text = "%d / %d Team Heart" % [session.player_health, session.rules.player_starting_health]
-	var low_team_heart := session.player_health <= 10
+	_show_team_heart(session.player_health)
+	_enemy_name.text = session.enemy.definition.display_name.to_upper()
+	_enemy_artwork.texture = session.enemy.definition.artwork if session.enemy.definition.artwork != null else load("res://icon.svg")
+	_enemy_artwork.tooltip_text = session.enemy.definition.description
+	_enemy_description.text = session.enemy.definition.description
+	_show_monster_heart(session.enemy.current_health)
+	_intent_label.text = controller.get_enemy_intent()
+	_enemy_status.text = enemy_status_text(session.enemy)
+	_enemy_status.visible = not _enemy_status.text.is_empty()
+	_refresh_board(session)
+
+
+func _show_team_heart(current: int) -> void:
+	var maximum := controller.session.rules.player_starting_health
+	_player_health.max_value = maximum
+	_player_health.value = current
+	_player_health_text.text = "%d / %d" % [current, maximum]
+	_player_health.tooltip_text = "%d / %d Team Heart" % [current, maximum]
+	var low_team_heart := current <= 10
 	_player_health.add_theme_stylebox_override(
 		"fill",
 		AppTheme.style_box(
@@ -383,17 +432,18 @@ func _refresh() -> void:
 		)
 	)
 	_player_health_text.add_theme_color_override("font_color", AppTheme.SURFACE if low_team_heart else AppTheme.INK)
-	_enemy_name.text = session.enemy.definition.display_name.to_upper()
-	_enemy_artwork.texture = session.enemy.definition.artwork if session.enemy.definition.artwork != null else load("res://icon.svg")
-	_enemy_artwork.tooltip_text = session.enemy.definition.description
-	_enemy_description.text = session.enemy.definition.description
-	_enemy_health.max_value = session.enemy.definition.maximum_health
-	_enemy_health.value = session.enemy.current_health
-	_enemy_health_text.text = "%d / %d" % [session.enemy.current_health, session.enemy.definition.maximum_health]
-	_enemy_health.tooltip_text = "%d / %d monster Heart" % [session.enemy.current_health, session.enemy.definition.maximum_health]
-	_intent_label.text = controller.get_enemy_intent()
-	_enemy_status.text = enemy_status_text(session.enemy)
-	_enemy_status.visible = not _enemy_status.text.is_empty()
+
+
+func _show_monster_heart(current: int) -> void:
+	var maximum := controller.session.enemy.definition.maximum_health
+	_enemy_health.max_value = maximum
+	_enemy_health.value = current
+	_enemy_health_text.text = "%d / %d" % [current, maximum]
+	_enemy_health.tooltip_text = "%d / %d monster Heart" % [current, maximum]
+
+
+func _refresh_board(session: BattleSession) -> void:
+	_clear_cast_views()
 	_refresh_spark_icons(session.current_energy, session.rules.energy_per_turn)
 	_piles_label.text = "DECK %d  •  REST PILE %d  •  HAND %d / %d     " % [
 		session.draw_pile.size(),
@@ -483,26 +533,34 @@ func _rebuild_cards(container: HBoxContainer, cards: Array[CardInstance], on_boa
 		container.add_child(empty)
 		return
 	for card in cards:
-		var view: CardBase = CARD_BASE_SCENE.instantiate()
-		var available := controller.can_attack_enemy(card.instance_id) if on_board else controller.can_play_card(card.instance_id)
-		var footer := ally_footer_text(card, available) if on_board else ""
-		view.setup_instance(card, footer)
-		view.set_compact()
-		view.set_battlefield_health_bar(on_board)
-		view.set_interactive(available)
-		view.card_activated.connect(controller.request_attack_enemy if on_board else controller.request_play_card)
-		container.add_child(view)
-		_card_views_by_instance[card.instance_id] = view
+		container.add_child(_create_card_view(card, on_board))
+
+
+func _create_card_view(card: CardInstance, on_board: bool) -> CardBase:
+	var view: CardBase = CARD_BASE_SCENE.instantiate()
+	var available := controller.can_attack_enemy(card.instance_id) if on_board else controller.can_play_card(card.instance_id)
+	var footer := ally_footer_text(card, available) if on_board else ""
+	view.setup_instance(card, footer)
+	view.set_compact()
+	view.set_battlefield_health_bar(on_board)
+	view.set_interactive(available)
+	view.card_activated.connect(controller.request_attack_enemy if on_board else controller.request_play_card)
+	_card_views_by_instance[card.instance_id] = view
+	return view
 
 
 static func enemy_status_text(enemy: EnemyInstance) -> String:
-	var parts: PackedStringArray = []
 	if enemy == null:
 		return ""
-	if enemy.calm > 0:
-		parts.append("CALM %d" % enemy.calm)
-	if enemy.exposed > 0:
-		parts.append("EXPOSED %d" % enemy.exposed)
+	return status_text(enemy.calm, enemy.exposed)
+
+
+static func status_text(calm: int, exposed: int) -> String:
+	var parts: PackedStringArray = []
+	if calm > 0:
+		parts.append("CALM %d" % calm)
+	if exposed > 0:
+		parts.append("EXPOSED %d" % exposed)
 	return "  •  ".join(parts)
 
 
@@ -515,33 +573,214 @@ static func ally_footer_text(card: CardInstance, ready_to_help: bool) -> String:
 	return " • ".join(parts)
 
 
-func _on_event_presented(event: BattleEvent) -> void:
+## Shows an event's effect. Hits arrive here when their projectile lands; everything
+## else as it is presented. The full refresh after the queue makes the final state exact.
+func _on_event_landed(event: BattleEvent, style: ProjectileStyle) -> void:
 	var message := _event_message(event)
 	if not message.is_empty():
 		_log.append_text("• %s\n" % message)
+	var impact_color := style.impact_color if style != null else AppTheme.DANGER
 	match event.kind:
+		&"BattleStarted": _refresh()
+		&"TurnStarted":
+			_turn_label.text = "ROUND %d  •  PLAYER TURN" % int(event.data.turn)
+			_refresh_spark_icons(int(event.data.energy), controller.session.rules.energy_per_turn)
+		&"EnergyChanged":
+			_refresh_spark_icons(int(event.data.energy), controller.session.rules.energy_per_turn)
 		&"EnemyActionStarted": _animate_attacker(_enemy_artwork)
 		&"DamageApplied":
 			_show_damage_number(event)
-			if event.data.target == "enemy":
-				_pulse(_enemy_health, AppTheme.DANGER)
-			elif event.data.target == "player":
-				_pulse(_player_health, AppTheme.DANGER)
-			else:
-				_pulse(_board_container, AppTheme.DANGER)
+			match str(event.data.get("target", "")):
+				"enemy":
+					_show_monster_heart(int(event.data.health))
+					_pulse(_enemy_health, AppTheme.DANGER)
+					_shake(_enemy_artwork)
+					_pulse(_enemy_artwork, impact_color)
+				"player":
+					_show_team_heart(int(event.data.health))
+					_pulse(_player_health, AppTheme.DANGER)
+				_:
+					var target := _card_view(int(event.data.get("instance_id", -1)))
+					if target != null:
+						target.show_health(int(event.data.health))
+						_shake(target)
+						_pulse(target, impact_color)
+					else:
+						_pulse(_board_container, AppTheme.DANGER)
 		&"HealingApplied":
 			match str(event.data.get("target", "")):
-				"enemy": _pulse(_enemy_health, AppTheme.ACCENT)
+				"enemy":
+					_show_monster_heart(int(event.data.health))
+					_pulse(_enemy_health, AppTheme.ACCENT)
 				"unit":
-					var ally: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
+					var ally := _card_view(int(event.data.get("instance_id", -1)))
+					if ally != null:
+						ally.show_health(int(event.data.health))
 					_pulse(ally if ally != null else _board_container, AppTheme.ACCENT)
-				_: _pulse(_player_health, AppTheme.ACCENT)
-		&"CardDrawn": _pulse(_hand_container, AppTheme.ACCENT)
-		&"EnemyStatusChanged": _pulse(_enemy_status, AppTheme.GOLD)
+				_:
+					_show_team_heart(int(event.data.health))
+					_pulse(_player_health, AppTheme.ACCENT)
+		&"ShieldAbsorbed":
+			var shielded := _card_view(int(event.data.get("instance_id", -1)))
+			if shielded != null:
+				_pulse(shielded, ProjectilePresenter.SHIELD_COLOR)
+		&"CardDrawn", &"CardCreated":
+			_add_hand_view(int(event.data.get("instance_id", -1)))
+			_pulse(_hand_container, AppTheme.ACCENT)
+		&"CardPlayed": _begin_cast(int(event.data.instance_id))
+		&"UnitSummoned": _summon_from_cast(int(event.data.instance_id))
+		&"CardDiscarded": _end_cast(int(event.data.instance_id))
+		&"CardDestroyed": _remove_board_view(int(event.data.instance_id))
+		&"EnemyStatusChanged":
+			_enemy_status.text = status_text(int(event.data.calm), int(event.data.exposed))
+			_enemy_status.visible = not _enemy_status.text.is_empty()
+			_pulse(_enemy_status, AppTheme.GOLD)
 		&"UnitAttacked":
-			var attacker: CardBase = _card_views_by_instance.get(int(event.data.get("instance_id", -1)))
-			_animate_attacker(attacker)
+			_animate_attacker(_card_view(int(event.data.get("instance_id", -1))))
 			_pulse(_board_container, AppTheme.GOLD)
+
+
+func _on_input_lock_changed(locked: bool) -> void:
+	if not locked:
+		return
+	# Keep the board as it was while events play out; only stop interaction.
+	_end_turn_button.disabled = true
+	for view in _card_views_by_instance.values():
+		if is_instance_valid(view):
+			view.set_interactive(false)
+
+
+func _card_view(instance_id: int) -> CardBase:
+	var view: CardBase = _card_views_by_instance.get(instance_id)
+	return view if view != null and is_instance_valid(view) and not view.is_queued_for_deletion() else null
+
+
+## Global rect of a presentation endpoint, falling back to where a card was last seen.
+func _endpoint_rect(endpoint: Dictionary) -> Rect2:
+	var instance_id := int(endpoint.get("instance_id", -1))
+	match str(endpoint.get("kind", "")):
+		"enemy":
+			return _enemy_artwork.get_global_rect()
+		"player":
+			return _player_health.get_global_rect()
+		"card":
+			var cast: CardBase = _cast_views.get(instance_id)
+			if cast != null and is_instance_valid(cast):
+				return Rect2(cast.get_meta("cast_spot", cast.position), cast.size)
+	var view := _card_view(instance_id)
+	if view != null:
+		return view.get_artwork_global_rect()
+	if _last_card_artwork_rects.has(instance_id):
+		return _last_card_artwork_rects[instance_id]
+	return _board_container.get_global_rect()
+
+
+func _remove_placeholders(container: Container) -> void:
+	for child in container.get_children():
+		if not child is CardBase:
+			container.remove_child(child)
+			child.queue_free()
+
+
+func _add_hand_view(instance_id: int) -> void:
+	if _card_view(instance_id) != null or controller.session == null:
+		return
+	var card := controller.session.find_hand_card(instance_id)
+	if card == null:
+		return
+	_remove_placeholders(_hand_container)
+	var view := _create_card_view(card, false)
+	view.set_interactive(false)
+	_hand_container.add_child(view)
+
+
+## Lifts a played card above the hand, where its effects launch from until it settles.
+func _begin_cast(instance_id: int) -> void:
+	var hand_view := _card_view(instance_id)
+	if hand_view == null or hand_view.instance == null:
+		return
+	var played := hand_view.instance
+	var start := hand_view.get_global_rect()
+	_last_card_artwork_rects[instance_id] = hand_view.get_artwork_global_rect()
+	_card_views_by_instance.erase(instance_id)
+	hand_view.get_parent().remove_child(hand_view)
+	hand_view.queue_free()
+	var cast: CardBase = CARD_BASE_SCENE.instantiate()
+	cast.setup_instance(played)
+	cast.set_compact()
+	cast.hover_preview_enabled = false
+	cast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cast_root.add_child(cast)
+	cast.size = cast.get_combined_minimum_size()
+	var hand_area := _hand_container.get_parent_control().get_global_rect()
+	var spot := Vector2(hand_area.get_center().x - cast.size.x * 0.5, hand_area.position.y - cast.size.y - 16.0)
+	cast.set_meta("cast_spot", spot)
+	_cast_views[instance_id] = cast
+	if _presenter.reduce_motion:
+		cast.position = spot
+		return
+	cast.position = start.position
+	var tween := cast.create_tween()
+	tween.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(cast, "position", spot, CAST_SECONDS)
+
+
+func _summon_from_cast(instance_id: int) -> void:
+	_free_cast_view(instance_id)
+	if _card_view(instance_id) != null or controller.session == null:
+		return
+	var card := controller.session.find_battlefield_card(instance_id)
+	if card == null:
+		return
+	_remove_placeholders(_board_container)
+	var view := _create_card_view(card, true)
+	view.set_interactive(false)
+	_board_container.add_child(view)
+
+
+func _end_cast(instance_id: int) -> void:
+	var cast: CardBase = _cast_views.get(instance_id)
+	_cast_views.erase(instance_id)
+	if cast == null or not is_instance_valid(cast):
+		return
+	var tween := cast.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(cast, "modulate:a", 0.0, 0.25)
+	tween.tween_property(cast, "position:y", cast.position.y + 40.0, 0.25)
+	tween.chain().tween_callback(cast.queue_free)
+
+
+func _free_cast_view(instance_id: int) -> void:
+	var cast: CardBase = _cast_views.get(instance_id)
+	_cast_views.erase(instance_id)
+	if cast != null and is_instance_valid(cast):
+		cast.queue_free()
+
+
+func _clear_cast_views() -> void:
+	for instance_id in _cast_views.keys():
+		_free_cast_view(instance_id)
+
+
+func _remove_board_view(instance_id: int) -> void:
+	var view := _card_view(instance_id)
+	if view == null:
+		return
+	_last_card_artwork_rects[instance_id] = view.get_artwork_global_rect()
+	_card_views_by_instance.erase(instance_id)
+	var tween := view.create_tween()
+	tween.tween_property(view, "modulate:a", 0.0, 0.25)
+	tween.tween_callback(view.queue_free)
+
+
+## A quick side-to-side wobble; rotation is safe on controls placed by containers.
+func _shake(control: Control) -> void:
+	if control == null or not is_instance_valid(control) or _presenter.reduce_motion:
+		return
+	control.pivot_offset = control.size * 0.5
+	var tween := control.create_tween()
+	for angle in [0.06, -0.05, 0.03, 0.0]:
+		tween.tween_property(control, "rotation", angle, 0.05)
 
 
 func _animate_attacker(control: Control) -> void:

@@ -12,6 +12,8 @@ var deck_rules: DeckRules
 var campaign: CampaignProgress
 var campaign_error: String = ""
 var last_save_error: String = ""
+## Replace battle projectiles with gentle pulses (paced the same way).
+var reduce_motion: bool = false
 var profile_path: String = PROFILE_PATH
 # Injectable disk boundary for persistence tests. Production uses atomic replacement.
 var profile_writer: Callable
@@ -26,6 +28,7 @@ func _ready() -> void:
 
 func load_profile() -> void:
 	decks.clear()
+	reduce_motion = false
 	campaign = null
 	campaign_error = ""
 	_campaign_data = null
@@ -53,6 +56,9 @@ func load_profile() -> void:
 		campaign_error = CampaignProgress.validation_error(_campaign_data)
 		campaign = CampaignProgress.from_dictionary(_campaign_data)
 	selected_deck_id = str(parsed.get("selected_deck_id", ""))
+	var settings: Variant = parsed.get("settings")
+	if settings is Dictionary:
+		reduce_motion = bool(settings.get("reduce_motion", false))
 	for deck_data in parsed.get("decks", []):
 		if deck_data is Dictionary:
 			var deck := DeckRecord.from_dictionary(deck_data)
@@ -76,6 +82,7 @@ func save_profile() -> bool:
 		"selected_deck_id": selected_deck_id,
 		"decks": serialized_decks,
 		"campaign": _campaign_data,
+		"settings": {"reduce_motion": reduce_motion},
 	}
 	last_save_error = ""
 	var error: Error = profile_writer.call(data) if profile_writer.is_valid() else _write_profile(data)
@@ -99,6 +106,16 @@ func _write_profile(data: Dictionary) -> Error:
 	if error != OK:
 		return error
 	return DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary), ProjectSettings.globalize_path(profile_path))
+
+
+func set_reduce_motion(enabled: bool) -> bool:
+	var previous := reduce_motion
+	reduce_motion = enabled
+	if not save_profile():
+		reduce_motion = previous
+		return false
+	profile_changed.emit()
+	return true
 
 
 func initialize_campaign() -> bool:

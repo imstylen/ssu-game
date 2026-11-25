@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ProjectilePresentationConfig" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://battle/projectiles/projectile_presentation_config.gd" id="1_config"]
+[ext_resource type="Resource" path="res://battle/projectiles/power_star.tres" id="2_ally"]
+[ext_resource type="Resource" path="res://battle/projectiles/kind_spark.tres" id="3_card"]
+[ext_resource type="Resource" path="res://battle/projectiles/helping_heart.tres" id="4_heal"]
+[ext_resource type="Resource" path="res://battle/projectiles/red_tape.tres" id="5_enemy"]
+
+[resource]
+script = ExtResource("1_config")
+ally_attack = ExtResource("2_ally")
+card_effect = ExtResource("3_card")
+healing = ExtResource("4_heal")
+enemy_attack = ExtResource("5_enemy")

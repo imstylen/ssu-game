@@ -44,6 +44,7 @@ func _run_all() -> void:
 	await load("res://tests/campaign_tests.gd").run_battles(_expect, self)
 	_test_card_base_artwork_and_style()
 	load("res://tests/card_mechanics_tests.gd").run(_expect)
+	load("res://tests/projectile_tests.gd").run(_expect)
 	load("res://tests/card_content_tests.gd").run(_expect, _catalog)
 	_test_battle_setup()
 	_test_damage_one_shot()
@@ -63,6 +64,7 @@ func _run_all() -> void:
 	_test_profile_migration()
 	_test_font_license_and_copy()
 	_test_legible_theme_colors()
+	await load("res://tests/projectile_tests.gd").run_scene(_expect, self)
 	await _test_enemy_portrait_binding()
 	_catalog.free()
 	if _failures == 0:
@@ -488,7 +490,7 @@ func _test_profile_migration() -> void:
 		],
 	}
 	var refreshed: Dictionary = ProfileMigrator.migrate_profile_data(previous)
-	_expect(refreshed.changed and refreshed.data.schema_version == 5, "Schema 4 profile migrates to schema 5")
+	_expect(refreshed.changed and refreshed.data.schema_version == ProfileMigrator.SCHEMA_VERSION, "Schema 4 profile migrates to the current schema")
 	_expect(
 		Array(refreshed.data.decks[0].card_ids).map(func(id): return StringName(id)) == Array(ProfileMigrator.ACCESS_ALLIES_STARTER_IDS),
 		"Untouched previous starter is refreshed to the expansion starter"
@@ -498,9 +500,34 @@ func _test_profile_migration() -> void:
 	tweaked.decks[0].card_ids[0] = "rally"
 	var tweaked_result: Dictionary = ProfileMigrator.migrate_profile_data(tweaked)
 	_expect(tweaked_result.data.decks[0] == tweaked.decks[0], "A customized previous starter is left untouched")
+	var schema_five := {"schema_version": 5, "selected_deck_id": "starter", "campaign": null, "decks": previous.decks.duplicate(true)}
+	var with_settings: Dictionary = ProfileMigrator.migrate_profile_data(schema_five)
+	_expect(with_settings.changed and with_settings.data.schema_version == 6, "Schema 5 profile migrates to schema 6")
+	_expect(with_settings.data.settings == {"reduce_motion": false}, "Schema 6 adds settings with reduce motion off")
+	_expect(with_settings.data.decks == schema_five.decks, "Adding settings leaves decks untouched")
+	var chosen := schema_five.duplicate(true)
+	chosen["settings"] = {"reduce_motion": true}
+	_expect(ProfileMigrator.migrate_profile_data(chosen).data.settings.reduce_motion == true, "Migration keeps an existing reduce motion choice")
+	_test_reduce_motion_setting()
 	var starter_ids: Array[StringName] = []
 	starter_ids.assign(ProfileMigrator.ACCESS_ALLIES_STARTER_IDS)
 	_expect(DeckRules.new(load("res://battle/rules/battle_rules.tres")).validate(starter_ids, _catalog).is_empty(), "Current starter is a valid deck")
+
+
+func _test_reduce_motion_setting() -> void:
+	var store = load("res://autoload/profile_store.gd").new()
+	store.profile_path = "user://reduce_motion_test_%d.json" % Time.get_ticks_usec()
+	store.deck_rules = DeckRules.new(load("res://battle/rules/battle_rules.tres"))
+	store.load_profile()
+	_expect(not store.reduce_motion, "A fresh profile starts with reduce motion off")
+	_expect(store.set_reduce_motion(true) and store.reduce_motion, "Turning on reduce motion saves")
+	store.load_profile()
+	_expect(store.reduce_motion, "Reduce motion survives a reload")
+	store.profile_writer = func(_data): return ERR_CANT_CREATE
+	_expect(not store.set_reduce_motion(false) and store.reduce_motion, "A failed save keeps the previous reduce motion choice")
+	store.profile_writer = Callable()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(store.profile_path))
+	store.free()
 
 
 func _test_font_license_and_copy() -> void:

@@ -63,7 +63,7 @@ func play_card(session: BattleSession, instance_id: int) -> Array[BattleEvent]:
 		"name": card.definition.display_name,
 		"card_type": card.definition.card_type,
 	}))
-	var context := EffectContext.new(session, self, events)
+	var context := EffectContext.new(session, self, events, card_source(card, "card"))
 	if card.definition.behavior != null:
 		card.definition.behavior.on_played(context, card)
 	if card.definition.card_type == CardDefinition.CardType.UNIT:
@@ -116,10 +116,19 @@ func attack_enemy(session: BattleSession, instance_id: int) -> Array[BattleEvent
 		"name": card.definition.display_name,
 		"amount": card.current_attack,
 	}))
-	apply_enemy_damage(session, card.current_attack, events)
+	apply_enemy_damage(session, card.current_attack, events, card_source(card))
 	if not session.is_finished():
 		session.phase = BattleSession.Phase.PLAYER_TURN
 	return events
+
+
+## Event source for effects an ally causes; `kind` is "card" while the card is being played.
+static func card_source(card: CardInstance, kind: String = "unit") -> Dictionary:
+	return {"kind": kind, "instance_id": card.instance_id, "card_id": String(card.definition.id)}
+
+
+static func enemy_source(action: EnemyAction) -> Dictionary:
+	return {"kind": "enemy", "action": action}
 
 
 func can_end_turn(session: BattleSession) -> bool:
@@ -140,15 +149,15 @@ func end_turn(session: BattleSession) -> Array[BattleEvent]:
 	session.phase = BattleSession.Phase.ENEMY_TURN
 	var decision_context := EnemyDecisionContext.new(session)
 	var actions := session.enemy.definition.behavior.get_turn_actions(decision_context)
-	var effect_context := EffectContext.new(session, self, events)
 	for action in actions:
 		if session.is_finished():
 			break
 		if action is EnemyAction:
 			events.append(BattleEvent.new(&"EnemyActionStarted", {
 				"description": action.describe(),
+				"action": action,
 			}))
-			action.resolve(effect_context)
+			action.resolve(EffectContext.new(session, self, events, enemy_source(action)))
 	if session.is_finished():
 		return events
 	session.turn_number += 1
@@ -173,17 +182,15 @@ func end_turn(session: BattleSession) -> Array[BattleEvent]:
 
 ## Runs a round hook for every ally in Ally Circle order, skipping allies that left mid-way.
 func _trigger_round_hook(session: BattleSession, hook: StringName, events: Array[BattleEvent]) -> void:
-	var context := EffectContext.new(session, self, events)
 	for card in session.battlefield.duplicate():
 		if session.is_finished():
 			return
 		if card.definition.behavior == null or session.find_battlefield_card(card.instance_id) == null:
 			continue
-		card.definition.behavior.call(hook, context, card)
+		card.definition.behavior.call(hook, EffectContext.new(session, self, events, card_source(card)), card)
 
 
 func _trigger_card_played(session: BattleSession, played_card: CardInstance, events: Array[BattleEvent]) -> void:
-	var context := EffectContext.new(session, self, events)
 	for card in session.battlefield.duplicate():
 		if session.is_finished():
 			return
@@ -191,6 +198,7 @@ func _trigger_card_played(session: BattleSession, played_card: CardInstance, eve
 			continue
 		if session.find_battlefield_card(card.instance_id) == null:
 			continue
+		var context := EffectContext.new(session, self, events, card_source(card))
 		card.definition.behavior.on_card_played(context, card, played_card)
 
 
@@ -246,7 +254,7 @@ func gain_energy(session: BattleSession, amount: int, events: Array[BattleEvent]
 	}))
 
 
-func apply_enemy_damage(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+func apply_enemy_damage(session: BattleSession, amount: int, events: Array[BattleEvent], source: Dictionary = {}) -> void:
 	if session.is_finished() or amount <= 0:
 		return
 	if session.enemy.exposed > 0:
@@ -260,11 +268,12 @@ func apply_enemy_damage(session: BattleSession, amount: int, events: Array[Battl
 		"target": "enemy",
 		"amount": applied,
 		"health": session.enemy.current_health,
+		"source": source,
 	}))
 	_check_battle_end(session, events)
 
 
-func apply_enemy_healing(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+func apply_enemy_healing(session: BattleSession, amount: int, events: Array[BattleEvent], source: Dictionary = {}) -> void:
 	if session.is_finished() or amount <= 0:
 		return
 	var old_health := session.enemy.current_health
@@ -278,6 +287,7 @@ func apply_enemy_healing(session: BattleSession, amount: int, events: Array[Batt
 			"target": "enemy",
 			"amount": applied,
 			"health": session.enemy.current_health,
+			"source": source,
 		}))
 
 
@@ -285,15 +295,17 @@ func apply_unit_damage(
 	session: BattleSession,
 	instance_id: int,
 	amount: int,
-	events: Array[BattleEvent]
+	events: Array[BattleEvent],
+	source: Dictionary = {}
 ) -> void:
 	if session.is_finished() or amount <= 0:
 		return
 	var card := session.find_battlefield_card(instance_id)
 	if card == null:
 		return
+	var absorbed := 0
 	if card.shield > 0:
-		var absorbed := mini(card.shield, amount)
+		absorbed = mini(card.shield, amount)
 		card.shield -= absorbed
 		amount -= absorbed
 		events.append(BattleEvent.new(&"ShieldAbsorbed", {
@@ -301,6 +313,7 @@ func apply_unit_damage(
 			"name": card.definition.display_name,
 			"amount": absorbed,
 			"shield": card.shield,
+			"source": source,
 		}))
 		if amount <= 0:
 			return
@@ -312,6 +325,8 @@ func apply_unit_damage(
 		"name": card.definition.display_name,
 		"amount": applied,
 		"health": card.current_health,
+		"absorbed": absorbed,
+		"source": source,
 	}))
 	if card.current_health <= 0:
 		session.battlefield.erase(card)
@@ -322,17 +337,17 @@ func apply_unit_damage(
 			"name": card.definition.display_name,
 		}))
 		if card.definition.behavior != null:
-			card.definition.behavior.on_knocked_out(EffectContext.new(session, self, events), card)
+			card.definition.behavior.on_knocked_out(EffectContext.new(session, self, events, card_source(card)), card)
 
 
-func apply_board_damage(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+func apply_board_damage(session: BattleSession, amount: int, events: Array[BattleEvent], source: Dictionary = {}) -> void:
 	if amount <= 0 or session.is_finished():
 		return
-	var context := EffectContext.new(session, self, events)
+	var context := EffectContext.new(session, self, events, source)
 	board_damage_policy.apply_damage(context, amount)
 
 
-func apply_ally_healing(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+func apply_ally_healing(session: BattleSession, amount: int, events: Array[BattleEvent], source: Dictionary = {}) -> void:
 	if amount <= 0 or session.is_finished():
 		return
 	for card in session.battlefield:
@@ -346,10 +361,11 @@ func apply_ally_healing(session: BattleSession, amount: int, events: Array[Battl
 				"name": card.definition.display_name,
 				"amount": applied,
 				"health": card.current_health,
+				"source": source,
 			}))
 
 
-func apply_player_damage(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+func apply_player_damage(session: BattleSession, amount: int, events: Array[BattleEvent], source: Dictionary = {}) -> void:
 	if session.is_finished() or amount <= 0:
 		return
 	var applied := mini(amount, session.player_health)
@@ -358,11 +374,12 @@ func apply_player_damage(session: BattleSession, amount: int, events: Array[Batt
 		"target": "player",
 		"amount": applied,
 		"health": session.player_health,
+		"source": source,
 	}))
 	_check_battle_end(session, events)
 
 
-func apply_player_healing(session: BattleSession, amount: int, events: Array[BattleEvent]) -> void:
+func apply_player_healing(session: BattleSession, amount: int, events: Array[BattleEvent], source: Dictionary = {}) -> void:
 	if session.is_finished() or amount <= 0:
 		return
 	var old_health := session.player_health
@@ -376,6 +393,7 @@ func apply_player_healing(session: BattleSession, amount: int, events: Array[Bat
 			"target": "player",
 			"amount": applied,
 			"health": session.player_health,
+			"source": source,
 		}))
 
 
@@ -422,7 +440,8 @@ func apply_unit_healing(
 	session: BattleSession,
 	instance_id: int,
 	amount: int,
-	events: Array[BattleEvent]
+	events: Array[BattleEvent],
+	source: Dictionary = {}
 ) -> void:
 	if amount <= 0 or session.is_finished():
 		return
@@ -439,6 +458,7 @@ func apply_unit_healing(
 			"name": card.definition.display_name,
 			"amount": applied,
 			"health": card.current_health,
+			"source": source,
 		}))
 
 

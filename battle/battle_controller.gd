@@ -11,6 +11,9 @@ signal invalid_action(message: String)
 var session: BattleSession
 var action_resolver := ActionResolver.new()
 var input_locked: bool = false
+## Optional pacing (e.g. projectiles). Without one, events are spaced by presentation_delay
+## and session_changed fires before they are presented.
+var presenter: BattlePresenter
 
 
 func start_battle(
@@ -73,15 +76,25 @@ func queue_events(events: Array[BattleEvent]) -> void:
 		return
 	input_locked = true
 	input_lock_changed.emit(true)
-	session_changed.emit()
+	if presenter == null:
+		session_changed.emit()
 	_present_events(events)
 
 
+## With presentation_delay == 0 nothing awaits, so the whole queue resolves synchronously.
 func _present_events(events: Array[BattleEvent]) -> void:
+	var instant := presentation_delay <= 0.0
+	if presenter != null:
+		presenter.begin_presentation(instant)
 	for event in events:
+		if presenter != null:
+			await presenter.wait_until_ready(event)
 		event_presented.emit(event)
-		if presentation_delay > 0.0:
-			await get_tree().create_timer(presentation_delay).timeout
+		var hold := presenter.present_event(event, presentation_delay) if presenter != null else presentation_delay
+		if not instant and hold > 0.0:
+			await get_tree().create_timer(hold).timeout
+	if presenter != null:
+		await presenter.wait_until_settled()
 	input_locked = false
 	input_lock_changed.emit(false)
 	session_changed.emit()

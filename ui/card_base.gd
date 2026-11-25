@@ -43,6 +43,10 @@ var interactive: bool = false
 var footer_text: String = ""
 var compact: bool = false
 var battlefield_health_bar: bool = false
+## Heart shown instead of the instance's live value while battle presentation catches up; -1 shows live.
+var _health_override: int = -1
+## Heart value the card last drew (labels do not follow later instance changes on their own).
+var _shown_health: int = 0
 
 @onready var _background: TextureRect = %CardBackground
 @onready var _frame_overlay: TextureRect = %FrameOverlay
@@ -107,6 +111,7 @@ func setup_definition(card_definition: CardDefinition, footer: String = "") -> v
 
 func setup_instance(card_instance: CardInstance, footer: String = "") -> void:
 	instance = card_instance
+	_health_override = -1
 	definition = instance.definition if instance != null else null
 	footer_text = footer
 	if is_node_ready():
@@ -137,6 +142,25 @@ func set_battlefield_health_bar(enabled: bool = true) -> void:
 
 func get_displayed_artwork() -> Texture2D:
 	return _artwork.texture if is_node_ready() else null
+
+
+## Shows a Heart value without touching the instance, so damage can land when its projectile does.
+func show_health(health: int) -> void:
+	_health_override = maxi(health, 0)
+	if is_node_ready():
+		_refresh()
+
+
+func get_displayed_health() -> int:
+	return _shown_health
+
+
+func _health_to_show() -> int:
+	if _health_override >= 0:
+		return _health_override
+	if instance != null:
+		return instance.current_health
+	return definition.health if definition != null else 0
 
 
 func get_artwork_global_rect() -> Rect2:
@@ -175,7 +199,8 @@ func _bind_card_data() -> void:
 	_description_label.text = definition.description
 	if definition.card_type == CardDefinition.CardType.UNIT:
 		var attack := instance.current_attack if instance != null else definition.attack
-		var health := instance.current_health if instance != null else definition.health
+		var health := _health_to_show()
+		_shown_health = health
 		_attack_label.text = "POWER %d" % attack
 		_health_label.text = "HEART %d" % health
 		_attack_label.visible = true
